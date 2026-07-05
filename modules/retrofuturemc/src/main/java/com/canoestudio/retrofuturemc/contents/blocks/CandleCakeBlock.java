@@ -9,6 +9,7 @@ import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
@@ -77,7 +78,7 @@ public class CandleCakeBlock extends Block {
 
     @Override
     public int getLightValue(IBlockState state) {
-        return state.getValue(LIT) ? 3 : 0;
+        return state.getValue(LIT) ? CandleBlock.LIGHT_PER_CANDLE : 0;
     }
 
     @Override
@@ -95,20 +96,14 @@ public class CandleCakeBlock extends Block {
     @Override
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
         ItemStack stack = playerIn.getHeldItem(hand);
-        if (stack.getItem() == Items.FLINT_AND_STEEL && !state.getValue(LIT)) {
-            if (!worldIn.isRemote) {
-                worldIn.setBlockState(pos, state.withProperty(LIT, true), 3);
-                worldIn.playSound(null, pos, net.minecraft.init.SoundEvents.ITEM_FLINTANDSTEEL_USE, SoundCategory.BLOCKS, 1.0F, worldIn.rand.nextFloat() * 0.4F + 0.8F);
-                stack.damageItem(1, playerIn);
-            }
+        if (canLight(state) && CandleBlock.isLightingItem(stack)) {
+            light(worldIn, pos, state, playerIn, stack, 3);
             return true;
         }
 
-        if (stack.isEmpty() && state.getValue(LIT) && hitY > 0.5F) {
+        if (stack.isEmpty() && state.getValue(LIT) && candleHit(hitY)) {
             if (!worldIn.isRemote) {
-                worldIn.setBlockState(pos, state.withProperty(LIT, false), 3);
-                worldIn.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, pos.getX() + 0.5D, pos.getY() + 1.0D, pos.getZ() + 0.5D, 0.0D, 0.1D, 0.0D);
-                worldIn.playSound(null, pos, net.minecraft.init.SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.35F, 2.0F + worldIn.rand.nextFloat() * 0.4F);
+                extinguish(playerIn, worldIn, pos, state, 3);
             }
             return true;
         }
@@ -117,6 +112,47 @@ public class CandleCakeBlock extends Block {
             return true;
         }
         return stack.isEmpty();
+    }
+
+    private static boolean candleHit(float hitY) {
+        return hitY > 0.5F;
+    }
+
+    public static boolean isLit(IBlockState state) {
+        return state.getBlock() instanceof CandleCakeBlock && state.getValue(LIT);
+    }
+
+    public static boolean canLight(IBlockState state) {
+        return state.getBlock() instanceof CandleCakeBlock && !state.getValue(LIT);
+    }
+
+    public static void light(World world, BlockPos pos, IBlockState state, EntityPlayer player, ItemStack stack, int flags) {
+        if (world.isRemote || !canLight(state)) {
+            return;
+        }
+
+        world.setBlockState(pos, state.withProperty(LIT, true), flags);
+        if (!stack.isEmpty()) {
+            if (stack.getItem() == Items.FIRE_CHARGE) {
+                world.playSound(null, pos, net.minecraft.init.SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.BLOCKS, 1.0F, (world.rand.nextFloat() - world.rand.nextFloat()) * 0.2F + 1.0F);
+            } else {
+                world.playSound(null, pos, net.minecraft.init.SoundEvents.ITEM_FLINTANDSTEEL_USE, SoundCategory.BLOCKS, 1.0F, world.rand.nextFloat() * 0.4F + 0.8F);
+            }
+
+            if (player != null && !player.capabilities.isCreativeMode) {
+                if (stack.getItem() == Items.FLINT_AND_STEEL) {
+                    stack.damageItem(1, player);
+                } else if (stack.getItem() == Items.FIRE_CHARGE) {
+                    stack.shrink(1);
+                }
+            }
+        }
+    }
+
+    public static void extinguish(EntityPlayer player, World world, BlockPos pos, IBlockState state, int flags) {
+        world.setBlockState(pos, state.withProperty(LIT, false), flags);
+        world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, pos.getX() + 0.5D, pos.getY() + 1.0D, pos.getZ() + 0.5D, 0.0D, 0.1D, 0.0D);
+        world.playSound(null, pos, net.minecraft.init.SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.35F, 2.0F + world.rand.nextFloat() * 0.4F);
     }
 
     private boolean eat(World world, BlockPos pos, EntityPlayer player) {
@@ -136,6 +172,15 @@ public class CandleCakeBlock extends Block {
     @Override
     public int quantityDropped(java.util.Random random) {
         return 0;
+    }
+
+    @Override
+    public void onEntityWalk(World worldIn, BlockPos pos, Entity entityIn) {
+        IBlockState state = worldIn.getBlockState(pos);
+        if (!worldIn.isRemote && entityIn.isBurning() && canLight(state)) {
+            light(worldIn, pos, state, null, ItemStack.EMPTY, 3);
+        }
+        super.onEntityWalk(worldIn, pos, entityIn);
     }
 
     @Override

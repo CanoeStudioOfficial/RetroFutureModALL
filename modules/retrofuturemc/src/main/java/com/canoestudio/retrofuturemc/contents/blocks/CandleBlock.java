@@ -14,8 +14,10 @@ import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockRenderLayer;
@@ -41,6 +43,7 @@ import static com.canoestudio.retrofuturemc.contents.tab.CreativeTab.CREATIVE_TA
 public class CandleBlock extends Block implements IFluidloggable {
     public static final PropertyBool LIT = PropertyBool.create("lit");
     public static final PropertyInteger CANDLES = PropertyInteger.create("candles", 1, 4);
+    public static final int LIGHT_PER_CANDLE = 3;
     private static final AxisAlignedBB[] AABBS = {
             new AxisAlignedBB(0.4375D, 0.0D, 0.4375D, 0.5625D, 0.4375D, 0.5625D),
             new AxisAlignedBB(0.3125D, 0.0D, 0.375D, 0.6875D, 0.4375D, 0.5625D),
@@ -90,13 +93,13 @@ public class CandleBlock extends Block implements IFluidloggable {
 
     @Override
     public int getLightValue(IBlockState state) {
-        return state.getValue(LIT) ? state.getValue(CANDLES) * 3 : 0;
+        return state.getValue(LIT) ? state.getValue(CANDLES) * LIGHT_PER_CANDLE : 0;
     }
 
     @Override
     public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
         IBlockState down = worldIn.getBlockState(pos.down());
-        return down.isSideSolid(worldIn, pos.down(), EnumFacing.UP);
+        return down.getBlock().canPlaceTorchOnTop(down, worldIn, pos.down());
     }
 
     @Override
@@ -117,7 +120,7 @@ public class CandleBlock extends Block implements IFluidloggable {
     @Override
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
         ItemStack stack = playerIn.getHeldItem(hand);
-        if (!stack.isEmpty() && stack.getItem() == net.minecraft.item.Item.getItemFromBlock(this) && state.getValue(CANDLES) < 4) {
+        if (!playerIn.isSneaking() && !stack.isEmpty() && stack.getItem() == net.minecraft.item.Item.getItemFromBlock(this) && state.getValue(CANDLES) < 4) {
             if (!worldIn.isRemote) {
                 worldIn.setBlockState(pos, state.withProperty(CANDLES, state.getValue(CANDLES) + 1), 3);
                 worldIn.playSound(null, pos, blockSoundType.getPlaceSound(), SoundCategory.BLOCKS, (blockSoundType.getVolume() + 1.0F) / 2.0F, blockSoundType.getPitch() * 0.8F);
@@ -127,29 +130,75 @@ public class CandleBlock extends Block implements IFluidloggable {
             }
             return true;
         }
-        if (stack.isEmpty() && state.getValue(LIT)) {
+        if (!playerIn.isSneaking() && stack.isEmpty() && state.getValue(LIT)) {
             if (!worldIn.isRemote) {
-                extinguish(worldIn, pos, state, 3);
+                extinguish(playerIn, worldIn, pos, state, 3);
             }
             return true;
         }
-        if (stack.getItem() == net.minecraft.init.Items.FLINT_AND_STEEL && !state.getValue(LIT) && FluidloggedUtils.getFluidState(worldIn, pos, state).getFluid() != FluidRegistry.WATER) {
-            if (!worldIn.isRemote) {
-                worldIn.setBlockState(pos, state.withProperty(LIT, true), 3);
-                worldIn.playSound(null, pos, net.minecraft.init.SoundEvents.ITEM_FLINTANDSTEEL_USE, SoundCategory.BLOCKS, 1.0F, worldIn.rand.nextFloat() * 0.4F + 0.8F);
-                stack.damageItem(1, playerIn);
-            }
+        if (canLight(worldIn, pos, state) && isLightingItem(stack)) {
+            light(worldIn, pos, state, playerIn, stack, 3);
             return true;
         }
         return false;
     }
 
     public static void extinguish(World world, BlockPos pos, IBlockState state, int flags) {
+        extinguish(null, world, pos, state, flags);
+    }
+
+    public static void extinguish(EntityPlayer player, World world, BlockPos pos, IBlockState state, int flags) {
         world.setBlockState(pos, state.withProperty(LIT, false), flags);
         for (Vec3d offset : WICK_OFFSETS[state.getValue(CANDLES) - 1]) {
             world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, pos.getX() + offset.x, pos.getY() + offset.y, pos.getZ() + offset.z, 0.0D, 0.1D, 0.0D);
         }
         world.playSound(null, pos, net.minecraft.init.SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.35F, 2.0F + world.rand.nextFloat() * 0.4F);
+    }
+
+    public static boolean isLit(IBlockState state) {
+        return state.getBlock() instanceof CandleBlock && state.getValue(LIT);
+    }
+
+    public static boolean canLight(World world, BlockPos pos, IBlockState state) {
+        return state.getBlock() instanceof CandleBlock
+                && !state.getValue(LIT)
+                && FluidloggedUtils.getFluidState(world, pos, state).getFluid() != FluidRegistry.WATER;
+    }
+
+    public static void light(World world, BlockPos pos, IBlockState state, EntityPlayer player, ItemStack stack, int flags) {
+        if (world.isRemote || !canLight(world, pos, state)) {
+            return;
+        }
+
+        world.setBlockState(pos, state.withProperty(LIT, true), flags);
+        if (!stack.isEmpty()) {
+            playLightSound(world, pos, stack);
+        }
+        consumeLightingItem(player, stack);
+    }
+
+    public static boolean isLightingItem(ItemStack stack) {
+        return !stack.isEmpty() && (stack.getItem() == Items.FLINT_AND_STEEL || stack.getItem() == Items.FIRE_CHARGE);
+    }
+
+    private static void playLightSound(World world, BlockPos pos, ItemStack stack) {
+        if (!stack.isEmpty() && stack.getItem() == Items.FIRE_CHARGE) {
+            world.playSound(null, pos, net.minecraft.init.SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.BLOCKS, 1.0F, (world.rand.nextFloat() - world.rand.nextFloat()) * 0.2F + 1.0F);
+        } else {
+            world.playSound(null, pos, net.minecraft.init.SoundEvents.ITEM_FLINTANDSTEEL_USE, SoundCategory.BLOCKS, 1.0F, world.rand.nextFloat() * 0.4F + 0.8F);
+        }
+    }
+
+    private static void consumeLightingItem(EntityPlayer player, ItemStack stack) {
+        if (player == null || stack.isEmpty() || player.capabilities.isCreativeMode) {
+            return;
+        }
+
+        if (stack.getItem() == Items.FLINT_AND_STEEL) {
+            stack.damageItem(1, player);
+        } else if (stack.getItem() == Items.FIRE_CHARGE) {
+            stack.shrink(1);
+        }
     }
 
     private void restoreFluidOrAir(World world, BlockPos pos, IBlockState state, int flags) {
@@ -189,7 +238,7 @@ public class CandleBlock extends Block implements IFluidloggable {
     @Override
     public EnumActionResult onFluidFill(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState here, @Nonnull FluidState newFluid, int blockFlags) {
         if (here.getValue(LIT)) {
-            extinguish(world, pos, here, blockFlags);
+            extinguish(null, world, pos, here, blockFlags);
         }
         return EnumActionResult.PASS;
     }
@@ -213,6 +262,15 @@ public class CandleBlock extends Block implements IFluidloggable {
     @Override
     public boolean overrideApplyDefaultsSetting() {
         return true;
+    }
+
+    @Override
+    public void onEntityWalk(World worldIn, BlockPos pos, Entity entityIn) {
+        IBlockState state = worldIn.getBlockState(pos);
+        if (!worldIn.isRemote && entityIn.isBurning() && canLight(worldIn, pos, state)) {
+            light(worldIn, pos, state, null, ItemStack.EMPTY, 3);
+        }
+        super.onEntityWalk(worldIn, pos, entityIn);
     }
 
     @Override

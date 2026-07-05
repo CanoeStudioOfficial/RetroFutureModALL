@@ -1,26 +1,38 @@
 package com.canoestudio.retrofuturemc.utils;
 
 import com.canoestudio.retrofuturemc.contents.blocks.CandleCakeBlock;
+import com.canoestudio.retrofuturemc.contents.blocks.CandleBlock;
 import com.canoestudio.retrofuturemc.contents.blocks.CopperBehavior;
 import com.canoestudio.retrofuturemc.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturemc.contents.items.ModItems;
 import com.canoestudio.retrofuturemc.sounds.ModSoundHandler;
+import net.minecraft.block.BlockDispenser;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockCake;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.dispenser.IBehaviorDispenseItem;
+import net.minecraft.dispenser.IBlockSource;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.projectile.EntityPotion;
+import net.minecraft.entity.projectile.EntitySmallFireball;
+import net.minecraft.entity.projectile.EntityThrowable;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
+import net.minecraft.potion.PotionUtils;
+import net.minecraft.init.PotionTypes;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
+import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.Event;
@@ -32,10 +44,15 @@ import java.util.Map;
 import java.util.UUID;
 
 public class RetroFutureBehaviorEvents {
+    private static boolean candleDispenserBehaviorRegistered = false;
     private static final DamageSource FREEZE = new DamageSource("freeze").setDamageBypassesArmor();
     private static final int TICKS_TO_FREEZE = 140;
     private static final int FREEZE_DAMAGE_INTERVAL = 40;
     private final Map<UUID, Integer> frozenTicks = new HashMap<>();
+
+    public RetroFutureBehaviorEvents() {
+        registerCandleDispenserBehavior();
+    }
 
     @SubscribeEvent
     public void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
@@ -50,6 +67,10 @@ public class RetroFutureBehaviorEvents {
         }
 
         if (handlePowderSnowPickup(world, pos, state, player, stack, event)) {
+            return;
+        }
+
+        if (handleCandleLighting(world, pos, state, player, stack, event)) {
             return;
         }
 
@@ -139,6 +160,32 @@ public class RetroFutureBehaviorEvents {
         event.setCancellationResult(EnumActionResult.SUCCESS);
     }
 
+    private boolean handleCandleLighting(World world, BlockPos pos, IBlockState state, EntityPlayer player, ItemStack stack, PlayerInteractEvent.RightClickBlock event) {
+        if (!CandleBlock.isLightingItem(stack)) {
+            return false;
+        }
+
+        if (CandleBlock.canLight(world, pos, state)) {
+            CandleBlock.light(world, pos, state, player, stack, 3);
+            event.setUseBlock(Event.Result.DENY);
+            event.setUseItem(Event.Result.DENY);
+            event.setCanceled(true);
+            event.setCancellationResult(EnumActionResult.SUCCESS);
+            return true;
+        }
+
+        if (CandleCakeBlock.canLight(state)) {
+            CandleCakeBlock.light(world, pos, state, player, stack, 3);
+            event.setUseBlock(Event.Result.DENY);
+            event.setUseItem(Event.Result.DENY);
+            event.setCanceled(true);
+            event.setCancellationResult(EnumActionResult.SUCCESS);
+            return true;
+        }
+
+        return false;
+    }
+
     @SubscribeEvent
     public void onLivingUpdate(LivingEvent.LivingUpdateEvent event) {
         EntityLivingBase entity = event.getEntityLiving();
@@ -167,6 +214,87 @@ public class RetroFutureBehaviorEvents {
         }
 
         updateFreeze(entity, inPowderSnow && !wearsLeatherArmor(entity));
+    }
+
+    @SubscribeEvent
+    public void onFireballImpact(ProjectileImpactEvent.Fireball event) {
+        if (!(event.getFireball() instanceof EntitySmallFireball)) {
+            return;
+        }
+
+        handleBurningProjectileImpact(event.getFireball().world, event.getRayTraceResult(), event);
+    }
+
+    @SubscribeEvent
+    public void onThrowableImpact(ProjectileImpactEvent.Throwable event) {
+        EntityThrowable projectile = event.getThrowable();
+        if (projectile instanceof EntityPotion) {
+            handleWaterPotionImpact((EntityPotion) projectile, event.getRayTraceResult());
+            return;
+        }
+
+        if (projectile.isBurning()) {
+            handleBurningProjectileImpact(projectile.world, event.getRayTraceResult(), event);
+        }
+    }
+
+    private void handleBurningProjectileImpact(World world, RayTraceResult hit, ProjectileImpactEvent event) {
+        if (world.isRemote || hit == null || hit.typeOfHit != RayTraceResult.Type.BLOCK) {
+            return;
+        }
+
+        BlockPos pos = hit.getBlockPos();
+        IBlockState state = world.getBlockState(pos);
+        if (lightCandleAt(world, pos, state)) {
+            event.setCanceled(true);
+            event.getEntity().setDead();
+        }
+    }
+
+    private void handleWaterPotionImpact(EntityPotion potion, RayTraceResult hit) {
+        World world = potion.world;
+        if (world.isRemote || PotionUtils.getPotionFromItem(potion.getPotion()) != PotionTypes.WATER || !PotionUtils.getEffectsFromStack(potion.getPotion()).isEmpty()) {
+            return;
+        }
+
+        if (hit != null && hit.typeOfHit == RayTraceResult.Type.BLOCK) {
+            BlockPos blockEffectPos = hit.getBlockPos().offset(hit.sideHit);
+            dowseCandleAt(world, hit.getBlockPos());
+            dowseCandleAt(world, blockEffectPos);
+            dowseCandleAt(world, blockEffectPos.offset(hit.sideHit.getOpposite()));
+            for (EnumFacing facing : EnumFacing.Plane.HORIZONTAL) {
+                dowseCandleAt(world, blockEffectPos.offset(facing));
+            }
+        }
+    }
+
+    private boolean lightCandleAt(World world, BlockPos pos, IBlockState state) {
+        if (CandleBlock.canLight(world, pos, state)) {
+            CandleBlock.light(world, pos, state, null, ItemStack.EMPTY, 3);
+            return true;
+        }
+
+        if (CandleCakeBlock.canLight(state)) {
+            CandleCakeBlock.light(world, pos, state, null, ItemStack.EMPTY, 3);
+            return true;
+        }
+
+        return false;
+    }
+
+    private boolean dowseCandleAt(World world, BlockPos pos) {
+        IBlockState state = world.getBlockState(pos);
+        if (CandleBlock.isLit(state)) {
+            CandleBlock.extinguish(null, world, pos, state, 3);
+            return true;
+        }
+
+        if (CandleCakeBlock.isLit(state)) {
+            CandleCakeBlock.extinguish(null, world, pos, state, 3);
+            return true;
+        }
+
+        return false;
     }
 
     private void updateFreeze(EntityLivingBase entity, boolean freezing) {
@@ -222,5 +350,42 @@ public class RetroFutureBehaviorEvents {
 
     private boolean isLeather(Item item) {
         return item == Items.LEATHER_HELMET || item == Items.LEATHER_CHESTPLATE || item == Items.LEATHER_LEGGINGS || item == Items.LEATHER_BOOTS;
+    }
+
+    private void registerCandleDispenserBehavior() {
+        if (candleDispenserBehaviorRegistered) {
+            return;
+        }
+
+        candleDispenserBehaviorRegistered = true;
+        wrapLightingDispenserBehavior(Items.FLINT_AND_STEEL);
+        wrapLightingDispenserBehavior(Items.FIRE_CHARGE);
+    }
+
+    private void wrapLightingDispenserBehavior(final Item item) {
+        final IBehaviorDispenseItem original = BlockDispenser.DISPENSE_BEHAVIOR_REGISTRY.getObject(item);
+        BlockDispenser.DISPENSE_BEHAVIOR_REGISTRY.putObject(item, new IBehaviorDispenseItem() {
+            @Override
+            public ItemStack dispense(IBlockSource source, ItemStack stack) {
+                World world = source.getWorld();
+                EnumFacing facing = source.getBlockState().getValue(BlockDispenser.FACING);
+                BlockPos targetPos = source.getBlockPos().offset(facing);
+                IBlockState targetState = world.getBlockState(targetPos);
+
+                if (lightCandleAt(world, targetPos, targetState)) {
+                    if (item == Items.FLINT_AND_STEEL) {
+                        if (stack.attemptDamageItem(1, world.rand, null)) {
+                            stack.setCount(0);
+                        }
+                    } else if (item == Items.FIRE_CHARGE) {
+                        stack.shrink(1);
+                    }
+                    world.playEvent(item == Items.FIRE_CHARGE ? 1018 : 1000, source.getBlockPos(), 0);
+                    return stack;
+                }
+
+                return original.dispense(source, stack);
+            }
+        });
     }
 }
