@@ -38,11 +38,41 @@ import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.IWorldGenerator;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCaveDecorator {
     private static final IBlockState STONE = Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.STONE);
     private static final IBlockState DEEPSLATE = ModBlocks.DeepSlate.getDefaultState();
+    private static final int GEODE_RARITY = 24;
+    private static final int GEODE_MIN_Y = 15;
+    private static final int GEODE_MAX_Y = 35;
+    private static final int GEODE_MIN_OFFSET = -16;
+    private static final int GEODE_MAX_OFFSET = 16;
+    private static final int GEODE_MIN_OUTER_WALL_DISTANCE = 4;
+    private static final int GEODE_MAX_OUTER_WALL_DISTANCE = 6;
+    private static final int GEODE_MIN_DISTRIBUTION_POINTS = 3;
+    private static final int GEODE_MAX_DISTRIBUTION_POINTS = 4;
+    private static final int GEODE_MIN_POINT_OFFSET = 1;
+    private static final int GEODE_MAX_POINT_OFFSET = 2;
+    private static final int GEODE_CRACK_POINT_OFFSET = 2;
+    private static final int GEODE_INVALID_BLOCKS_THRESHOLD = 1;
+    private static final double GEODE_FILLING = 1.7D;
+    private static final double GEODE_INNER_LAYER = 2.2D;
+    private static final double GEODE_MIDDLE_LAYER = 3.2D;
+    private static final double GEODE_OUTER_LAYER = 4.2D;
+    private static final double GEODE_CRACK_CHANCE = 0.95D;
+    private static final double GEODE_BASE_CRACK_SIZE = 2.0D;
+    private static final double GEODE_NOISE_MULTIPLIER = 0.05D;
+    private static final double GEODE_BUDDING_AMETHYST_CHANCE = 0.083D;
+    private static final double GEODE_CRYSTAL_PLACEMENT_CHANCE = 0.35D;
+    private static final int CAVE_DECORATION_ATTEMPTS = 72;
+    private static final int CAVE_AIR_SCAN_DISTANCE = 20;
+    private static final int LUSH_SURFACE_SCAN_DISTANCE = 16;
+    private static final int BETTER_CAVES_DECORATION_ATTEMPTS = 36;
+    private static final boolean GENERATE_LUSH_CAVES = false;
+    private static final boolean GENERATE_DRIPSTONE_CAVES = false;
     private static boolean betterCavesDecoratorRegistered;
 
     public static void registerBetterCavesDecorator() {
@@ -62,8 +92,11 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
         int blockZ = chunkZ * 16;
         generateOres(world, random, blockX, blockZ);
 
-        if (random.nextInt(24) == 0) {
-            generateAmethystGeode(world, random, new BlockPos(blockX + random.nextInt(16), 6 + random.nextInt(25), blockZ + random.nextInt(16)));
+        if (shouldGenerateAmethystGeode(world, random, blockX, blockZ)) {
+            generateAmethystGeode(world, random, new BlockPos(
+                    blockX + random.nextInt(16),
+                    randomRange(random, GEODE_MIN_Y, GEODE_MAX_Y),
+                    blockZ + random.nextInt(16)));
         }
 
         decorateCavesInWorld(world, random, blockX, blockZ);
@@ -75,7 +108,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
         World world = context.getWorld();
         Random random = new Random(world.getSeed() ^ (long)context.getChunkX() * 341873128712L ^ (long)context.getChunkZ() * 132897987541L);
 
-        for (int i = 0; i < 22; i++) {
+        for (int i = 0; i < BETTER_CAVES_DECORATION_ATTEMPTS; i++) {
             int x = random.nextInt(16);
             int z = random.nextInt(16);
             int y = 8 + random.nextInt(56);
@@ -84,14 +117,26 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
                 continue;
             }
 
-            if (sample.getCaveBiomeType() == BetterCavesCaveBiomeType.LUSH) {
+            CaveStyle fallbackStyle = CaveStyle.NORMAL;
+            if (GENERATE_LUSH_CAVES || GENERATE_DRIPSTONE_CAVES) {
+                fallbackStyle = classifyCaveStyle(world, new BlockPos(sample.getBlockX(), sample.getBlockY(), sample.getBlockZ()));
+            }
+
+            if (GENERATE_LUSH_CAVES && (sample.getCaveBiomeType() == BetterCavesCaveBiomeType.LUSH || shouldUseFallbackCaveStyle(sample, fallbackStyle, CaveStyle.LUSH))) {
                 decorateLushPrimer(context, random, x, y, z);
-            } else if (sample.getCaveBiomeType() == BetterCavesCaveBiomeType.DRIPSTONE) {
+            } else if (GENERATE_DRIPSTONE_CAVES && (sample.getCaveBiomeType() == BetterCavesCaveBiomeType.DRIPSTONE || shouldUseFallbackCaveStyle(sample, fallbackStyle, CaveStyle.DRIPSTONE))) {
                 decorateDripstonePrimer(context, random, x, y, z);
             } else if (random.nextInt(5) == 0) {
                 placeGlowLichenPrimer(context, random, x, y, z);
             }
         }
+    }
+
+    private boolean shouldUseFallbackCaveStyle(BetterCavesCaveSample sample, CaveStyle fallbackStyle, CaveStyle expectedStyle) {
+        return fallbackStyle == expectedStyle
+                && sample.getFluidState() == null
+                && (sample.getCaveBiomeType() == BetterCavesCaveBiomeType.NORMAL
+                || sample.getCaveBiomeType() == BetterCavesCaveBiomeType.NONE);
     }
 
     private void generateOres(World world, Random random, int blockX, int blockZ) {
@@ -126,73 +171,233 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
         }
     }
 
-    private boolean generateAmethystGeode(World world, Random random, BlockPos center) {
-        if (!isNaturalStone(world.getBlockState(center))) {
+    private boolean shouldGenerateAmethystGeode(World world, Random random, int blockX, int blockZ) {
+        if (random.nextInt(GEODE_RARITY) != 0) {
             return false;
         }
 
-        int radius = 4 + random.nextInt(2);
-        boolean crack = random.nextFloat() < 0.35F;
-        EnumFacing crackFace = EnumFacing.HORIZONTALS[random.nextInt(EnumFacing.HORIZONTALS.length)];
+        Biome biome = world.getBiome(new BlockPos(blockX + 8, 0, blockZ + 8));
+        return !BiomeDictionary.hasType(biome, BiomeDictionary.Type.OCEAN);
+    }
 
-        for (int x = -radius - 2; x <= radius + 2; x++) {
-            for (int y = -radius - 2; y <= radius + 2; y++) {
-                for (int z = -radius - 2; z <= radius + 2; z++) {
-                    BlockPos pos = center.add(x, y, z);
-                    double distance = Math.sqrt(x * x + y * y + z * z) + random.nextDouble() * 0.55D;
-                    boolean inCrack = crack && isInCrack(x, y, z, crackFace, radius);
+    private boolean generateAmethystGeode(World world, Random random, BlockPos origin) {
+        int pointCount = randomRange(random, GEODE_MIN_DISTRIBUTION_POINTS, GEODE_MAX_DISTRIBUTION_POINTS);
+        List<GeodePoint> shellPoints = new ArrayList<>();
+        int invalidPoints = 0;
 
-                    if (distance <= radius - 1.7D || inCrack && distance <= radius + 1.1D) {
-                        world.setBlockState(pos, Blocks.AIR.getDefaultState(), 2);
-                    } else if (distance <= radius - 0.7D) {
-                        world.setBlockState(pos, random.nextFloat() < 0.18F ? ModBlocks.BUDDING_AMETHYST.getDefaultState() : ModBlocks.AMETHYST_BLOCK.getDefaultState(), 2);
-                    } else if (distance <= radius + 0.25D) {
-                        world.setBlockState(pos, ModBlocks.CALCITE.getDefaultState(), 2);
-                    } else if (distance <= radius + 1.2D) {
-                        world.setBlockState(pos, ModBlocks.SMOOTH_BASALT.getDefaultState(), 2);
+        for (int i = 0; i < pointCount; i++) {
+            BlockPos point = origin.add(
+                    randomRange(random, GEODE_MIN_OUTER_WALL_DISTANCE, GEODE_MAX_OUTER_WALL_DISTANCE),
+                    randomRange(random, GEODE_MIN_OUTER_WALL_DISTANCE, GEODE_MAX_OUTER_WALL_DISTANCE),
+                    randomRange(random, GEODE_MIN_OUTER_WALL_DISTANCE, GEODE_MAX_OUTER_WALL_DISTANCE));
+
+            if (isInvalidGeodeSample(world.getBlockState(point))) {
+                invalidPoints++;
+                if (invalidPoints > GEODE_INVALID_BLOCKS_THRESHOLD) {
+                    return false;
+                }
+            }
+
+            shellPoints.add(new GeodePoint(point, randomRange(random, GEODE_MIN_POINT_OFFSET, GEODE_MAX_POINT_OFFSET)));
+        }
+
+        List<BlockPos> crackPoints = new ArrayList<>();
+        boolean shouldGenerateCrack = random.nextDouble() < GEODE_CRACK_CHANCE;
+        if (shouldGenerateCrack) {
+            addGeodeCrackPoints(random, origin, pointCount, crackPoints);
+        }
+
+        double crackSizeAdjustment = (double)pointCount / (double)GEODE_MAX_OUTER_WALL_DISTANCE;
+        double innerAir = inverseSqrt(GEODE_FILLING);
+        double innermostBlockLayer = inverseSqrt(GEODE_INNER_LAYER + crackSizeAdjustment);
+        double innerCrust = inverseSqrt(GEODE_MIDDLE_LAYER + crackSizeAdjustment);
+        double outerCrust = inverseSqrt(GEODE_OUTER_LAYER + crackSizeAdjustment);
+        double crackSize = inverseSqrt(GEODE_BASE_CRACK_SIZE + random.nextDouble() / 2.0D + (pointCount > 3 ? crackSizeAdjustment : 0.0D));
+        List<BlockPos> potentialCrystalPlacements = new ArrayList<>();
+
+        for (int x = GEODE_MIN_OFFSET; x <= GEODE_MAX_OFFSET; x++) {
+            for (int y = GEODE_MIN_OFFSET; y <= GEODE_MAX_OFFSET; y++) {
+                for (int z = GEODE_MIN_OFFSET; z <= GEODE_MAX_OFFSET; z++) {
+                    BlockPos pos = origin.add(x, y, z);
+                    double noiseOffset = smoothNoise(world.getSeed() ^ 0x47454F44454CL, pos.getX() * 0.12D, pos.getY() * 0.12D, pos.getZ() * 0.12D) * GEODE_NOISE_MULTIPLIER;
+                    double shellDistance = 0.0D;
+                    double crackDistance = 0.0D;
+
+                    for (GeodePoint point : shellPoints) {
+                        shellDistance += inverseSqrt(distanceSq(pos, point.pos) + point.offset) + noiseOffset;
+                    }
+
+                    for (BlockPos crackPoint : crackPoints) {
+                        crackDistance += inverseSqrt(distanceSq(pos, crackPoint) + GEODE_CRACK_POINT_OFFSET) + noiseOffset;
+                    }
+
+                    if (shellDistance < outerCrust) {
+                        continue;
+                    }
+
+                    if (shouldGenerateCrack && crackDistance >= crackSize && shellDistance < innerAir) {
+                        if (setGeodeBlock(world, pos, Blocks.AIR.getDefaultState(), 2)) {
+                            notifyAdjacentFluids(world, pos);
+                        }
+                    } else if (shellDistance >= innerAir) {
+                        setGeodeBlock(world, pos, Blocks.AIR.getDefaultState(), 2);
+                    } else if (shellDistance >= innermostBlockLayer) {
+                        boolean budding = random.nextDouble() < GEODE_BUDDING_AMETHYST_CHANCE;
+                        if (setGeodeBlock(world, pos, budding ? ModBlocks.BUDDING_AMETHYST.getDefaultState() : ModBlocks.AMETHYST_BLOCK.getDefaultState(), 2)
+                                && budding && random.nextDouble() < GEODE_CRYSTAL_PLACEMENT_CHANCE) {
+                            potentialCrystalPlacements.add(pos);
+                        }
+                    } else if (shellDistance >= innerCrust) {
+                        setGeodeBlock(world, pos, ModBlocks.CALCITE.getDefaultState(), 2);
+                    } else {
+                        setGeodeBlock(world, pos, getGeodeOuterLayerState(world, pos), 2);
                     }
                 }
             }
         }
 
-        placeAmethystBuds(world, random, center, radius);
+        for (BlockPos crystalPos : potentialCrystalPlacements) {
+            placeGeodeCrystal(world, random, crystalPos);
+        }
+
         return true;
     }
 
-    private boolean isInCrack(int x, int y, int z, EnumFacing face, int radius) {
-        int along = face.getAxis() == EnumFacing.Axis.X ? x * face.getXOffset() : z * face.getZOffset();
-        int across = face.getAxis() == EnumFacing.Axis.X ? Math.abs(z) : Math.abs(x);
-        return along > radius - 2 && across <= 1 && y >= -2 && y <= 2;
+    private void addGeodeCrackPoints(Random random, BlockPos origin, int pointCount, List<BlockPos> crackPoints) {
+        int crackOffset = pointCount * 2 + 1;
+        int side = random.nextInt(4);
+
+        if (side == 0) {
+            crackPoints.add(origin.add(crackOffset, 7, 0));
+            crackPoints.add(origin.add(crackOffset, 5, 0));
+            crackPoints.add(origin.add(crackOffset, 1, 0));
+        } else if (side == 1) {
+            crackPoints.add(origin.add(0, 7, crackOffset));
+            crackPoints.add(origin.add(0, 5, crackOffset));
+            crackPoints.add(origin.add(0, 1, crackOffset));
+        } else if (side == 2) {
+            crackPoints.add(origin.add(crackOffset, 7, crackOffset));
+            crackPoints.add(origin.add(crackOffset, 5, crackOffset));
+            crackPoints.add(origin.add(crackOffset, 1, crackOffset));
+        } else {
+            crackPoints.add(origin.add(0, 7, 0));
+            crackPoints.add(origin.add(0, 5, 0));
+            crackPoints.add(origin.add(0, 1, 0));
+        }
     }
 
-    private void placeAmethystBuds(World world, Random random, BlockPos center, int radius) {
-        for (int i = 0; i < 28; i++) {
-            BlockPos pos = center.add(random.nextInt(radius * 2 + 1) - radius, random.nextInt(radius * 2 + 1) - radius, random.nextInt(radius * 2 + 1) - radius);
-            if (world.getBlockState(pos).getBlock() != Blocks.AIR) {
-                continue;
-            }
-            for (EnumFacing facing : EnumFacing.values()) {
-                BlockPos support = pos.offset(facing.getOpposite());
-                if (world.getBlockState(support).getBlock() == ModBlocks.BUDDING_AMETHYST && random.nextInt(3) == 0) {
-                    Block block = random.nextInt(4) == 0 ? ModBlocks.AMETHYST_CLUSTER : random.nextBoolean() ? ModBlocks.LARGE_AMETHYST_BUD : ModBlocks.MEDIUM_AMETHYST_BUD;
-                    world.setBlockState(pos, block.getDefaultState().withProperty(AmethystClusterBlock.FACING, facing), 2);
-                    break;
+    private IBlockState getGeodeOuterLayerState(World world, BlockPos pos) {
+        double texture = smoothNoise(world.getSeed() ^ 0x444447454F4445L, pos.getX() * 0.35D, pos.getY() * 0.35D, pos.getZ() * 0.35D);
+        return texture > -0.35D ? ModBlocks.TUFF.getDefaultState() : STONE;
+    }
+
+    private void placeGeodeCrystal(World world, Random random, BlockPos supportPos) {
+        Block crystal = getRandomGeodeCrystal(random);
+        int start = random.nextInt(EnumFacing.values().length);
+
+        for (int i = 0; i < EnumFacing.values().length; i++) {
+            EnumFacing facing = EnumFacing.values()[(start + i) % EnumFacing.values().length];
+            BlockPos placePos = supportPos.offset(facing);
+            IBlockState target = world.getBlockState(placePos);
+
+            if (canGeodeClusterGrowAtState(world, placePos, target) && canReplaceGeodeBlock(world, placePos, target)) {
+                IBlockState crystalState = crystal.getDefaultState().withProperty(AmethystClusterBlock.FACING, facing);
+                FluidState fluidState = getFluidState(world, placePos, target);
+                world.setBlockState(placePos, crystalState, 3);
+                if (fluidState.getFluid() == FluidRegistry.WATER) {
+                    FluidloggedUtils.setFluidState(world, placePos, world.getBlockState(placePos), fluidState, false, 3);
                 }
+                return;
+            }
+        }
+    }
+
+    private Block getRandomGeodeCrystal(Random random) {
+        int choice = random.nextInt(4);
+        if (choice == 0) {
+            return ModBlocks.SMALL_AMETHYST_BUD;
+        }
+        if (choice == 1) {
+            return ModBlocks.MEDIUM_AMETHYST_BUD;
+        }
+        if (choice == 2) {
+            return ModBlocks.LARGE_AMETHYST_BUD;
+        }
+        return ModBlocks.AMETHYST_CLUSTER;
+    }
+
+    private boolean isInvalidGeodeSample(IBlockState state) {
+        Block block = state.getBlock();
+        Material material = state.getMaterial();
+        return block == Blocks.AIR
+                || block == Blocks.BEDROCK
+                || block == Blocks.ICE
+                || block == Blocks.PACKED_ICE
+                || material == Material.WATER
+                || material == Material.LAVA;
+    }
+
+    private boolean setGeodeBlock(World world, BlockPos pos, IBlockState state, int flags) {
+        IBlockState current = world.getBlockState(pos);
+        if (!canReplaceGeodeBlock(world, pos, current)) {
+            return false;
+        }
+
+        world.setBlockState(pos, state, flags);
+        return true;
+    }
+
+    private boolean canReplaceGeodeBlock(World world, BlockPos pos, IBlockState state) {
+        Block block = state.getBlock();
+        return block != Blocks.BEDROCK
+                && block != Blocks.MOB_SPAWNER
+                && block != Blocks.CHEST
+                && block != Blocks.TRAPPED_CHEST
+                && block != Blocks.END_PORTAL_FRAME
+                && block != Blocks.END_PORTAL
+                && block != Blocks.PORTAL
+                && block != Blocks.COMMAND_BLOCK
+                && block != Blocks.CHAIN_COMMAND_BLOCK
+                && block != Blocks.REPEATING_COMMAND_BLOCK
+                && block != Blocks.STRUCTURE_BLOCK
+                && !block.hasTileEntity(state);
+    }
+
+    private boolean canGeodeClusterGrowAtState(World world, BlockPos pos, IBlockState state) {
+        return state.getBlock() == Blocks.AIR
+                || state.getMaterial() == Material.WATER
+                || FluidloggedUtils.getFluidState(world, pos, state).getFluid() == FluidRegistry.WATER;
+    }
+
+    private FluidState getFluidState(World world, BlockPos pos, IBlockState state) {
+        return state.getMaterial() == Material.WATER ? FluidState.of(state) : FluidloggedUtils.getFluidState(world, pos, state);
+    }
+
+    private void notifyAdjacentFluids(World world, BlockPos pos) {
+        for (EnumFacing facing : EnumFacing.values()) {
+            BlockPos adjacent = pos.offset(facing);
+            IBlockState state = world.getBlockState(adjacent);
+            if (state.getMaterial().isLiquid()) {
+                world.scheduleUpdate(adjacent, state.getBlock(), 0);
             }
         }
     }
 
     private void decorateCavesInWorld(World world, Random random, int blockX, int blockZ) {
-        for (int i = 0; i < 28; i++) {
-            BlockPos pos = new BlockPos(blockX + random.nextInt(16), 8 + random.nextInt(58), blockZ + random.nextInt(16));
-            if (!world.isAirBlock(pos)) {
+        for (int i = 0; i < CAVE_DECORATION_ATTEMPTS; i++) {
+            BlockPos pos = findCaveAirInColumn(world,
+                    blockX + random.nextInt(16),
+                    8 + random.nextInt(62),
+                    blockZ + random.nextInt(16),
+                    CAVE_AIR_SCAN_DISTANCE);
+            if (pos == null) {
                 continue;
             }
 
             CaveStyle style = classifyCaveStyle(world, pos);
-            if (style == CaveStyle.LUSH) {
+            if (GENERATE_LUSH_CAVES && style == CaveStyle.LUSH) {
                 decorateLushWorld(world, random, pos);
-            } else if (style == CaveStyle.DRIPSTONE) {
+            } else if (GENERATE_DRIPSTONE_CAVES && style == CaveStyle.DRIPSTONE) {
                 decorateDripstoneWorld(world, random, pos);
             } else if (random.nextInt(4) == 0) {
                 placeGlowLichenWorld(world, random, pos);
@@ -206,10 +411,13 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
                 || BiomeDictionary.hasType(biome, BiomeDictionary.Type.WET)
                 || BiomeDictionary.hasType(biome, BiomeDictionary.Type.JUNGLE)
                 || BiomeDictionary.hasType(biome, BiomeDictionary.Type.SWAMP);
-        double region = smoothNoise(world.getSeed() ^ 0x4C555348L, pos.getX() * 0.018D, 0.0D, pos.getZ() * 0.018D);
-        double detail = smoothNoise(world.getSeed() ^ 0x44524950L, pos.getX() * 0.025D, pos.getY() * 0.03D, pos.getZ() * 0.025D);
+        double region = smoothNoise(world.getSeed() ^ 0x4C555348L, pos.getX() * 0.014D, 0.0D, pos.getZ() * 0.014D);
+        double detail = smoothNoise(world.getSeed() ^ 0x44524950L, pos.getX() * 0.023D, pos.getY() * 0.032D, pos.getZ() * 0.023D);
+        double patch = smoothNoise(world.getSeed() ^ 0x4C55534843415645L, pos.getX() * 0.045D, pos.getY() * 0.04D, pos.getZ() * 0.045D);
+        double lushScore = region + detail * 0.35D + patch * 0.15D;
+        double lushThreshold = wet ? 0.02D : 0.48D;
 
-        if (wet && region + detail * 0.25D > 0.12D && pos.getY() > 10 && pos.getY() < 70) {
+        if (pos.getY() >= 8 && pos.getY() <= 72 && lushScore > lushThreshold) {
             return CaveStyle.LUSH;
         }
         if (region * 0.35D - detail > 0.18D && pos.getY() < 74) {
@@ -219,19 +427,22 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
     }
 
     private void decorateLushWorld(World world, Random random, BlockPos pos) {
-        BlockPos floor = scan(world, pos, EnumFacing.DOWN, 10);
-        BlockPos ceiling = scan(world, pos, EnumFacing.UP, 10);
+        BlockPos floor = scan(world, pos, EnumFacing.DOWN, LUSH_SURFACE_SCAN_DISTANCE);
+        BlockPos ceiling = scan(world, pos, EnumFacing.UP, LUSH_SURFACE_SCAN_DISTANCE);
         if (floor != null) {
-            placeMossPatchWorld(world, random, floor.up(), 3 + random.nextInt(4));
-            if (random.nextInt(3) == 0) {
+            placeMossPatchWorld(world, random, floor.up(), 4 + random.nextInt(4));
+            if (random.nextBoolean()) {
                 placeClayAndDripleafWorld(world, random, floor.up());
             }
         }
         if (ceiling != null) {
-            if (random.nextInt(3) == 0) {
+            if (isLushGroundReplaceable(world.getBlockState(ceiling)) && random.nextBoolean()) {
+                world.setBlockState(ceiling, ModBlocks.MOSS_BLOCK.getDefaultState(), 2);
+            }
+            if (random.nextBoolean()) {
                 placeCaveVineWorld(world, random, ceiling.down());
             }
-            if (random.nextInt(8) == 0 && world.isAirBlock(ceiling.down())) {
+            if (random.nextInt(6) == 0 && world.isAirBlock(ceiling.down())) {
                 world.setBlockState(ceiling.down(), ModBlocks.SPORE_BLOSSOM.getDefaultState(), 2);
             }
         }
@@ -258,11 +469,11 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
                 }
                 BlockPos top = center.add(x, 0, z);
                 BlockPos ground = top.down();
-                if (world.isAirBlock(top) && isNaturalStone(world.getBlockState(ground))) {
+                if (world.isAirBlock(top) && isLushGroundReplaceable(world.getBlockState(ground))) {
                     world.setBlockState(ground, ModBlocks.MOSS_BLOCK.getDefaultState(), 2);
-                    if (random.nextInt(5) == 0) {
+                    if (random.nextInt(4) == 0) {
                         world.setBlockState(top, ModBlocks.MOSS_CARPET.getDefaultState(), 2);
-                    } else if (random.nextInt(8) == 0) {
+                    } else if (random.nextInt(9) == 0) {
                         world.setBlockState(top, (random.nextBoolean() ? ModBlocks.Azalea : ModBlocks.Flowering_Azalea).getDefaultState(), 2);
                     }
                 }
@@ -273,7 +484,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
     private void placeClayAndDripleafWorld(World world, Random random, BlockPos center) {
         for (int i = 0; i < 12; i++) {
             BlockPos pos = center.add(random.nextInt(7) - 3, 0, random.nextInt(7) - 3);
-            if (world.isAirBlock(pos) && isNaturalStone(world.getBlockState(pos.down()))) {
+            if (world.isAirBlock(pos) && isLushGroundReplaceable(world.getBlockState(pos.down()))) {
                 world.setBlockState(pos.down(), Blocks.CLAY.getDefaultState(), 2);
                 if (random.nextBoolean() && world.isAirBlock(pos.up())) {
                     ((SmallDripleaf)ModBlocks.SMALL_DRIPLEAF).placeAt(world, pos, EnumFacing.HORIZONTALS[random.nextInt(EnumFacing.HORIZONTALS.length)], 2);
@@ -289,6 +500,36 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
                 }
             }
         }
+    }
+
+    private BlockPos findCaveAirInColumn(World world, int x, int startY, int z, int distance) {
+        BlockPos pos = getDecoratableCaveAir(world, x, startY, z);
+        if (pos != null) {
+            return pos;
+        }
+
+        for (int offset = 1; offset <= distance; offset++) {
+            pos = getDecoratableCaveAir(world, x, startY + offset, z);
+            if (pos != null) {
+                return pos;
+            }
+
+            pos = getDecoratableCaveAir(world, x, startY - offset, z);
+            if (pos != null) {
+                return pos;
+            }
+        }
+
+        return null;
+    }
+
+    private BlockPos getDecoratableCaveAir(World world, int x, int y, int z) {
+        if (y < 5 || y > 86) {
+            return null;
+        }
+
+        BlockPos pos = new BlockPos(x, y, z);
+        return world.isAirBlock(pos) && !world.canSeeSky(pos) ? pos : null;
     }
 
     private void placeCaveVineWorld(World world, Random random, BlockPos start) {
@@ -365,19 +606,29 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
     }
 
     private void decorateLushPrimer(BetterCavesCaveDecorationContext context, Random random, int x, int y, int z) {
-        int floor = scanPrimer(context, x, y, z, EnumFacing.DOWN, 10);
-        int ceiling = scanPrimer(context, x, y, z, EnumFacing.UP, 10);
+        int floor = scanPrimer(context, x, y, z, EnumFacing.DOWN, LUSH_SURFACE_SCAN_DISTANCE);
+        int ceiling = scanPrimer(context, x, y, z, EnumFacing.UP, LUSH_SURFACE_SCAN_DISTANCE);
         if (floor >= 0) {
-            for (int i = 0; i < 12; i++) {
-                int px = Math.max(0, Math.min(15, x + random.nextInt(7) - 3));
-                int pz = Math.max(0, Math.min(15, z + random.nextInt(7) - 3));
-                if (isAir(context.getBlockState(px, floor + 1, pz)) && isNaturalStone(context.getBlockState(px, floor, pz))) {
+            for (int i = 0; i < 20; i++) {
+                int px = Math.max(0, Math.min(15, x + random.nextInt(9) - 4));
+                int pz = Math.max(0, Math.min(15, z + random.nextInt(9) - 4));
+                if (isAir(context.getBlockState(px, floor + 1, pz)) && isLushGroundReplaceable(context.getBlockState(px, floor, pz))) {
                     context.setBlockState(px, floor, pz, ModBlocks.MOSS_BLOCK.getDefaultState());
                     if (random.nextInt(4) == 0 && floor + 1 < 255) {
                         context.setBlockState(px, floor + 1, pz, ModBlocks.MOSS_CARPET.getDefaultState());
+                    } else if (random.nextInt(12) == 0 && floor + 1 < 255) {
+                        context.setBlockState(px, floor + 1, pz, (random.nextBoolean() ? ModBlocks.Azalea : ModBlocks.Flowering_Azalea).getDefaultState());
+                    } else if (random.nextInt(10) == 0 && floor + 1 < 255) {
+                        context.setBlockState(px, floor, pz, Blocks.CLAY.getDefaultState());
                     }
                 }
             }
+        }
+        if (ceiling >= 0 && isLushGroundReplaceable(context.getBlockState(x, ceiling, z)) && random.nextBoolean()) {
+            context.setBlockState(x, ceiling, z, ModBlocks.MOSS_BLOCK.getDefaultState());
+        }
+        if (ceiling >= 0 && random.nextInt(6) == 0 && ceiling > 0 && isAir(context.getBlockState(x, ceiling - 1, z))) {
+            context.setBlockState(x, ceiling - 1, z, ModBlocks.SPORE_BLOSSOM.getDefaultState());
         }
         if (ceiling >= 0 && random.nextBoolean()) {
             int length = 1 + random.nextInt(5);
@@ -386,7 +637,11 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
                     break;
                 }
                 boolean berries = random.nextInt(5) == 0;
-                context.setBlockState(x, ceiling - i, z, (i == length ? ModBlocks.CAVE_VINE : ModBlocks.CAVE_VINE_PLANT).getDefaultState().withProperty(CaveVinePlant.BERRIES, berries));
+                if (i == length) {
+                    context.setBlockState(x, ceiling - i, z, ModBlocks.CAVE_VINE.getDefaultState().withProperty(CaveVine.AGE, 1).withProperty(CaveVine.BERRIES, berries));
+                } else {
+                    context.setBlockState(x, ceiling - i, z, ModBlocks.CAVE_VINE_PLANT.getDefaultState().withProperty(CaveVinePlant.BERRIES, berries));
+                }
             }
         }
     }
@@ -451,6 +706,16 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
         return block == Blocks.STONE || block == ModBlocks.DeepSlate || block == ModBlocks.TUFF || block == ModBlocks.DRIPSTONE_BLOCK;
     }
 
+    private boolean isLushGroundReplaceable(IBlockState state) {
+        Block block = state.getBlock();
+        return isNaturalStone(state)
+                || block == Blocks.DIRT
+                || block == Blocks.GRASS
+                || block == Blocks.GRAVEL
+                || block == Blocks.CLAY
+                || block == ModBlocks.ROOTED_DIRT;
+    }
+
     private boolean isAir(IBlockState state) {
         return state.getBlock() == Blocks.AIR;
     }
@@ -464,6 +729,21 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
         world.setBlockState(pos, state, flags);
         FluidloggedUtils.setFluidState(world, pos, world.getBlockState(pos), fluidState, false, flags);
         world.scheduleUpdate(pos, Blocks.WATER, Blocks.WATER.tickRate(world));
+    }
+
+    private static int randomRange(Random random, int min, int max) {
+        return min + random.nextInt(max - min + 1);
+    }
+
+    private static double inverseSqrt(double value) {
+        return 1.0D / Math.sqrt(value);
+    }
+
+    private static double distanceSq(BlockPos first, BlockPos second) {
+        double x = first.getX() - second.getX();
+        double y = first.getY() - second.getY();
+        double z = first.getZ() - second.getZ();
+        return x * x + y * y + z * z;
     }
 
     private static double smoothNoise(long seed, double x, double y, double z) {
@@ -508,5 +788,15 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
         NORMAL,
         LUSH,
         DRIPSTONE
+    }
+
+    private static class GeodePoint {
+        private final BlockPos pos;
+        private final int offset;
+
+        private GeodePoint(BlockPos pos, int offset) {
+            this.pos = pos;
+            this.offset = offset;
+        }
     }
 }
