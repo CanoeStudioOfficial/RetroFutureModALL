@@ -1,6 +1,5 @@
 package com.canoestudio.retrofuturemc;
 
-import com.canoestudio.retrofuturemc.contents.world.command.CommandLocateRetroFutureLushCave;
 import com.canoestudio.retrofuturemc.utils.proxy.CommonProxy;
 import com.canoestudio.retrofuturemc.retrofuturemc.Tags;
 import com.canoestudio.retrofuturemc.utils.RetroFutureBehaviorEvents;
@@ -11,7 +10,6 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -33,9 +31,4 @@ public class RetroFuturemc {
 
     @Mod.EventHandler
     public void postInit(FMLPostInitializationEvent event) { proxy.postInit(event); }
-
-    @Mod.EventHandler
-    public void serverStarting(FMLServerStartingEvent event) {
-        event.registerServerCommand(new CommandLocateRetroFutureLushCave());
-    }
 }
