@@ -8,6 +8,7 @@ import net.minecraft.util.math.MathHelper;
 
 public class ModelGoat extends ModelBase {
     private final ModelRenderer head;
+    private final ModelRenderer nose;
     private final ModelRenderer leftHorn;
     private final ModelRenderer rightHorn;
     private final ModelRenderer body;
@@ -21,11 +22,16 @@ public class ModelGoat extends ModelBase {
         textureHeight = 64;
 
         head = new ModelRenderer(this, 0, 0);
-        head.setRotationPoint(1.0F, 14.0F, -6.0F);
-        head.setTextureOffset(34, 46).addBox(-3.0F, -12.0F, -16.0F, 5, 7, 10);
+        head.setRotationPoint(1.0F, 14.0F, 0.0F);
         head.setTextureOffset(2, 61).addBox(-6.0F, -11.0F, -10.0F, 3, 2, 1);
         head.setTextureOffset(2, 61).addBox(2.0F, -11.0F, -10.0F, 3, 2, 1);
         head.setTextureOffset(23, 52).addBox(-0.5F, -3.0F, -14.0F, 0, 7, 5);
+
+        nose = new ModelRenderer(this, 34, 46);
+        nose.setRotationPoint(0.0F, -8.0F, -8.0F);
+        nose.rotateAngleX = 0.9599F;
+        nose.addBox(-3.0F, -4.0F, -8.0F, 5, 7, 10);
+        head.addChild(nose);
 
         leftHorn = new ModelRenderer(this, 12, 55);
         leftHorn.setRotationPoint(0.0F, 0.0F, 0.0F);
@@ -131,10 +137,13 @@ public class ModelGoat extends ModelBase {
     private void resetPose() {
         head.rotationPointX = 1.0F;
         head.rotationPointY = 14.0F;
-        head.rotationPointZ = -6.0F;
+        head.rotationPointZ = 0.0F;
         head.rotateAngleX = 0.0F;
         head.rotateAngleY = 0.0F;
         head.rotateAngleZ = 0.0F;
+        nose.rotateAngleX = 0.9599F;
+        nose.rotateAngleY = 0.0F;
+        nose.rotateAngleZ = 0.0F;
 
         body.rotationPointY = 24.0F;
         body.rotateAngleX = 0.0F;
