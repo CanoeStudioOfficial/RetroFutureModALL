@@ -26,6 +26,8 @@ entity.axolotl.name=Axolotl
 entity.retrofuturemc.axolotl.name=Axolotl
 entity.brown_mooshroom.name=Brown Mooshroom
 entity.retrofuturemc.brown_mooshroom.name=Brown Mooshroom
+entity.goat.name=Goat
+entity.retrofuturemc.goat.name=Goat
 entity.MushroomCow.name=Red Mooshroom
 
 subtitles.entity.axolotl.attack=Axolotl attacks
@@ -136,6 +138,7 @@ item.retrofuturemc.raw_iron.name=Raw Iron
 item.retrofuturemc.raw_gold.name=Raw Gold
 item.retrofuturemc.amethyst_shard.name=Amethyst Shard
 item.retrofuturemc.glow_ink_sac.name=Glow Ink Sac
+item.retrofuturemc.goat_horn.name=Goat Horn
 item.retrofuturemc.powder_snow_bucket.name=Powder Snow Bucket
 tile.retrofuturemc.candle_cake.name=Candle Cake
 tile.retrofuturemc.white_candle_cake.name=White Candle Cake

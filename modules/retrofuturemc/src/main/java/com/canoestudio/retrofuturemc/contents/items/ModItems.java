@@ -20,5 +20,6 @@ public class ModItems {
     public static final Item RAW_GOLD = new SimpleItemCreator("Raw_Gold");
     public static final Item AMETHYST_SHARD = new SimpleItemCreator("Amethyst_Shard");
     public static final Item GLOW_INK_SAC = new SimpleItemCreator("Glow_Ink_Sac");
+    public static final Item GOAT_HORN = new SimpleItemCreator("Goat_Horn").setMaxStackSize(1);
     public static final Item POWDER_SNOW_BUCKET = new ItemPowderSnowBucket();
 }

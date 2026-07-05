@@ -26,6 +26,8 @@ entity.axolotl.name=美西螈
 entity.retrofuturemc.axolotl.name=美西螈
 entity.brown_mooshroom.name=棕色哞菇
 entity.retrofuturemc.brown_mooshroom.name=棕色哞菇
+entity.goat.name=山羊
+entity.retrofuturemc.goat.name=山羊
 entity.MushroomCow.name=红色哞菇
 
 subtitles.entity.axolotl.attack=美西螈攻击
@@ -136,6 +138,7 @@ item.retrofuturemc.raw_iron.name=粗铁
 item.retrofuturemc.raw_gold.name=粗金
 item.retrofuturemc.amethyst_shard.name=紫水晶碎片
 item.retrofuturemc.glow_ink_sac.name=荧光墨囊
+item.retrofuturemc.goat_horn.name=山羊角
 item.retrofuturemc.powder_snow_bucket.name=细雪桶
 tile.retrofuturemc.candle_cake.name=蜡烛蛋糕
 tile.retrofuturemc.white_candle_cake.name=白色蜡烛蛋糕

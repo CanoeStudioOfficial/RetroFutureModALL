@@ -3,6 +3,7 @@ package com.canoestudio.retrofuturemc.utils;
 import com.canoestudio.retrofuturemc.contents.blocks.CandleCakeBlock;
 import com.canoestudio.retrofuturemc.contents.blocks.CandleBlock;
 import com.canoestudio.retrofuturemc.contents.blocks.CopperBehavior;
+import com.canoestudio.retrofuturemc.contents.blocks.LightningRodBlock;
 import com.canoestudio.retrofuturemc.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturemc.contents.items.ModItems;
 import com.canoestudio.retrofuturemc.sounds.ModSoundHandler;
@@ -12,7 +13,9 @@ import net.minecraft.block.BlockCake;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.dispenser.IBehaviorDispenseItem;
 import net.minecraft.dispenser.IBlockSource;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityPotion;
 import net.minecraft.entity.projectile.EntitySmallFireball;
@@ -32,15 +35,21 @@ import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.oredict.OreDictionary;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.UUID;
 
 public class RetroFutureBehaviorEvents {
@@ -48,6 +57,7 @@ public class RetroFutureBehaviorEvents {
     private static final DamageSource FREEZE = new DamageSource("freeze").setDamageBypassesArmor();
     private static final int TICKS_TO_FREEZE = 140;
     private static final int FREEZE_DAMAGE_INTERVAL = 40;
+    private static final double LIGHTNING_STRIKE_EPSILON = 1.0E-6D;
     private final Map<UUID, Integer> frozenTicks = new HashMap<>();
 
     public RetroFutureBehaviorEvents() {
@@ -75,6 +85,63 @@ public class RetroFutureBehaviorEvents {
         }
 
         handleCandleCakePlacement(world, pos, state, player, stack, event);
+    }
+
+    @SubscribeEvent
+    public void onChunkLoad(ChunkEvent.Load event) {
+        if (!(event.getWorld() instanceof WorldServer)) {
+            return;
+        }
+
+        LightningRodData data = LightningRodData.get((WorldServer) event.getWorld());
+        Chunk chunk = event.getChunk();
+        ExtendedBlockStorage[] storageArray = chunk.getBlockStorageArray();
+        for (ExtendedBlockStorage storage : storageArray) {
+            if (storage == null || storage.isEmpty()) {
+                continue;
+            }
+
+            int baseY = storage.getYLocation();
+            for (int x = 0; x < 16; ++x) {
+                for (int y = 0; y < 16; ++y) {
+                    for (int z = 0; z < 16; ++z) {
+                        if (storage.get(x, y, z).getBlock() instanceof LightningRodBlock) {
+                            data.add(new BlockPos((chunk.x << 4) + x, baseY + y, (chunk.z << 4) + z));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public void onEntityJoinWorld(EntityJoinWorldEvent event) {
+        Entity entity = event.getEntity();
+        if (!(entity instanceof EntityLightningBolt) || event.getWorld().isRemote) {
+            return;
+        }
+
+        World world = event.getWorld();
+        BlockPos strikePos = new BlockPos(entity.posX, entity.posY - LIGHTNING_STRIKE_EPSILON, entity.posZ);
+        if (activateLightningRodAt(world, strikePos)) {
+            clearCopperAroundLightning(world, strikePos);
+            return;
+        }
+
+        if (!world.isThundering()) {
+            clearCopperAroundLightning(world, strikePos);
+            return;
+        }
+
+        BlockPos rodPos = LightningRodData.get((WorldServer) world).getClosest((WorldServer) world, strikePos, LightningRodBlock.RANGE);
+        if (rodPos == null) {
+            clearCopperAroundLightning(world, strikePos);
+            return;
+        }
+
+        entity.setPosition(rodPos.getX() + 0.5D, rodPos.getY() + 1.0D - LIGHTNING_STRIKE_EPSILON, rodPos.getZ() + 0.5D);
+        activateLightningRodAt(world, rodPos);
+        clearCopperAroundLightning(world, rodPos);
     }
 
     private boolean handleCopperInteraction(World world, BlockPos pos, IBlockState state, EntityPlayer player, ItemStack stack, PlayerInteractEvent.RightClickBlock event) {
@@ -295,6 +362,40 @@ public class RetroFutureBehaviorEvents {
         }
 
         return false;
+    }
+
+    private boolean activateLightningRodAt(World world, BlockPos pos) {
+        if (!world.isBlockLoaded(pos, false)) {
+            return false;
+        }
+
+        IBlockState state = world.getBlockState(pos);
+        if (!(state.getBlock() instanceof LightningRodBlock)) {
+            return false;
+        }
+
+        ((LightningRodBlock) state.getBlock()).onLightningStrike(world, pos, state);
+        return true;
+    }
+
+    private void clearCopperAroundLightning(World world, BlockPos center) {
+        scrapeCopperAt(world, center);
+
+        Random rand = world.rand;
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(center);
+        for (int i = 0; i < 10; ++i) {
+            pos.setPos(center.getX() + rand.nextInt(5) - 2, center.getY() + rand.nextInt(5) - 2, center.getZ() + rand.nextInt(5) - 2);
+            scrapeCopperAt(world, pos);
+        }
+    }
+
+    private boolean scrapeCopperAt(World world, BlockPos pos) {
+        if (!world.isBlockLoaded(pos, false)) {
+            return false;
+        }
+
+        IBlockState state = world.getBlockState(pos);
+        return CopperBehavior.canScrape(state) && CopperBehavior.scrape(world, pos, state);
     }
 
     private void updateFreeze(EntityLivingBase entity, boolean freezing) {
