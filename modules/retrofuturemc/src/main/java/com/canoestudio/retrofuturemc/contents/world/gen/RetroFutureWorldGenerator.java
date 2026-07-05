@@ -160,7 +160,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
         return null;
     }
 
-    private CaveStyle classifyModernCaveStyle(ModernCaveTerrainUndergroundBiomeSample sample) {
+    public static CaveStyle classifyModernCaveStyle(ModernCaveTerrainUndergroundBiomeSample sample) {
         if (sample == null) {
             return CaveStyle.NORMAL;
         }
@@ -188,7 +188,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
         return CaveStyle.DRIPSTONE;
     }
 
-    private double getModernCaveStyleStrength(ModernCaveTerrainUndergroundBiomeSample sample, CaveStyle style) {
+    private static double getModernCaveStyleStrength(ModernCaveTerrainUndergroundBiomeSample sample, CaveStyle style) {
         if (style == CaveStyle.LUSH) {
             return clamp(getModernLushScore(sample) * getDepthBandStrength(sample) * getEdgeStrength(sample), 0.0D, 1.0D);
         }
@@ -198,21 +198,21 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
         return 0.0D;
     }
 
-    private double getModernLushScore(ModernCaveTerrainUndergroundBiomeSample sample) {
+    private static double getModernLushScore(ModernCaveTerrainUndergroundBiomeSample sample) {
         return clampedMap(sample.getHumidity(), MODERN_LUSH_MIN_HUMIDITY, 1.0D, 0.0D, 1.0D);
     }
 
-    private double getModernDripstoneScore(ModernCaveTerrainUndergroundBiomeSample sample) {
+    private static double getModernDripstoneScore(ModernCaveTerrainUndergroundBiomeSample sample) {
         return clampedMap(sample.getContinentalness(), MODERN_DRIPSTONE_MIN_CONTINENTALNESS, 1.0D, 0.0D, 1.0D);
     }
 
-    private double getDepthBandStrength(ModernCaveTerrainUndergroundBiomeSample sample) {
+    private static double getDepthBandStrength(ModernCaveTerrainUndergroundBiomeSample sample) {
         double lower = clampedMap(sample.getDepth(), MODERN_UNDERGROUND_MIN_DEPTH, MODERN_UNDERGROUND_MIN_DEPTH + 0.12D, 0.0D, 1.0D);
         double upper = clampedMap(sample.getDepth(), MODERN_UNDERGROUND_MAX_DEPTH, MODERN_UNDERGROUND_MAX_DEPTH - 0.12D, 0.0D, 1.0D);
         return Math.min(lower, upper);
     }
 
-    private double getEdgeStrength(ModernCaveTerrainUndergroundBiomeSample sample) {
+    private static double getEdgeStrength(ModernCaveTerrainUndergroundBiomeSample sample) {
         return 0.35D + sample.getEdgeFactor() * 0.65D;
     }
 
@@ -630,6 +630,9 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
 
     private void placeGlowLichenWorld(World world, Random random, BlockPos pos) {
         for (EnumFacing facing : EnumFacing.values()) {
+            if (facing == EnumFacing.DOWN) {
+                continue;
+            }
             if (random.nextBoolean()) {
                 BlockPos support = pos.offset(facing);
                 if (world.isAirBlock(pos) && world.getBlockState(support).isSideSolid(world, support, facing.getOpposite())) {
@@ -885,6 +888,9 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
             return;
         }
         for (EnumFacing facing : EnumFacing.values()) {
+            if (facing == EnumFacing.DOWN) {
+                continue;
+            }
             int sx = x + facing.getXOffset();
             int sy = y + facing.getYOffset();
             int sz = z + facing.getZOffset();
@@ -1055,7 +1061,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
         return from + factor * (to - from);
     }
 
-    private enum CaveStyle {
+    public enum CaveStyle {
         NORMAL,
         LUSH,
         DRIPSTONE
