@@ -117,6 +117,41 @@ public class ModSoundHandler {
     public static SoundEvent ITEM_BUCKET_EMPTY_AXOLOTL = new ModSoundEvent("item.bucket.empty_axolotl");
     public static SoundEvent ITEM_BUCKET_FILL_AXOLOTL = new ModSoundEvent("item.bucket.fill_axolotl");
 
+    public static SoundEvent ENTITY_GOAT_AMBIENT = new ModSoundEvent("entity.goat.ambient");
+    public static SoundEvent ENTITY_GOAT_DEATH = new ModSoundEvent("entity.goat.death");
+    public static SoundEvent ENTITY_GOAT_EAT = new ModSoundEvent("entity.goat.eat");
+    public static SoundEvent ENTITY_GOAT_HURT = new ModSoundEvent("entity.goat.hurt");
+    public static SoundEvent ENTITY_GOAT_LONG_JUMP = new ModSoundEvent("entity.goat.long_jump");
+    public static SoundEvent ENTITY_GOAT_MILK = new ModSoundEvent("entity.goat.milk");
+    public static SoundEvent ENTITY_GOAT_PREPARE_RAM = new ModSoundEvent("entity.goat.prepare_ram");
+    public static SoundEvent ENTITY_GOAT_RAM_IMPACT = new ModSoundEvent("entity.goat.ram_impact");
+    public static SoundEvent ENTITY_GOAT_HORN_BREAK = new ModSoundEvent("entity.goat.horn_break");
+    public static SoundEvent ENTITY_GOAT_SCREAMING_AMBIENT = new ModSoundEvent("entity.goat.screaming.ambient");
+    public static SoundEvent ENTITY_GOAT_SCREAMING_DEATH = new ModSoundEvent("entity.goat.screaming.death");
+    public static SoundEvent ENTITY_GOAT_SCREAMING_EAT = new ModSoundEvent("entity.goat.screaming.eat");
+    public static SoundEvent ENTITY_GOAT_SCREAMING_HURT = new ModSoundEvent("entity.goat.screaming.hurt");
+    public static SoundEvent ENTITY_GOAT_SCREAMING_LONG_JUMP = new ModSoundEvent("entity.goat.screaming.long_jump");
+    public static SoundEvent ENTITY_GOAT_SCREAMING_MILK = new ModSoundEvent("entity.goat.screaming.milk");
+    public static SoundEvent ENTITY_GOAT_SCREAMING_PREPARE_RAM = new ModSoundEvent("entity.goat.screaming.prepare_ram");
+    public static SoundEvent ENTITY_GOAT_SCREAMING_RAM_IMPACT = new ModSoundEvent("entity.goat.screaming.ram_impact");
+    public static SoundEvent ENTITY_GOAT_STEP = new ModSoundEvent("entity.goat.step");
+
+    public static SoundEvent ITEM_GOAT_HORN_SOUND_0 = new ModSoundEvent("item.goat_horn.sound.0");
+    public static SoundEvent ITEM_GOAT_HORN_SOUND_1 = new ModSoundEvent("item.goat_horn.sound.1");
+    public static SoundEvent ITEM_GOAT_HORN_SOUND_2 = new ModSoundEvent("item.goat_horn.sound.2");
+    public static SoundEvent ITEM_GOAT_HORN_SOUND_3 = new ModSoundEvent("item.goat_horn.sound.3");
+    public static SoundEvent ITEM_GOAT_HORN_SOUND_4 = new ModSoundEvent("item.goat_horn.sound.4");
+    public static SoundEvent ITEM_GOAT_HORN_SOUND_5 = new ModSoundEvent("item.goat_horn.sound.5");
+    public static SoundEvent ITEM_GOAT_HORN_SOUND_6 = new ModSoundEvent("item.goat_horn.sound.6");
+    public static SoundEvent ITEM_GOAT_HORN_SOUND_7 = new ModSoundEvent("item.goat_horn.sound.7");
+
+    public static SoundEvent ENTITY_GLOW_SQUID_AMBIENT = new ModSoundEvent("entity.glow_squid.ambient");
+    public static SoundEvent ENTITY_GLOW_SQUID_DEATH = new ModSoundEvent("entity.glow_squid.death");
+    public static SoundEvent ENTITY_GLOW_SQUID_HURT = new ModSoundEvent("entity.glow_squid.hurt");
+    public static SoundEvent ENTITY_GLOW_SQUID_SQUIRT = new ModSoundEvent("entity.glow_squid.squirt");
+
+    public static SoundEvent MUSIC_DISC_OTHERSIDE = new ModSoundEvent("music_disc.otherside");
+
     public static void soundRegister()
     {
         ForgeRegistries.SOUND_EVENTS.registerAll(ModSoundHandler.SOUNDS.toArray(new SoundEvent[0]));

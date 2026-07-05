@@ -7,6 +7,8 @@ import com.canoestudio.retrofuturemc.contents.mobs.brownmooshrooms.EntityBrownMo
 import com.canoestudio.retrofuturemc.contents.mobs.brownmooshrooms.RenderBrownMooshroom;
 import com.canoestudio.retrofuturemc.contents.mobs.goat.EntityGoat;
 import com.canoestudio.retrofuturemc.contents.mobs.goat.RenderGoat;
+import com.canoestudio.retrofuturemc.contents.mobs.glowsquid.EntityGlowSquid;
+import com.canoestudio.retrofuturemc.contents.mobs.glowsquid.RenderGlowSquid;
 import com.canoestudio.retrofuturemc.utils.PowderSnowHudHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
@@ -21,6 +23,7 @@ public class ClientProxy extends CommonProxy {
         RenderingRegistry.registerEntityRenderingHandler(EntityBrownMooshroom.class, RenderBrownMooshroom::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityAxolotl.class, RenderAxolotl::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityGoat.class, RenderGoat::new);
+        RenderingRegistry.registerEntityRenderingHandler(EntityGlowSquid.class, RenderGlowSquid::new);
         MinecraftForge.EVENT_BUS.register(SpyglassHandler.class);
         MinecraftForge.EVENT_BUS.register(PowderSnowHudHandler.class);
     }

@@ -1,6 +1,8 @@
 package com.canoestudio.retrofuturemc.contents.mobs.goat;
 
 import com.canoestudio.retrofuturemc.contents.items.ModItems;
+import com.canoestudio.retrofuturemc.contents.items.ItemGoatHorn;
+import com.canoestudio.retrofuturemc.sounds.ModSoundHandler;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -15,7 +17,6 @@ import net.minecraft.entity.ai.EntityAIWatchClosest;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
@@ -100,7 +101,7 @@ public class EntityGoat extends EntityAnimal {
         ItemStack itemstack = player.getHeldItem(hand);
 
         if (itemstack.getItem() == Items.BUCKET && !player.capabilities.isCreativeMode && !isChild()) {
-            player.playSound(SoundEvents.ENTITY_COW_MILK, 1.0F, isScreamingGoat() ? 0.65F : 1.0F);
+            player.playSound(isScreamingGoat() ? ModSoundHandler.ENTITY_GOAT_SCREAMING_MILK : ModSoundHandler.ENTITY_GOAT_MILK, 1.0F, isScreamingGoat() ? 0.65F : 1.0F);
             itemstack.shrink(1);
 
             if (itemstack.isEmpty()) {
@@ -114,7 +115,7 @@ public class EntityGoat extends EntityAnimal {
 
         boolean result = super.processInteract(player, hand);
         if (result && itemstack.getItem() == Items.WHEAT) {
-            playSound(SoundEvents.ENTITY_GENERIC_EAT, 1.0F, getSoundPitch());
+            playSound(isScreamingGoat() ? ModSoundHandler.ENTITY_GOAT_SCREAMING_EAT : ModSoundHandler.ENTITY_GOAT_EAT, 1.0F, getSoundPitch());
         }
         return result;
     }
@@ -163,22 +164,22 @@ public class EntityGoat extends EntityAnimal {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return SoundEvents.ENTITY_SHEEP_AMBIENT;
+        return isScreamingGoat() ? ModSoundHandler.ENTITY_GOAT_SCREAMING_AMBIENT : ModSoundHandler.ENTITY_GOAT_AMBIENT;
     }
 
     @Override
     protected SoundEvent getHurtSound(DamageSource damageSourceIn) {
-        return SoundEvents.ENTITY_SHEEP_HURT;
+        return isScreamingGoat() ? ModSoundHandler.ENTITY_GOAT_SCREAMING_HURT : ModSoundHandler.ENTITY_GOAT_HURT;
     }
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.ENTITY_SHEEP_DEATH;
+        return isScreamingGoat() ? ModSoundHandler.ENTITY_GOAT_SCREAMING_DEATH : ModSoundHandler.ENTITY_GOAT_DEATH;
     }
 
     @Override
     protected void playStepSound(BlockPos pos, net.minecraft.block.Block blockIn) {
-        playSound(SoundEvents.ENTITY_COW_STEP, 0.15F, 1.15F);
+        playSound(ModSoundHandler.ENTITY_GOAT_STEP, 0.15F, 1.15F);
     }
 
     @Override
@@ -266,7 +267,7 @@ public class EntityGoat extends EntityAnimal {
             setHasRightHorn(false);
         }
 
-        entityDropItem(new ItemStack(ModItems.GOAT_HORN), 0.25F);
+        entityDropItem(ItemGoatHorn.createRandomHorn(world, isScreamingGoat()), 0.25F);
         return true;
     }
 }

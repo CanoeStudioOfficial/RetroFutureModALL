@@ -79,5 +79,243 @@
       { "name": "retrofuturemc:item/bucket/fill_axolotl2", "pitch": 1.0 },
       { "name": "retrofuturemc:item/bucket/fill_axolotl3", "pitch": 1.0 }
     ]
+  },
+  "entity.goat.ambient": {
+    "subtitle": "subtitles.entity.goat.ambient",
+    "sounds": [
+      { "name": "minecraft:mob/sheep/say1", "pitch": 0.72 },
+      { "name": "minecraft:mob/sheep/say2", "pitch": 0.75 },
+      { "name": "minecraft:mob/sheep/say3", "pitch": 0.78 }
+    ]
+  },
+  "entity.goat.death": {
+    "subtitle": "subtitles.entity.goat.death",
+    "sounds": [
+      { "name": "minecraft:mob/cow/hurt1", "pitch": 0.78 },
+      { "name": "minecraft:mob/cow/hurt2", "pitch": 0.76 },
+      { "name": "minecraft:mob/cow/hurt3", "pitch": 0.74 }
+    ]
+  },
+  "entity.goat.eat": {
+    "subtitle": "subtitles.entity.goat.eat",
+    "sounds": [
+      { "name": "minecraft:entity/horse/eat1", "volume": 0.7, "pitch": 1.1 },
+      { "name": "minecraft:entity/horse/eat2", "volume": 0.7, "pitch": 1.1 },
+      { "name": "minecraft:entity/horse/eat3", "volume": 0.7, "pitch": 1.1 },
+      { "name": "minecraft:entity/horse/eat4", "volume": 0.7, "pitch": 1.1 },
+      { "name": "minecraft:entity/horse/eat5", "volume": 0.7, "pitch": 1.1 }
+    ]
+  },
+  "entity.goat.hurt": {
+    "subtitle": "subtitles.entity.goat.hurt",
+    "sounds": [
+      { "name": "minecraft:mob/cow/hurt1", "pitch": 0.85 },
+      { "name": "minecraft:mob/cow/hurt2", "pitch": 0.82 },
+      { "name": "minecraft:mob/cow/hurt3", "pitch": 0.8 }
+    ]
+  },
+  "entity.goat.long_jump": {
+    "subtitle": "subtitles.entity.goat.long_jump",
+    "sounds": [
+      { "name": "minecraft:random/bow", "volume": 0.45, "pitch": 0.65 },
+      { "name": "minecraft:mob/sheep/step1", "volume": 0.8, "pitch": 0.85 },
+      { "name": "minecraft:mob/sheep/step2", "volume": 0.8, "pitch": 0.85 }
+    ]
+  },
+  "entity.goat.milk": {
+    "subtitle": "subtitles.entity.goat.milk",
+    "sounds": [
+      "minecraft:entity/cow/milk1",
+      "minecraft:entity/cow/milk2",
+      "minecraft:entity/cow/milk3"
+    ]
+  },
+  "entity.goat.prepare_ram": {
+    "subtitle": "subtitles.entity.goat.prepare_ram",
+    "sounds": [
+      { "name": "minecraft:random/bow", "volume": 0.35, "pitch": 0.55 },
+      { "name": "minecraft:mob/sheep/say1", "volume": 0.7, "pitch": 0.55 }
+    ]
+  },
+  "entity.goat.ram_impact": {
+    "subtitle": "subtitles.entity.goat.ram_impact",
+    "sounds": [
+      { "name": "minecraft:random/anvil_land", "volume": 0.7, "pitch": 1.65 },
+      { "name": "minecraft:mob/cow/hurt1", "volume": 0.8, "pitch": 0.65 }
+    ]
+  },
+  "entity.goat.horn_break": {
+    "subtitle": "subtitles.entity.goat.horn_break",
+    "sounds": [
+      { "name": "minecraft:random/anvil_break", "volume": 0.55, "pitch": 1.75 },
+      { "name": "minecraft:mob/sheep/shear", "volume": 0.9, "pitch": 0.65 }
+    ]
+  },
+  "entity.goat.screaming.ambient": {
+    "subtitle": "subtitles.entity.goat.ambient",
+    "sounds": [
+      { "name": "minecraft:mob/sheep/say1", "volume": 1.1, "pitch": 0.45 },
+      { "name": "minecraft:mob/sheep/say2", "volume": 1.1, "pitch": 0.48 },
+      { "name": "minecraft:mob/sheep/say3", "volume": 1.1, "pitch": 0.5 }
+    ]
+  },
+  "entity.goat.screaming.death": {
+    "subtitle": "subtitles.entity.goat.death",
+    "sounds": [
+      { "name": "minecraft:mob/cow/hurt1", "volume": 1.1, "pitch": 0.52 },
+      { "name": "minecraft:mob/cow/hurt2", "volume": 1.1, "pitch": 0.5 },
+      { "name": "minecraft:mob/cow/hurt3", "volume": 1.1, "pitch": 0.48 }
+    ]
+  },
+  "entity.goat.screaming.eat": {
+    "subtitle": "subtitles.entity.goat.eat",
+    "sounds": [
+      { "name": "minecraft:entity/horse/eat1", "volume": 0.8, "pitch": 0.75 },
+      { "name": "minecraft:entity/horse/eat2", "volume": 0.8, "pitch": 0.75 },
+      { "name": "minecraft:entity/horse/eat3", "volume": 0.8, "pitch": 0.75 }
+    ]
+  },
+  "entity.goat.screaming.hurt": {
+    "subtitle": "subtitles.entity.goat.hurt",
+    "sounds": [
+      { "name": "minecraft:mob/cow/hurt1", "volume": 1.1, "pitch": 0.58 },
+      { "name": "minecraft:mob/cow/hurt2", "volume": 1.1, "pitch": 0.55 },
+      { "name": "minecraft:mob/cow/hurt3", "volume": 1.1, "pitch": 0.52 }
+    ]
+  },
+  "entity.goat.screaming.long_jump": {
+    "subtitle": "subtitles.entity.goat.long_jump",
+    "sounds": [
+      { "name": "minecraft:random/bow", "volume": 0.5, "pitch": 0.45 },
+      { "name": "minecraft:mob/sheep/say1", "volume": 0.8, "pitch": 0.48 }
+    ]
+  },
+  "entity.goat.screaming.milk": {
+    "subtitle": "subtitles.entity.goat.milk",
+    "sounds": [
+      { "name": "minecraft:entity/cow/milk1", "pitch": 0.75 },
+      { "name": "minecraft:entity/cow/milk2", "pitch": 0.75 },
+      { "name": "minecraft:entity/cow/milk3", "pitch": 0.75 }
+    ]
+  },
+  "entity.goat.screaming.prepare_ram": {
+    "subtitle": "subtitles.entity.goat.prepare_ram",
+    "sounds": [
+      { "name": "minecraft:random/bow", "volume": 0.4, "pitch": 0.42 },
+      { "name": "minecraft:mob/sheep/say2", "volume": 0.9, "pitch": 0.45 }
+    ]
+  },
+  "entity.goat.screaming.ram_impact": {
+    "subtitle": "subtitles.entity.goat.ram_impact",
+    "sounds": [
+      { "name": "minecraft:random/anvil_land", "volume": 0.75, "pitch": 1.45 },
+      { "name": "minecraft:mob/cow/hurt2", "volume": 0.9, "pitch": 0.5 }
+    ]
+  },
+  "entity.goat.step": {
+    "subtitle": "subtitles.block.generic.footsteps",
+    "sounds": [
+      { "name": "minecraft:mob/sheep/step1", "volume": 0.5 },
+      { "name": "minecraft:mob/sheep/step2", "volume": 0.5 },
+      { "name": "minecraft:mob/sheep/step3", "volume": 0.5 },
+      { "name": "minecraft:mob/sheep/step4", "volume": 0.5 },
+      { "name": "minecraft:mob/sheep/step5", "volume": 0.5 }
+    ]
+  },
+  "item.goat_horn.sound.0": {
+    "subtitle": "subtitles.item.goat_horn.sound",
+    "sounds": [
+      { "name": "minecraft:note/flute", "volume": 1.0, "pitch": 0.5 },
+      { "name": "minecraft:note/bass", "volume": 0.75, "pitch": 0.5 }
+    ]
+  },
+  "item.goat_horn.sound.1": {
+    "subtitle": "subtitles.item.goat_horn.sound",
+    "sounds": [
+      { "name": "minecraft:note/pling", "volume": 1.0, "pitch": 0.5 },
+      { "name": "minecraft:note/bassattack", "volume": 0.8, "pitch": 0.5 }
+    ]
+  },
+  "item.goat_horn.sound.2": {
+    "subtitle": "subtitles.item.goat_horn.sound",
+    "sounds": [
+      { "name": "minecraft:note/bell", "volume": 1.0, "pitch": 0.5 },
+      { "name": "minecraft:note/flute", "volume": 0.8, "pitch": 0.63 }
+    ]
+  },
+  "item.goat_horn.sound.3": {
+    "subtitle": "subtitles.item.goat_horn.sound",
+    "sounds": [
+      { "name": "minecraft:note/xylobone", "volume": 1.0, "pitch": 0.53 },
+      { "name": "minecraft:note/bass", "volume": 0.8, "pitch": 0.47 }
+    ]
+  },
+  "item.goat_horn.sound.4": {
+    "subtitle": "subtitles.item.goat_horn.sound",
+    "sounds": [
+      { "name": "minecraft:mob/ghast/moan1", "volume": 0.55, "pitch": 0.95 },
+      { "name": "minecraft:note/flute", "volume": 0.9, "pitch": 0.45 }
+    ]
+  },
+  "item.goat_horn.sound.5": {
+    "subtitle": "subtitles.item.goat_horn.sound",
+    "sounds": [
+      { "name": "minecraft:mob/ghast/moan2", "volume": 0.55, "pitch": 1.0 },
+      { "name": "minecraft:note/bell", "volume": 0.9, "pitch": 0.45 }
+    ]
+  },
+  "item.goat_horn.sound.6": {
+    "subtitle": "subtitles.item.goat_horn.sound",
+    "sounds": [
+      { "name": "minecraft:mob/ghast/moan3", "volume": 0.55, "pitch": 1.0 },
+      { "name": "minecraft:note/icechime", "volume": 0.9, "pitch": 0.45 }
+    ]
+  },
+  "item.goat_horn.sound.7": {
+    "subtitle": "subtitles.item.goat_horn.sound",
+    "sounds": [
+      { "name": "minecraft:mob/ghast/moan4", "volume": 0.55, "pitch": 1.0 },
+      { "name": "minecraft:note/pling", "volume": 0.9, "pitch": 0.42 }
+    ]
+  },
+  "entity.glow_squid.ambient": {
+    "subtitle": "subtitles.entity.glow_squid.ambient",
+    "sounds": [
+      { "name": "minecraft:entity/squid/ambient1", "volume": 0.85, "pitch": 1.2 },
+      { "name": "minecraft:entity/squid/ambient2", "volume": 0.85, "pitch": 1.2 },
+      { "name": "minecraft:entity/squid/ambient3", "volume": 0.85, "pitch": 1.2 },
+      { "name": "minecraft:entity/squid/ambient4", "volume": 0.85, "pitch": 1.2 },
+      { "name": "minecraft:entity/squid/ambient5", "volume": 0.85, "pitch": 1.2 }
+    ]
+  },
+  "entity.glow_squid.death": {
+    "subtitle": "subtitles.entity.glow_squid.death",
+    "sounds": [
+      { "name": "minecraft:entity/squid/death1", "pitch": 1.15 },
+      { "name": "minecraft:entity/squid/death2", "pitch": 1.15 },
+      { "name": "minecraft:entity/squid/death3", "pitch": 1.15 }
+    ]
+  },
+  "entity.glow_squid.hurt": {
+    "subtitle": "subtitles.entity.glow_squid.hurt",
+    "sounds": [
+      { "name": "minecraft:entity/squid/hurt1", "pitch": 1.15 },
+      { "name": "minecraft:entity/squid/hurt2", "pitch": 1.15 },
+      { "name": "minecraft:entity/squid/hurt3", "pitch": 1.15 },
+      { "name": "minecraft:entity/squid/hurt4", "pitch": 1.15 }
+    ]
+  },
+  "entity.glow_squid.squirt": {
+    "subtitle": "subtitles.entity.glow_squid.squirt",
+    "sounds": [
+      { "name": "retrofuturemc:item/bucket/empty_fish1", "volume": 0.75, "pitch": 1.3 },
+      { "name": "retrofuturemc:item/bucket/empty_fish2", "volume": 0.75, "pitch": 1.3 },
+      { "name": "retrofuturemc:item/bucket/empty_fish3", "volume": 0.75, "pitch": 1.3 }
+    ]
+  },
+  "music_disc.otherside": {
+    "sounds": [
+      { "name": "minecraft:records/wait", "stream": true }
+    ]
   }
 }

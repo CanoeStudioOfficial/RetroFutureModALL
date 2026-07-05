@@ -6,6 +6,9 @@ import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.passive.EntityWaterMob;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
 import net.minecraft.init.MobEffects;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
@@ -13,12 +16,14 @@ import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
 import com.canoestudio.retrofuturemc.sounds.ModSoundHandler;
+import com.canoestudio.retrofuturemc.contents.items.ItemAxolotlBucket;
 
 import javax.annotation.Nullable;
 
@@ -92,6 +97,28 @@ public class EntityAxolotl extends EntityWaterMob {
 
     public String getVariantName() {
         return VARIANT_NAMES[getVariant()];
+    }
+
+    @Override
+    public boolean processInteract(EntityPlayer player, EnumHand hand) {
+        ItemStack stack = player.getHeldItem(hand);
+        if (stack.getItem() == Items.WATER_BUCKET && isEntityAlive()) {
+            if (!world.isRemote) {
+                ItemStack bucket = ItemAxolotlBucket.create(this);
+                if (!player.capabilities.isCreativeMode) {
+                    stack.shrink(1);
+                    if (stack.isEmpty()) {
+                        player.setHeldItem(hand, bucket);
+                    } else if (!player.inventory.addItemStackToInventory(bucket)) {
+                        player.dropItem(bucket, false);
+                    }
+                }
+                playSound(ModSoundHandler.ITEM_BUCKET_FILL_AXOLOTL, 1.0F, 1.0F);
+                setDead();
+            }
+            return true;
+        }
+        return super.processInteract(player, hand);
     }
 
     public boolean isPlayingDead() {

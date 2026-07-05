@@ -1,10 +1,10 @@
 package com.canoestudio.retrofuturemc.contents.mobs.goat;
 
+import com.canoestudio.retrofuturemc.sounds.ModSoundHandler;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.EntityAIBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -73,7 +73,7 @@ public class GoatRamGoal extends EntityAIBase {
         ramTicks = 0;
         goat.setLoweringHead(true);
         goat.getNavigator().clearPath();
-        goat.playSound(SoundEvents.ENTITY_SHEEP_AMBIENT, 1.0F, goat.isScreamingGoat() ? 0.55F : 0.8F);
+        goat.playSound(goat.isScreamingGoat() ? ModSoundHandler.ENTITY_GOAT_SCREAMING_PREPARE_RAM : ModSoundHandler.ENTITY_GOAT_PREPARE_RAM, 1.0F, goat.isScreamingGoat() ? 0.55F : 0.8F);
     }
 
     @Override
@@ -143,16 +143,16 @@ public class GoatRamGoal extends EntityAIBase {
         if (hit != null) {
             hit.attackEntityFrom(DamageSource.causeMobDamage(goat), goat.isChild() ? 1.0F : 2.0F);
             hit.knockBack(goat, goat.isChild() ? 1.0F : 2.5F, goat.posX - hit.posX, goat.posZ - hit.posZ);
-            goat.playSound(SoundEvents.ENTITY_IRONGOLEM_ATTACK, 0.75F, goat.isScreamingGoat() ? 0.65F : 1.15F);
+            goat.playSound(goat.isScreamingGoat() ? ModSoundHandler.ENTITY_GOAT_SCREAMING_RAM_IMPACT : ModSoundHandler.ENTITY_GOAT_RAM_IMPACT, 0.75F, goat.isScreamingGoat() ? 0.65F : 1.15F);
             resetTask();
             return;
         }
 
         if (ramTicks > 4 && hasHitWall()) {
             if (goat.removeRandomHorn()) {
-                goat.playSound(SoundEvents.ENTITY_ITEM_BREAK, 1.0F, 0.9F);
+                goat.playSound(ModSoundHandler.ENTITY_GOAT_HORN_BREAK, 1.0F, 0.9F);
             } else {
-                goat.playSound(SoundEvents.BLOCK_STONE_HIT, 0.8F, 1.0F);
+                goat.playSound(goat.isScreamingGoat() ? ModSoundHandler.ENTITY_GOAT_SCREAMING_RAM_IMPACT : ModSoundHandler.ENTITY_GOAT_RAM_IMPACT, 0.8F, 1.0F);
             }
             resetTask();
             return;

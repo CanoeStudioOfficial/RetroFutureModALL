@@ -1,8 +1,8 @@
 package com.canoestudio.retrofuturemc.contents.mobs.goat;
 
+import com.canoestudio.retrofuturemc.sounds.ModSoundHandler;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.ai.EntityAIBase;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -155,7 +155,7 @@ public class GoatLongJumpGoal extends EntityAIBase {
         goat.motionZ = dz / distance * HORIZONTAL_SPEED;
         goat.velocityChanged = true;
         goat.setLoweringHead(false);
-        goat.playSound(SoundEvents.ENTITY_HORSE_JUMP, 0.7F, goat.isChild() ? 1.35F : 1.0F);
+        goat.playSound(goat.isScreamingGoat() ? ModSoundHandler.ENTITY_GOAT_SCREAMING_LONG_JUMP : ModSoundHandler.ENTITY_GOAT_LONG_JUMP, 0.7F, goat.isChild() ? 1.35F : 1.0F);
         phase = Phase.JUMP;
     }
 

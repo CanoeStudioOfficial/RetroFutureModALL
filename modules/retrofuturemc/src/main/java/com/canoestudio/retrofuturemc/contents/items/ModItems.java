@@ -3,6 +3,7 @@ package com.canoestudio.retrofuturemc.contents.items;
 import com.canoestudio.retrofuturemc.contents.BerryCreator;
 import com.canoestudio.retrofuturemc.contents.SimpleItemCreator;
 import com.canoestudio.retrofuturemc.contents.items.spyglass.ItemSpyglass;
+import com.canoestudio.retrofuturemc.sounds.ModSoundHandler;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemFood;
 
@@ -20,6 +21,8 @@ public class ModItems {
     public static final Item RAW_GOLD = new SimpleItemCreator("Raw_Gold");
     public static final Item AMETHYST_SHARD = new SimpleItemCreator("Amethyst_Shard");
     public static final Item GLOW_INK_SAC = new SimpleItemCreator("Glow_Ink_Sac");
-    public static final Item GOAT_HORN = new SimpleItemCreator("Goat_Horn").setMaxStackSize(1);
+    public static final Item GOAT_HORN = new ItemGoatHorn();
+    public static final Item AXOLOTL_BUCKET = new ItemAxolotlBucket();
     public static final Item POWDER_SNOW_BUCKET = new ItemPowderSnowBucket();
+    public static final Item MUSIC_DISC_OTHERSIDE = new ItemRetroFutureRecord("music_disc_otherside", ModSoundHandler.MUSIC_DISC_OTHERSIDE);
 }
