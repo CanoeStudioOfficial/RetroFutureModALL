@@ -12,8 +12,8 @@ public class CommonProxy {
 
     public void preInit(FMLPreInitializationEvent event) {
         GameRegistry.registerWorldGenerator(new RetroFutureWorldGenerator(), 20);
-        if (Loader.isModLoaded("bettercaves")) {
-            RetroFutureWorldGenerator.registerBetterCavesDecorator();
+        if (Loader.isModLoaded("moderncaveterrain")) {
+            RetroFutureWorldGenerator.registerModernCaveTerrainDecorator();
         }
 
     }

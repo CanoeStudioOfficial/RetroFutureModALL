@@ -11,11 +11,12 @@ import com.canoestudio.retrofuturemc.contents.blocks.dripLeaf.DripleafStem;
 import com.canoestudio.retrofuturemc.contents.blocks.dripLeaf.SmallDripleaf;
 import com.canoestudio.retrofuturemc.contents.mobs.axolotl.EntityAxolotl;
 import com.canoestudio.retrofuturemc.contents.mobs.glowsquid.EntityGlowSquid;
-import com.yungnickyoung.minecraft.bettercaves.api.BetterCavesAPI;
-import com.yungnickyoung.minecraft.bettercaves.api.BetterCavesCaveBiomeType;
-import com.yungnickyoung.minecraft.bettercaves.api.BetterCavesCaveDecorationContext;
-import com.yungnickyoung.minecraft.bettercaves.api.BetterCavesCaveDecorator;
-import com.yungnickyoung.minecraft.bettercaves.api.BetterCavesCaveSample;
+import com.lonelyxiya.minecraft.moderncaveterrain.api.ModernCaveTerrainAPI;
+import com.lonelyxiya.minecraft.moderncaveterrain.api.ModernCaveTerrainCaveBiomeType;
+import com.lonelyxiya.minecraft.moderncaveterrain.api.ModernCaveTerrainCaveDecorationContext;
+import com.lonelyxiya.minecraft.moderncaveterrain.api.ModernCaveTerrainCaveDecorator;
+import com.lonelyxiya.minecraft.moderncaveterrain.api.ModernCaveTerrainUndergroundBiomeResolver;
+import com.lonelyxiya.minecraft.moderncaveterrain.api.ModernCaveTerrainUndergroundBiomeSample;
 import git.jbredwards.fluidlogged_api.api.util.FluidState;
 import git.jbredwards.fluidlogged_api.api.util.FluidloggedUtils;
 import net.minecraft.block.Block;
@@ -25,9 +26,9 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EnumCreatureType;
-import net.minecraft.init.Biomes;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -42,9 +43,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCaveDecorator {
+public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTerrainCaveDecorator, ModernCaveTerrainUndergroundBiomeResolver {
     private static final IBlockState STONE = Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.STONE);
     private static final IBlockState DEEPSLATE = ModBlocks.DeepSlate.getDefaultState();
+    private static final ResourceLocation LUSH_CAVES_BIOME_ID = new ResourceLocation("retrofuturemc", "lush_caves");
+    private static final ResourceLocation DRIPSTONE_CAVES_BIOME_ID = new ResourceLocation("retrofuturemc", "dripstone_caves");
     private static final int GEODE_RARITY = 24;
     private static final int GEODE_MIN_Y = 15;
     private static final int GEODE_MAX_Y = 35;
@@ -69,16 +72,23 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
     private static final double GEODE_CRYSTAL_PLACEMENT_CHANCE = 0.35D;
     private static final int CAVE_DECORATION_ATTEMPTS = 72;
     private static final int CAVE_AIR_SCAN_DISTANCE = 20;
+    private static final int PRIMER_CAVE_AIR_SCAN_DISTANCE = 24;
     private static final int LUSH_SURFACE_SCAN_DISTANCE = 16;
-    private static final int BETTER_CAVES_DECORATION_ATTEMPTS = 36;
-    private static final boolean GENERATE_LUSH_CAVES = false;
-    private static final boolean GENERATE_DRIPSTONE_CAVES = false;
-    private static boolean betterCavesDecoratorRegistered;
+    private static final int MODERN_CAVE_TERRAIN_DECORATION_ATTEMPTS = 128;
+    private static final double MODERN_UNDERGROUND_MIN_DEPTH = 0.2D;
+    private static final double MODERN_UNDERGROUND_MAX_DEPTH = 0.9D;
+    private static final double MODERN_LUSH_MIN_HUMIDITY = 0.7D;
+    private static final double MODERN_DRIPSTONE_MIN_CONTINENTALNESS = 0.8D;
+    private static final boolean GENERATE_LUSH_CAVES = true;
+    private static final boolean GENERATE_DRIPSTONE_CAVES = true;
+    private static boolean modernCaveTerrainDecoratorRegistered;
 
-    public static void registerBetterCavesDecorator() {
-        if (!betterCavesDecoratorRegistered) {
-            BetterCavesAPI.registerCaveDecorator(new RetroFutureWorldGenerator());
-            betterCavesDecoratorRegistered = true;
+    public static void registerModernCaveTerrainDecorator() {
+        if (!modernCaveTerrainDecoratorRegistered) {
+            RetroFutureWorldGenerator hooks = new RetroFutureWorldGenerator();
+            ModernCaveTerrainAPI.registerUndergroundBiomeResolver(hooks);
+            ModernCaveTerrainAPI.registerCaveDecorator(hooks);
+            modernCaveTerrainDecoratorRegistered = true;
         }
     }
 
@@ -99,44 +109,111 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
                     blockZ + random.nextInt(16)));
         }
 
-        decorateCavesInWorld(world, random, blockX, blockZ);
+        if (!modernCaveTerrainDecoratorRegistered) {
+            decorateCavesInWorld(world, random, blockX, blockZ);
+        }
         spawnAquaticCaveMobs(world, random, blockX, blockZ);
     }
 
     @Override
-    public void decorate(BetterCavesCaveDecorationContext context) {
+    public void decorate(ModernCaveTerrainCaveDecorationContext context) {
         World world = context.getWorld();
-        Random random = new Random(world.getSeed() ^ (long)context.getChunkX() * 341873128712L ^ (long)context.getChunkZ() * 132897987541L);
+        Random random = new Random(world.getSeed() ^ (long)context.getChunkX() * 341873128712L ^ (long)context.getChunkZ() * 132897987541L ^ 0x4D435442494F4D45L);
+        int minY = Math.max(4, context.getConfig().getMojang118StyleCaveBottom());
+        int maxY = Math.min(255, context.getConfig().getMojang118StyleCaveTop());
+        if (maxY <= minY) {
+            maxY = Math.min(96, world.getActualHeight() - 1);
+            minY = 4;
+        }
 
-        for (int i = 0; i < BETTER_CAVES_DECORATION_ATTEMPTS; i++) {
+        for (int i = 0; i < MODERN_CAVE_TERRAIN_DECORATION_ATTEMPTS; i++) {
             int x = random.nextInt(16);
             int z = random.nextInt(16);
-            int y = 8 + random.nextInt(56);
-            BetterCavesCaveSample sample = context.sampleLocal(x, y, z);
-            if (!sample.isOpen()) {
+            int y = minY + random.nextInt(Math.max(1, maxY - minY + 1));
+            y = findPrimerCaveAir(context, x, y, z, PRIMER_CAVE_AIR_SCAN_DISTANCE);
+            if (y < 0) {
                 continue;
             }
 
-            CaveStyle fallbackStyle = CaveStyle.NORMAL;
-            if (GENERATE_LUSH_CAVES || GENERATE_DRIPSTONE_CAVES) {
-                fallbackStyle = classifyCaveStyle(world, new BlockPos(sample.getBlockX(), sample.getBlockY(), sample.getBlockZ()));
-            }
-
-            if (GENERATE_LUSH_CAVES && (sample.getCaveBiomeType() == BetterCavesCaveBiomeType.LUSH || shouldUseFallbackCaveStyle(sample, fallbackStyle, CaveStyle.LUSH))) {
-                decorateLushPrimer(context, random, x, y, z);
-            } else if (GENERATE_DRIPSTONE_CAVES && (sample.getCaveBiomeType() == BetterCavesCaveBiomeType.DRIPSTONE || shouldUseFallbackCaveStyle(sample, fallbackStyle, CaveStyle.DRIPSTONE))) {
-                decorateDripstonePrimer(context, random, x, y, z);
+            ModernCaveTerrainUndergroundBiomeSample biomeSample = context.sampleUndergroundBiomeLocal(x, y, z);
+            CaveStyle style = classifyModernCaveStyle(biomeSample);
+            double strength = getModernCaveStyleStrength(biomeSample, style);
+            if (GENERATE_LUSH_CAVES && style == CaveStyle.LUSH) {
+                decorateLushPrimer(context, random, x, y, z, strength);
+            } else if (GENERATE_DRIPSTONE_CAVES && style == CaveStyle.DRIPSTONE) {
+                decorateDripstonePrimer(context, random, x, y, z, strength);
             } else if (random.nextInt(5) == 0) {
                 placeGlowLichenPrimer(context, random, x, y, z);
             }
         }
     }
 
-    private boolean shouldUseFallbackCaveStyle(BetterCavesCaveSample sample, CaveStyle fallbackStyle, CaveStyle expectedStyle) {
-        return fallbackStyle == expectedStyle
-                && sample.getFluidState() == null
-                && (sample.getCaveBiomeType() == BetterCavesCaveBiomeType.NORMAL
-                || sample.getCaveBiomeType() == BetterCavesCaveBiomeType.NONE);
+    @Override
+    public ModernCaveTerrainUndergroundBiomeSample resolve(World world, ModernCaveTerrainUndergroundBiomeSample sample) {
+        CaveStyle style = classifyModernCaveStyle(sample);
+        if (GENERATE_LUSH_CAVES && style == CaveStyle.LUSH) {
+            return sample.withBiome(ModernCaveTerrainCaveBiomeType.GENERIC_3D, LUSH_CAVES_BIOME_ID);
+        }
+        if (GENERATE_DRIPSTONE_CAVES && style == CaveStyle.DRIPSTONE) {
+            return sample.withBiome(ModernCaveTerrainCaveBiomeType.GENERIC_3D, DRIPSTONE_CAVES_BIOME_ID);
+        }
+        return null;
+    }
+
+    private CaveStyle classifyModernCaveStyle(ModernCaveTerrainUndergroundBiomeSample sample) {
+        if (sample == null) {
+            return CaveStyle.NORMAL;
+        }
+        if (LUSH_CAVES_BIOME_ID.equals(sample.getBiomeId())) {
+            return CaveStyle.LUSH;
+        }
+        if (DRIPSTONE_CAVES_BIOME_ID.equals(sample.getBiomeId())) {
+            return CaveStyle.DRIPSTONE;
+        }
+        if (sample.getCaveBiomeType() != ModernCaveTerrainCaveBiomeType.GENERIC_3D) {
+            return CaveStyle.NORMAL;
+        }
+        if (sample.getDepth() < MODERN_UNDERGROUND_MIN_DEPTH || sample.getDepth() > MODERN_UNDERGROUND_MAX_DEPTH) {
+            return CaveStyle.NORMAL;
+        }
+
+        double lushScore = getModernLushScore(sample);
+        double dripstoneScore = getModernDripstoneScore(sample);
+        if (lushScore <= 0.0D && dripstoneScore <= 0.0D) {
+            return CaveStyle.NORMAL;
+        }
+        if (lushScore > 0.0D && (lushScore >= dripstoneScore || sample.getHumidity() >= 0.82D)) {
+            return CaveStyle.LUSH;
+        }
+        return CaveStyle.DRIPSTONE;
+    }
+
+    private double getModernCaveStyleStrength(ModernCaveTerrainUndergroundBiomeSample sample, CaveStyle style) {
+        if (style == CaveStyle.LUSH) {
+            return clamp(getModernLushScore(sample) * getDepthBandStrength(sample) * getEdgeStrength(sample), 0.0D, 1.0D);
+        }
+        if (style == CaveStyle.DRIPSTONE) {
+            return clamp(getModernDripstoneScore(sample) * getDepthBandStrength(sample) * getEdgeStrength(sample), 0.0D, 1.0D);
+        }
+        return 0.0D;
+    }
+
+    private double getModernLushScore(ModernCaveTerrainUndergroundBiomeSample sample) {
+        return clampedMap(sample.getHumidity(), MODERN_LUSH_MIN_HUMIDITY, 1.0D, 0.0D, 1.0D);
+    }
+
+    private double getModernDripstoneScore(ModernCaveTerrainUndergroundBiomeSample sample) {
+        return clampedMap(sample.getContinentalness(), MODERN_DRIPSTONE_MIN_CONTINENTALNESS, 1.0D, 0.0D, 1.0D);
+    }
+
+    private double getDepthBandStrength(ModernCaveTerrainUndergroundBiomeSample sample) {
+        double lower = clampedMap(sample.getDepth(), MODERN_UNDERGROUND_MIN_DEPTH, MODERN_UNDERGROUND_MIN_DEPTH + 0.12D, 0.0D, 1.0D);
+        double upper = clampedMap(sample.getDepth(), MODERN_UNDERGROUND_MAX_DEPTH, MODERN_UNDERGROUND_MAX_DEPTH - 0.12D, 0.0D, 1.0D);
+        return Math.min(lower, upper);
+    }
+
+    private double getEdgeStrength(ModernCaveTerrainUndergroundBiomeSample sample) {
+        return 0.35D + sample.getEdgeFactor() * 0.65D;
     }
 
     private void generateOres(World world, Random random, int blockX, int blockZ) {
@@ -554,15 +631,9 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
     private void placeGlowLichenWorld(World world, Random random, BlockPos pos) {
         for (EnumFacing facing : EnumFacing.values()) {
             if (random.nextBoolean()) {
-                BlockPos support = pos.offset(facing.getOpposite());
-                if (world.isAirBlock(pos) && world.getBlockState(support).isSideSolid(world, support, facing)) {
-                    world.setBlockState(pos, ModBlocks.GLOW_LICHEN.getDefaultState()
-                            .withProperty(GlowLichenBlock.UP, facing == EnumFacing.UP)
-                            .withProperty(GlowLichenBlock.DOWN, facing == EnumFacing.DOWN)
-                            .withProperty(GlowLichenBlock.NORTH, facing == EnumFacing.NORTH)
-                            .withProperty(GlowLichenBlock.EAST, facing == EnumFacing.EAST)
-                            .withProperty(GlowLichenBlock.SOUTH, facing == EnumFacing.SOUTH)
-                            .withProperty(GlowLichenBlock.WEST, facing == EnumFacing.WEST), 2);
+                BlockPos support = pos.offset(facing);
+                if (world.isAirBlock(pos) && world.getBlockState(support).isSideSolid(world, support, facing.getOpposite())) {
+                    world.setBlockState(pos, ((GlowLichenBlock)ModBlocks.GLOW_LICHEN).getStateForFace(facing), 2);
                     return;
                 }
             }
@@ -605,89 +676,229 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
         }
     }
 
-    private void decorateLushPrimer(BetterCavesCaveDecorationContext context, Random random, int x, int y, int z) {
+    private void decorateLushPrimer(ModernCaveTerrainCaveDecorationContext context, Random random, int x, int y, int z, double strength) {
         int floor = scanPrimer(context, x, y, z, EnumFacing.DOWN, LUSH_SURFACE_SCAN_DISTANCE);
         int ceiling = scanPrimer(context, x, y, z, EnumFacing.UP, LUSH_SURFACE_SCAN_DISTANCE);
         if (floor >= 0) {
-            for (int i = 0; i < 20; i++) {
-                int px = Math.max(0, Math.min(15, x + random.nextInt(9) - 4));
-                int pz = Math.max(0, Math.min(15, z + random.nextInt(9) - 4));
-                if (isAir(context.getBlockState(px, floor + 1, pz)) && isLushGroundReplaceable(context.getBlockState(px, floor, pz))) {
-                    context.setBlockState(px, floor, pz, ModBlocks.MOSS_BLOCK.getDefaultState());
-                    if (random.nextInt(4) == 0 && floor + 1 < 255) {
-                        context.setBlockState(px, floor + 1, pz, ModBlocks.MOSS_CARPET.getDefaultState());
-                    } else if (random.nextInt(12) == 0 && floor + 1 < 255) {
-                        context.setBlockState(px, floor + 1, pz, (random.nextBoolean() ? ModBlocks.Azalea : ModBlocks.Flowering_Azalea).getDefaultState());
-                    } else if (random.nextInt(10) == 0 && floor + 1 < 255) {
-                        context.setBlockState(px, floor, pz, Blocks.CLAY.getDefaultState());
-                    }
-                }
-            }
-        }
-        if (ceiling >= 0 && isLushGroundReplaceable(context.getBlockState(x, ceiling, z)) && random.nextBoolean()) {
-            context.setBlockState(x, ceiling, z, ModBlocks.MOSS_BLOCK.getDefaultState());
-        }
-        if (ceiling >= 0 && random.nextInt(6) == 0 && ceiling > 0 && isAir(context.getBlockState(x, ceiling - 1, z))) {
-            context.setBlockState(x, ceiling - 1, z, ModBlocks.SPORE_BLOSSOM.getDefaultState());
-        }
-        if (ceiling >= 0 && random.nextBoolean()) {
-            int length = 1 + random.nextInt(5);
-            for (int i = 1; i <= length && ceiling - i > 1; i++) {
-                if (!isAir(context.getBlockState(x, ceiling - i, z))) {
-                    break;
-                }
-                boolean berries = random.nextInt(5) == 0;
-                if (i == length) {
-                    context.setBlockState(x, ceiling - i, z, ModBlocks.CAVE_VINE.getDefaultState().withProperty(CaveVine.AGE, 1).withProperty(CaveVine.BERRIES, berries));
-                } else {
-                    context.setBlockState(x, ceiling - i, z, ModBlocks.CAVE_VINE_PLANT.getDefaultState().withProperty(CaveVinePlant.BERRIES, berries));
-                }
-            }
-        }
-    }
-
-    private void decorateDripstonePrimer(BetterCavesCaveDecorationContext context, Random random, int x, int y, int z) {
-        int floor = scanPrimer(context, x, y, z, EnumFacing.DOWN, 12);
-        int ceiling = scanPrimer(context, x, y, z, EnumFacing.UP, 12);
-        if (floor >= 0) {
-            context.setBlockState(x, floor, z, ModBlocks.DRIPSTONE_BLOCK.getDefaultState());
-            if (floor + 1 < 255) {
-                context.setBlockState(x, floor + 1, z, ModBlocks.POINTED_DRIPSTONE.getDefaultState().withProperty(PointedDripstoneBlock.VERTICAL_DIRECTION, EnumFacing.UP));
+            placeMossPatchPrimer(context, random, x, floor + 1, z, 3 + random.nextInt(4), strength);
+            if (random.nextDouble() < 0.42D * strength) {
+                placeClayAndDripleafPrimer(context, random, x, floor + 1, z, strength);
             }
         }
         if (ceiling >= 0) {
-            context.setBlockState(x, ceiling, z, ModBlocks.DRIPSTONE_BLOCK.getDefaultState());
-            if (ceiling - 1 > 0) {
-                context.setBlockState(x, ceiling - 1, z, ModBlocks.POINTED_DRIPSTONE.getDefaultState().withProperty(PointedDripstoneBlock.VERTICAL_DIRECTION, EnumFacing.DOWN));
+            if (random.nextDouble() < 0.72D * strength) {
+                placeCeilingMossPrimer(context, random, x, ceiling, z, 2 + random.nextInt(3), strength);
+            }
+            if (random.nextDouble() < 0.72D * strength) {
+                placeCaveVinePrimer(context, random, x, ceiling - 1, z, 2 + random.nextInt(6));
+            }
+            if (random.nextDouble() < 0.12D * strength && isAir(context.getBlockState(x, ceiling - 1, z))) {
+                context.setBlockState(x, ceiling - 1, z, ModBlocks.SPORE_BLOSSOM.getDefaultState());
+            } else if (random.nextDouble() < 0.18D * strength && isAir(context.getBlockState(x, ceiling - 1, z))) {
+                context.setBlockState(x, ceiling - 1, z, ModBlocks.HANGING_ROOTS.getDefaultState());
             }
         }
     }
 
-    private void placeGlowLichenPrimer(BetterCavesCaveDecorationContext context, Random random, int x, int y, int z) {
+    private void placeMossPatchPrimer(ModernCaveTerrainCaveDecorationContext context, Random random, int centerX, int centerY, int centerZ, int radius, double strength) {
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                if (dx * dx + dz * dz > radius * radius + random.nextInt(3)) {
+                    continue;
+                }
+
+                int x = centerX + dx;
+                int z = centerZ + dz;
+                if (!isInsideChunk(x, centerY, z)) {
+                    continue;
+                }
+
+                if (!isAir(context.getBlockState(x, centerY, z)) || !isLushGroundReplaceable(context.getBlockState(x, centerY - 1, z))) {
+                    continue;
+                }
+
+                context.setBlockState(x, centerY - 1, z, ModBlocks.MOSS_BLOCK.getDefaultState());
+                if (random.nextDouble() < 0.22D * strength) {
+                    context.setBlockState(x, centerY, z, ModBlocks.MOSS_CARPET.getDefaultState());
+                } else if (random.nextDouble() < 0.06D * strength) {
+                    context.setBlockState(x, centerY, z, (random.nextBoolean() ? ModBlocks.Azalea : ModBlocks.Flowering_Azalea).getDefaultState());
+                } else if (random.nextDouble() < 0.05D * strength) {
+                    context.setBlockState(x, centerY, z, Blocks.TALLGRASS.getDefaultState());
+                }
+            }
+        }
+    }
+
+    private void placeCeilingMossPrimer(ModernCaveTerrainCaveDecorationContext context, Random random, int centerX, int ceilingY, int centerZ, int radius, double strength) {
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                if (dx * dx + dz * dz > radius * radius + random.nextInt(3)) {
+                    continue;
+                }
+
+                int x = centerX + dx;
+                int z = centerZ + dz;
+                if (!isInsideChunk(x, ceilingY - 1, z)) {
+                    continue;
+                }
+
+                if (isAir(context.getBlockState(x, ceilingY - 1, z)) && isLushGroundReplaceable(context.getBlockState(x, ceilingY, z))
+                        && random.nextDouble() < 0.64D * strength) {
+                    context.setBlockState(x, ceilingY, z, ModBlocks.MOSS_BLOCK.getDefaultState());
+                }
+            }
+        }
+    }
+
+    private void placeClayAndDripleafPrimer(ModernCaveTerrainCaveDecorationContext context, Random random, int centerX, int centerY, int centerZ, double strength) {
+        int count = 6 + (int)(10.0D * strength);
+        for (int i = 0; i < count; i++) {
+            int x = centerX + random.nextInt(9) - 4;
+            int z = centerZ + random.nextInt(9) - 4;
+            if (!isInsideChunk(x, centerY + 3, z)) {
+                continue;
+            }
+
+            if (!isAir(context.getBlockState(x, centerY, z)) || !isLushGroundReplaceable(context.getBlockState(x, centerY - 1, z))) {
+                continue;
+            }
+
+            context.setBlockState(x, centerY - 1, z, Blocks.CLAY.getDefaultState());
+            EnumFacing facing = EnumFacing.HORIZONTALS[random.nextInt(EnumFacing.HORIZONTALS.length)];
+            if (random.nextDouble() < 0.55D && isAir(context.getBlockState(x, centerY + 1, z))) {
+                context.setBlockState(x, centerY, z, ModBlocks.SMALL_DRIPLEAF.getDefaultState()
+                        .withProperty(SmallDripleaf.HALF, BlockDoublePlant.EnumBlockHalf.LOWER)
+                        .withProperty(SmallDripleaf.FACING, facing));
+                context.setBlockState(x, centerY + 1, z, ModBlocks.SMALL_DRIPLEAF.getDefaultState()
+                        .withProperty(SmallDripleaf.HALF, BlockDoublePlant.EnumBlockHalf.UPPER)
+                        .withProperty(SmallDripleaf.FACING, facing));
+            } else if (random.nextDouble() < 0.55D) {
+                int height = 1 + random.nextInt(3);
+                int placedStems = 0;
+                for (int y = 0; y < height && isAir(context.getBlockState(x, centerY + y, z)); y++) {
+                    context.setBlockState(x, centerY + y, z, ModBlocks.DRIPLEAF_STEM.getDefaultState().withProperty(DripleafStem.FACING, facing));
+                    placedStems++;
+                }
+                if (placedStems == height && isAir(context.getBlockState(x, centerY + height, z))) {
+                    context.setBlockState(x, centerY + height, z, ModBlocks.BIG_DRIPLEAF.getDefaultState().withProperty(BigDripleaf.FACING, facing));
+                }
+            }
+        }
+    }
+
+    private void placeCaveVinePrimer(ModernCaveTerrainCaveDecorationContext context, Random random, int x, int y, int z, int length) {
+        if (!isInsideChunk(x, y, z) || !isAir(context.getBlockState(x, y, z)) || !isSolid(context.getBlockState(x, y + 1, z))) {
+            return;
+        }
+
+        for (int i = 0; i < length && y - i > 1; i++) {
+            if (!isAir(context.getBlockState(x, y - i, z))) {
+                break;
+            }
+
+            boolean berries = random.nextInt(5) == 0;
+            if (i == length - 1) {
+                context.setBlockState(x, y - i, z, ModBlocks.CAVE_VINE.getDefaultState().withProperty(CaveVine.AGE, 1).withProperty(CaveVine.BERRIES, berries));
+            } else {
+                context.setBlockState(x, y - i, z, ModBlocks.CAVE_VINE_PLANT.getDefaultState().withProperty(CaveVinePlant.BERRIES, berries));
+            }
+        }
+    }
+
+    private void decorateDripstonePrimer(ModernCaveTerrainCaveDecorationContext context, Random random, int x, int y, int z, double strength) {
+        int floor = scanPrimer(context, x, y, z, EnumFacing.DOWN, 12);
+        int ceiling = scanPrimer(context, x, y, z, EnumFacing.UP, 12);
+        if (floor >= 0 && ceiling >= 0 && random.nextDouble() < 0.18D * strength) {
+            placeDripstoneClusterPrimer(context, random, x, floor, z, 2 + random.nextInt(6), strength);
+            return;
+        }
+
+        if (floor >= 0 && random.nextDouble() < 0.55D * strength) {
+            placePointedDripstonePrimer(context, random, x, floor, z, EnumFacing.UP, 1 + random.nextInt(3 + (int)(strength * 3.0D)));
+        }
+        if (ceiling >= 0 && random.nextDouble() < 0.75D * strength) {
+            placePointedDripstonePrimer(context, random, x, ceiling, z, EnumFacing.DOWN, 1 + random.nextInt(4 + (int)(strength * 4.0D)));
+        }
+    }
+
+    private void placeDripstoneClusterPrimer(ModernCaveTerrainCaveDecorationContext context, Random random, int centerX, int floorY, int centerZ, int radius, double strength) {
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                double distance = Math.sqrt(dx * dx + dz * dz);
+                if (distance > radius || random.nextDouble() > (1.0D - distance / (radius + 1.0D)) * strength + 0.08D) {
+                    continue;
+                }
+
+                int x = centerX + dx;
+                int z = centerZ + dz;
+                if (!isInsideChunk(x, floorY + 1, z)) {
+                    continue;
+                }
+
+                int airY = floorY + 1;
+                if (isAir(context.getBlockState(x, airY, z)) && isDripstoneReplaceable(context.getBlockState(x, floorY, z))) {
+                    int height = Math.max(1, (int)Math.round((radius - distance + 1.0D) * (0.45D + strength * 0.45D))) + random.nextInt(2);
+                    placePointedDripstonePrimer(context, random, x, floorY, z, EnumFacing.UP, height);
+                }
+
+                int ceilingY = scanPrimer(context, x, airY, z, EnumFacing.UP, 12);
+                if (ceilingY >= 0 && random.nextDouble() < 0.7D * strength) {
+                    int height = Math.max(1, (int)Math.round((radius - distance + 1.0D) * (0.5D + strength * 0.5D))) + random.nextInt(3);
+                    placePointedDripstonePrimer(context, random, x, ceilingY, z, EnumFacing.DOWN, height);
+                }
+            }
+        }
+    }
+
+    private void placePointedDripstonePrimer(ModernCaveTerrainCaveDecorationContext context, Random random, int x, int supportY, int z, EnumFacing direction, int length) {
+        if (!isInsideChunk(x, supportY, z) || !isDripstoneReplaceable(context.getBlockState(x, supportY, z))) {
+            return;
+        }
+
+        context.setBlockState(x, supportY, z, ModBlocks.DRIPSTONE_BLOCK.getDefaultState());
+        int y = supportY + direction.getYOffset();
+        for (int i = 0; i < length && y > 0 && y < 255; i++, y += direction.getYOffset()) {
+            if (!isAirOrWater(context.getBlockState(x, y, z))) {
+                break;
+            }
+            context.setBlockState(x, y, z, ModBlocks.POINTED_DRIPSTONE.getDefaultState()
+                    .withProperty(PointedDripstoneBlock.VERTICAL_DIRECTION, direction)
+                    .withProperty(PointedDripstoneBlock.THICKNESS, getGeneratedDripstoneThickness(i, length)));
+        }
+    }
+
+    private PointedDripstoneBlock.Thickness getGeneratedDripstoneThickness(int index, int length) {
+        if (length <= 1 || index == length - 1) {
+            return PointedDripstoneBlock.Thickness.TIP;
+        }
+        if (index == 0) {
+            return length >= 4 ? PointedDripstoneBlock.Thickness.BASE : PointedDripstoneBlock.Thickness.FRUSTUM;
+        }
+        if (index == length - 2) {
+            return PointedDripstoneBlock.Thickness.FRUSTUM;
+        }
+        return PointedDripstoneBlock.Thickness.MIDDLE;
+    }
+
+    private void placeGlowLichenPrimer(ModernCaveTerrainCaveDecorationContext context, Random random, int x, int y, int z) {
         if (!isAir(context.getBlockState(x, y, z))) {
             return;
         }
         for (EnumFacing facing : EnumFacing.values()) {
-            int sx = x - facing.getXOffset();
-            int sy = y - facing.getYOffset();
-            int sz = z - facing.getZOffset();
+            int sx = x + facing.getXOffset();
+            int sy = y + facing.getYOffset();
+            int sz = z + facing.getZOffset();
             if (sx < 0 || sx > 15 || sy < 0 || sy > 255 || sz < 0 || sz > 15) {
                 continue;
             }
             if (isSolid(context.getBlockState(sx, sy, sz)) && random.nextBoolean()) {
-                context.setBlockState(x, y, z, ModBlocks.GLOW_LICHEN.getDefaultState()
-                        .withProperty(GlowLichenBlock.UP, facing == EnumFacing.UP)
-                        .withProperty(GlowLichenBlock.DOWN, facing == EnumFacing.DOWN)
-                        .withProperty(GlowLichenBlock.NORTH, facing == EnumFacing.NORTH)
-                        .withProperty(GlowLichenBlock.EAST, facing == EnumFacing.EAST)
-                        .withProperty(GlowLichenBlock.SOUTH, facing == EnumFacing.SOUTH)
-                        .withProperty(GlowLichenBlock.WEST, facing == EnumFacing.WEST));
+                context.setBlockState(x, y, z, ((GlowLichenBlock)ModBlocks.GLOW_LICHEN).getStateForFace(facing));
                 return;
             }
         }
     }
 
-    private int scanPrimer(BetterCavesCaveDecorationContext context, int x, int y, int z, EnumFacing direction, int distance) {
+    private int scanPrimer(ModernCaveTerrainCaveDecorationContext context, int x, int y, int z, EnumFacing direction, int distance) {
         int checkY = y;
         for (int i = 0; i < distance; i++) {
             checkY += direction.getYOffset();
@@ -699,6 +910,30 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
             }
         }
         return -1;
+    }
+
+    private int findPrimerCaveAir(ModernCaveTerrainCaveDecorationContext context, int x, int startY, int z, int distance) {
+        if (isInsideChunk(x, startY, z) && isAir(context.getBlockState(x, startY, z))) {
+            return startY;
+        }
+
+        for (int offset = 1; offset <= distance; offset++) {
+            int up = startY + offset;
+            if (isInsideChunk(x, up, z) && isAir(context.getBlockState(x, up, z))) {
+                return up;
+            }
+
+            int down = startY - offset;
+            if (isInsideChunk(x, down, z) && isAir(context.getBlockState(x, down, z))) {
+                return down;
+            }
+        }
+
+        return -1;
+    }
+
+    private boolean isInsideChunk(int x, int y, int z) {
+        return x >= 0 && x <= 15 && y >= 0 && y <= 255 && z >= 0 && z <= 15;
     }
 
     private boolean isNaturalStone(IBlockState state) {
@@ -720,8 +955,20 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
         return state.getBlock() == Blocks.AIR;
     }
 
+    private boolean isAirOrWater(IBlockState state) {
+        return state.getBlock() == Blocks.AIR || state.getMaterial() == Material.WATER;
+    }
+
     private boolean isSolid(IBlockState state) {
         return state.getMaterial().isSolid();
+    }
+
+    private boolean isDripstoneReplaceable(IBlockState state) {
+        Block block = state.getBlock();
+        return isNaturalStone(state)
+                || block == Blocks.DIRT
+                || block == Blocks.GRAVEL
+                || block == Blocks.CLAY;
     }
 
     private void setFluidloggableWater(World world, BlockPos pos, IBlockState state, int flags) {
@@ -744,6 +991,30 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, BetterCavesCa
         double y = first.getY() - second.getY();
         double z = first.getZ() - second.getZ();
         return x * x + y * y + z * z;
+    }
+
+    private static double clampedMap(double value, double fromMin, double fromMax, double toMin, double toMax) {
+        if (fromMin < fromMax) {
+            if (value <= fromMin) {
+                return toMin;
+            }
+            if (value >= fromMax) {
+                return toMax;
+            }
+        } else {
+            if (value >= fromMin) {
+                return toMin;
+            }
+            if (value <= fromMax) {
+                return toMax;
+            }
+        }
+
+        return lerp((value - fromMin) / (fromMax - fromMin), toMin, toMax);
+    }
+
+    private static double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     private static double smoothNoise(long seed, double x, double y, double z) {
