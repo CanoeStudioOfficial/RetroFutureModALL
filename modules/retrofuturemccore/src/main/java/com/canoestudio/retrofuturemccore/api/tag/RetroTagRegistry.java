@@ -51,6 +51,14 @@ public final class RetroTagRegistry {
         getOrCreate(key).addPredicate(predicate);
     }
 
+    public static <T> void addReference(RetroTagKey<T> key, RetroTagKey<T> reference) {
+        getOrCreate(key).addReference(reference);
+    }
+
+    public static <T> void clear(RetroTagKey<T> key) {
+        getOrCreate(key).clear();
+    }
+
     public static boolean containsItem(RetroTagKey<Item> key, Item item) {
         RetroTag<Item> tag = get(key);
         return tag != null && tag.contains(item, item == null ? null : item.getRegistryName());

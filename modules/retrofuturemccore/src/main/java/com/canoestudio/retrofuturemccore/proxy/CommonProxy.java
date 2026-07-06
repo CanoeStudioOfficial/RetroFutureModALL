@@ -7,7 +7,9 @@ import com.canoestudio.retrofuturemccore.internal.gameevent.GameEventWorldCleanu
 import com.canoestudio.retrofuturemccore.internal.item.RetroItemUseEventHandler;
 import com.canoestudio.retrofuturemccore.network.RetroFutureCoreNetwork;
 import com.canoestudio.retrofuturemccore.network.message.MessageSyncEntityComponent;
+import com.canoestudio.retrofuturemccore.api.tag.RetroTagJsonLoader;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 
 public class CommonProxy {
@@ -22,5 +24,9 @@ public class CommonProxy {
     }
 
     public void handleEntityComponentSync(MessageSyncEntityComponent message) {
+    }
+
+    public void postInit(FMLPostInitializationEvent event) {
+        RetroTagJsonLoader.loadAllActiveModTags();
     }
 }

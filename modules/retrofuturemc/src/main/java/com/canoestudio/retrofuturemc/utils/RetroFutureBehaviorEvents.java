@@ -8,6 +8,9 @@ import com.canoestudio.retrofuturemc.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturemc.contents.items.ModItems;
 import com.canoestudio.retrofuturemc.contents.mobs.axolotl.EntityAxolotl;
 import com.canoestudio.retrofuturemc.sounds.ModSoundHandler;
+import com.canoestudio.retrofuturemccore.api.event.RetroBlockInteractionHandler;
+import com.canoestudio.retrofuturemccore.api.event.RetroEventRegistry;
+import com.canoestudio.retrofuturemccore.api.event.RetroEventResult;
 import net.minecraft.block.BlockDispenser;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockCake;
@@ -32,11 +35,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.potion.PotionUtils;
 import net.minecraft.init.PotionTypes;
 import net.minecraft.util.DamageSource;
-import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -44,9 +48,7 @@ import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.ProjectileImpactEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.world.ChunkEvent;
-import net.minecraftforge.fml.common.eventhandler.Event;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.oredict.OreDictionary;
 
@@ -57,6 +59,7 @@ import java.util.UUID;
 
 public class RetroFutureBehaviorEvents {
     private static boolean candleDispenserBehaviorRegistered = false;
+    private static boolean blockInteractionHandlerRegistered = false;
     private static final DamageSource FREEZE = new DamageSource("freeze").setDamageBypassesArmor();
     private static final int TICKS_TO_FREEZE = 140;
     private static final int FREEZE_DAMAGE_INTERVAL = 40;
@@ -65,29 +68,7 @@ public class RetroFutureBehaviorEvents {
 
     public RetroFutureBehaviorEvents() {
         registerCandleDispenserBehavior();
-    }
-
-    @SubscribeEvent
-    public void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
-        World world = event.getWorld();
-        BlockPos pos = event.getPos();
-        IBlockState state = world.getBlockState(pos);
-        EntityPlayer player = event.getEntityPlayer();
-        ItemStack stack = event.getItemStack();
-
-        if (handleCopperInteraction(world, pos, state, player, stack, event)) {
-            return;
-        }
-
-        if (handlePowderSnowPickup(world, pos, state, player, stack, event)) {
-            return;
-        }
-
-        if (handleCandleLighting(world, pos, state, player, stack, event)) {
-            return;
-        }
-
-        handleCandleCakePlacement(world, pos, state, player, stack, event);
+        registerCoreBlockInteractionHandler();
     }
 
     @SubscribeEvent
@@ -159,7 +140,23 @@ public class RetroFutureBehaviorEvents {
         guardian.targetTasks.addTask(3, new EntityAINearestAttackableTarget<>(guardian, EntityAxolotl.class, true));
     }
 
-    private boolean handleCopperInteraction(World world, BlockPos pos, IBlockState state, EntityPlayer player, ItemStack stack, PlayerInteractEvent.RightClickBlock event) {
+    private RetroEventResult handleRightClickBlock(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, ItemStack stack) {
+        if (handleCopperInteraction(world, pos, state, player, stack)) {
+            return RetroEventResult.SUCCESS;
+        }
+
+        if (handlePowderSnowPickup(world, pos, state, player, hand, stack)) {
+            return RetroEventResult.SUCCESS;
+        }
+
+        if (handleCandleLighting(world, pos, state, player, stack)) {
+            return RetroEventResult.SUCCESS;
+        }
+
+        return handleCandleCakePlacement(world, pos, state, player, stack) ? RetroEventResult.SUCCESS : RetroEventResult.PASS;
+    }
+
+    private boolean handleCopperInteraction(World world, BlockPos pos, IBlockState state, EntityPlayer player, ItemStack stack) {
         if (!CopperBehavior.isCopper(state.getBlock()) || stack.isEmpty()) {
             return false;
         }
@@ -172,8 +169,6 @@ public class RetroFutureBehaviorEvents {
                     stack.damageItem(1, player);
                 }
             }
-            event.setCanceled(true);
-            event.setCancellationResult(EnumActionResult.SUCCESS);
             return true;
         }
 
@@ -185,15 +180,13 @@ public class RetroFutureBehaviorEvents {
                     stack.shrink(1);
                 }
             }
-            event.setCanceled(true);
-            event.setCancellationResult(EnumActionResult.SUCCESS);
             return true;
         }
 
         return false;
     }
 
-    private boolean handlePowderSnowPickup(World world, BlockPos pos, IBlockState state, EntityPlayer player, ItemStack stack, PlayerInteractEvent.RightClickBlock event) {
+    private boolean handlePowderSnowPickup(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, ItemStack stack) {
         if (state.getBlock() != ModBlocks.POWDER_SNOW || stack.getItem() != Items.BUCKET) {
             return false;
         }
@@ -205,27 +198,25 @@ public class RetroFutureBehaviorEvents {
                 stack.shrink(1);
                 ItemStack filled = new ItemStack(ModItems.POWDER_SNOW_BUCKET);
                 if (stack.isEmpty()) {
-                    player.setHeldItem(event.getHand(), filled);
+                    player.setHeldItem(hand, filled);
                 } else if (!player.inventory.addItemStackToInventory(filled)) {
                     player.dropItem(filled, false);
                 }
             }
         }
 
-        event.setCanceled(true);
-        event.setCancellationResult(EnumActionResult.SUCCESS);
         return true;
     }
 
-    private void handleCandleCakePlacement(World world, BlockPos pos, IBlockState state, EntityPlayer player, ItemStack stack, PlayerInteractEvent.RightClickBlock event) {
+    private boolean handleCandleCakePlacement(World world, BlockPos pos, IBlockState state, EntityPlayer player, ItemStack stack) {
         if (state.getBlock() != Blocks.CAKE || state.getValue(BlockCake.BITES) != 0 || !(stack.getItem() instanceof ItemBlock)) {
-            return;
+            return false;
         }
 
         Block candle = ((ItemBlock) stack.getItem()).getBlock();
         CandleCakeBlock cake = CandleCakeBlock.byCandle(candle);
         if (cake == null) {
-            return;
+            return false;
         }
 
         if (!world.isRemote) {
@@ -236,32 +227,21 @@ public class RetroFutureBehaviorEvents {
             }
         }
 
-        event.setUseBlock(Event.Result.DENY);
-        event.setUseItem(Event.Result.DENY);
-        event.setCanceled(true);
-        event.setCancellationResult(EnumActionResult.SUCCESS);
+        return true;
     }
 
-    private boolean handleCandleLighting(World world, BlockPos pos, IBlockState state, EntityPlayer player, ItemStack stack, PlayerInteractEvent.RightClickBlock event) {
+    private boolean handleCandleLighting(World world, BlockPos pos, IBlockState state, EntityPlayer player, ItemStack stack) {
         if (!CandleBlock.isLightingItem(stack)) {
             return false;
         }
 
         if (CandleBlock.canLight(world, pos, state)) {
             CandleBlock.light(world, pos, state, player, stack, 3);
-            event.setUseBlock(Event.Result.DENY);
-            event.setUseItem(Event.Result.DENY);
-            event.setCanceled(true);
-            event.setCancellationResult(EnumActionResult.SUCCESS);
             return true;
         }
 
         if (CandleCakeBlock.canLight(state)) {
             CandleCakeBlock.light(world, pos, state, player, stack, 3);
-            event.setUseBlock(Event.Result.DENY);
-            event.setUseItem(Event.Result.DENY);
-            event.setCanceled(true);
-            event.setCancellationResult(EnumActionResult.SUCCESS);
             return true;
         }
 
@@ -479,6 +459,21 @@ public class RetroFutureBehaviorEvents {
         candleDispenserBehaviorRegistered = true;
         wrapLightingDispenserBehavior(Items.FLINT_AND_STEEL);
         wrapLightingDispenserBehavior(Items.FIRE_CHARGE);
+    }
+
+    private void registerCoreBlockInteractionHandler() {
+        if (blockInteractionHandlerRegistered) {
+            return;
+        }
+
+        blockInteractionHandlerRegistered = true;
+        RetroEventRegistry.registerBlockInteraction(new RetroBlockInteractionHandler() {
+            @Override
+            public RetroEventResult onRightClickBlock(World world, BlockPos pos, IBlockState state, EntityPlayer player,
+                    EnumHand hand, ItemStack stack, EnumFacing face, Vec3d hitVec) {
+                return RetroFutureBehaviorEvents.this.handleRightClickBlock(world, pos, state, player, hand, stack);
+            }
+        });
     }
 
     private void wrapLightingDispenserBehavior(final Item item) {

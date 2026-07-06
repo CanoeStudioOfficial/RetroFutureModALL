@@ -12,6 +12,7 @@ public class RetroTag<T> {
     private final Set<ResourceLocation> ids = new LinkedHashSet<ResourceLocation>();
     private final Set<T> values = new LinkedHashSet<T>();
     private final Set<Predicate<T>> predicates = new LinkedHashSet<Predicate<T>>();
+    private final Set<RetroTagKey<T>> references = new LinkedHashSet<RetroTagKey<T>>();
 
     RetroTag(RetroTagKey<T> key) {
         this.key = key;
@@ -36,7 +37,24 @@ public class RetroTag<T> {
         return this;
     }
 
+    public RetroTag<T> addReference(RetroTagKey<T> reference) {
+        this.references.add(reference);
+        return this;
+    }
+
+    public RetroTag<T> clear() {
+        this.ids.clear();
+        this.values.clear();
+        this.predicates.clear();
+        this.references.clear();
+        return this;
+    }
+
     public boolean contains(T value, ResourceLocation id) {
+        return contains(value, id, new LinkedHashSet<RetroTagKey<?>>());
+    }
+
+    private boolean contains(T value, ResourceLocation id, Set<RetroTagKey<?>> visiting) {
         if (id != null && this.ids.contains(id)) {
             return true;
         }
@@ -45,6 +63,15 @@ public class RetroTag<T> {
         }
         for (Predicate<T> predicate : this.predicates) {
             if (predicate.test(value)) {
+                return true;
+            }
+        }
+        for (RetroTagKey<T> reference : this.references) {
+            if (!visiting.add(reference)) {
+                continue;
+            }
+            RetroTag<T> referencedTag = RetroTagRegistry.get(reference);
+            if (referencedTag != null && referencedTag.contains(value, id, visiting)) {
                 return true;
             }
         }
@@ -57,5 +84,9 @@ public class RetroTag<T> {
 
     public Set<T> getValues() {
         return Collections.unmodifiableSet(this.values);
+    }
+
+    public Set<RetroTagKey<T>> getReferences() {
+        return Collections.unmodifiableSet(this.references);
     }
 }
