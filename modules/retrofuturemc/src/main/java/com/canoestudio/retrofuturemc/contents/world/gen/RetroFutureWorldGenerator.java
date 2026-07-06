@@ -17,7 +17,6 @@ import com.lonelyxiya.minecraft.moderncaveterrain.api.ModernCaveTerrainCaveDecor
 import com.lonelyxiya.minecraft.moderncaveterrain.api.ModernCaveTerrainConfig;
 import com.lonelyxiya.minecraft.moderncaveterrain.api.ModernCaveTerrainUndergroundBiomeDecorator;
 import com.lonelyxiya.minecraft.moderncaveterrain.api.ModernCaveTerrainUndergroundBiomeDefinition;
-import com.lonelyxiya.minecraft.moderncaveterrain.api.ModernCaveTerrainUndergroundBiomeSelector;
 import com.lonelyxiya.minecraft.moderncaveterrain.api.ModernCaveTerrainUndergroundBiomeSample;
 import git.jbredwards.fluidlogged_api.api.util.FluidState;
 import git.jbredwards.fluidlogged_api.api.util.FluidloggedUtils;
@@ -100,35 +99,37 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
         if (!modernCaveTerrainBiomesRegistered) {
             RetroFutureWorldGenerator decorator = new RetroFutureWorldGenerator();
             if (GENERATE_LUSH_CAVES) {
-                ModernCaveTerrainAPI.registerUndergroundBiome(ModernCaveTerrainUndergroundBiomeDefinition.builder(LUSH_CAVES_BIOME_ID)
-                        .caveBiomeType(ModernCaveTerrainCaveBiomeType.GENERIC_3D)
-                        .yRange(MODERN_UNDERGROUND_BIOME_MIN_Y, MODERN_UNDERGROUND_BIOME_MAX_Y)
-                        .priority(MODERN_UNDERGROUND_BIOME_PRIORITY)
-                        .selector(new ModernCaveTerrainUndergroundBiomeSelector() {
-                            @Override
-                            public double getWeight(World world, ModernCaveTerrainUndergroundBiomeSample sample) {
-                                return getModernLushSelectionWeight(sample);
-                            }
-                        })
-                        .decorator(decorator)
-                        .build());
+                ModernCaveTerrainAPI.registerUndergroundBiome(createLushCavesDefinition(decorator));
             }
             if (GENERATE_DRIPSTONE_CAVES) {
-                ModernCaveTerrainAPI.registerUndergroundBiome(ModernCaveTerrainUndergroundBiomeDefinition.builder(DRIPSTONE_CAVES_BIOME_ID)
-                        .caveBiomeType(ModernCaveTerrainCaveBiomeType.GENERIC_3D)
-                        .yRange(MODERN_UNDERGROUND_BIOME_MIN_Y, MODERN_UNDERGROUND_BIOME_MAX_Y)
-                        .priority(MODERN_UNDERGROUND_BIOME_PRIORITY)
-                        .selector(new ModernCaveTerrainUndergroundBiomeSelector() {
-                            @Override
-                            public double getWeight(World world, ModernCaveTerrainUndergroundBiomeSample sample) {
-                                return getModernDripstoneSelectionWeight(sample);
-                            }
-                        })
-                        .decorator(decorator)
-                        .build());
+                ModernCaveTerrainAPI.registerUndergroundBiome(createDripstoneCavesDefinition(decorator));
             }
             modernCaveTerrainBiomesRegistered = true;
         }
+    }
+
+    private static ModernCaveTerrainUndergroundBiomeDefinition createLushCavesDefinition(
+            ModernCaveTerrainUndergroundBiomeDecorator decorator) {
+        return ModernCaveTerrainUndergroundBiomeDefinition
+                .builder(LUSH_CAVES_BIOME_ID)
+                .caveBiomeType(ModernCaveTerrainCaveBiomeType.GENERIC_3D)
+                .yRange(MODERN_UNDERGROUND_BIOME_MIN_Y, MODERN_UNDERGROUND_BIOME_MAX_Y)
+                .priority(MODERN_UNDERGROUND_BIOME_PRIORITY)
+                .selector((world, sample) -> getModernLushSelectionWeight(sample))
+                .decorator(decorator)
+                .build();
+    }
+
+    private static ModernCaveTerrainUndergroundBiomeDefinition createDripstoneCavesDefinition(
+            ModernCaveTerrainUndergroundBiomeDecorator decorator) {
+        return ModernCaveTerrainUndergroundBiomeDefinition
+                .builder(DRIPSTONE_CAVES_BIOME_ID)
+                .caveBiomeType(ModernCaveTerrainCaveBiomeType.GENERIC_3D)
+                .yRange(MODERN_UNDERGROUND_BIOME_MIN_Y, MODERN_UNDERGROUND_BIOME_MAX_Y)
+                .priority(MODERN_UNDERGROUND_BIOME_PRIORITY)
+                .selector((world, sample) -> getModernDripstoneSelectionWeight(sample))
+                .decorator(decorator)
+                .build();
     }
 
     @Override
@@ -168,11 +169,14 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
 
         Random positionRandom = createModernCavePositionRandom(world, context.getChunkX(), context.getChunkZ(), getModernPositionSalt(targetStyle));
         Random decorationRandom = createModernCaveFeatureRandom(world, context.getChunkX(), context.getChunkZ(), getModernFeatureSalt(targetStyle));
-        int minY = getModernCaveMinY(world, context.getConfig());
-        int maxY = getModernCaveMaxY(world, context.getConfig());
-        if (maxY <= minY) {
-            maxY = Math.min(96, world.getActualHeight() - 1);
-            minY = 4;
+        int minY = Math.max(getModernCaveMinY(world, context.getConfig()), definition.getMinY());
+        int maxY = Math.min(getModernCaveMaxY(world, context.getConfig()), definition.getMaxY());
+        if (maxY < minY) {
+            maxY = Math.min(definition.getMaxY(), Math.min(96, world.getActualHeight() - 1));
+            minY = Math.max(definition.getMinY(), 4);
+            if (maxY < minY) {
+                return;
+            }
         }
 
         for (int i = 0; i < MODERN_CAVE_TERRAIN_DECORATION_ATTEMPTS; i++) {
