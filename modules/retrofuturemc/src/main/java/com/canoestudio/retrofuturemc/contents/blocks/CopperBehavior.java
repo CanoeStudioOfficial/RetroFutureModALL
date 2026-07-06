@@ -10,7 +10,9 @@ import java.util.Map;
 import java.util.Random;
 
 public final class CopperBehavior {
-    private static final float BASE_CHANCE = 0.05688889F;
+    private static final int SCAN_DISTANCE = 4;
+    private static final float BASE_CHANCE = 0.12F;
+    private static final float UNAFFECTED_CHANCE_MODIFIER = 0.75F;
     private static final Map<Block, CopperInfo> INFO = new HashMap<>();
 
     private CopperBehavior() {}
@@ -108,15 +110,15 @@ public final class CopperBehavior {
             return;
         }
 
-        int sameAge = 0;
-        int older = 0;
+        int sameAgeCount = 0;
+        int moreWeatheredCount = 0;
 
         BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos(pos);
-        for (int dx = -4; dx <= 4; dx++) {
-            for (int dy = -4; dy <= 4; dy++) {
-                for (int dz = -4; dz <= 4; dz++) {
+        for (int dx = -SCAN_DISTANCE; dx <= SCAN_DISTANCE; dx++) {
+            for (int dy = -SCAN_DISTANCE; dy <= SCAN_DISTANCE; dy++) {
+                for (int dz = -SCAN_DISTANCE; dz <= SCAN_DISTANCE; dz++) {
                     int distance = Math.abs(dx) + Math.abs(dy) + Math.abs(dz);
-                    if (distance == 0 || distance > 4) {
+                    if (distance == 0 || distance > SCAN_DISTANCE) {
                         continue;
                     }
 
@@ -130,19 +132,23 @@ public final class CopperBehavior {
                         return;
                     }
                     if (other.age > info.age) {
-                        older++;
+                        moreWeatheredCount++;
                     } else {
-                        sameAge++;
+                        sameAgeCount++;
                     }
                 }
             }
         }
 
-        float localChance = (older + 1.0F) / (older + sameAge + 1.0F);
-        float ageModifier = info.age == 0 ? 0.75F : 1.0F;
-        if (rand.nextFloat() < localChance * localChance * ageModifier) {
+        float localChance = (moreWeatheredCount + 1.0F) / (moreWeatheredCount + sameAgeCount + 1.0F);
+        float actualChance = localChance * localChance * getChanceModifier(info);
+        if (rand.nextFloat() < actualChance) {
             world.setBlockState(pos, copyCompatibleProperties(state, info.next.getDefaultState()), 3);
         }
+    }
+
+    private static float getChanceModifier(CopperInfo info) {
+        return info.age == 0 ? UNAFFECTED_CHANCE_MODIFIER : 1.0F;
     }
 
     private static IBlockState copyCompatibleProperties(IBlockState from, IBlockState to) {

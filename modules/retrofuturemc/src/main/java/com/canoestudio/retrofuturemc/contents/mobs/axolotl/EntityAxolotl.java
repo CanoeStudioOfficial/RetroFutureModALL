@@ -2,9 +2,12 @@ package com.canoestudio.retrofuturemc.contents.mobs.axolotl;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.IAttributeInstance;
+import net.minecraft.entity.monster.EntityGuardian;
 import net.minecraft.entity.passive.EntityWaterMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -18,6 +21,7 @@ import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundEvent;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
@@ -37,6 +41,10 @@ public class EntityAxolotl extends EntityWaterMob {
     private static final double WATER_MOVE_INERTIA = 0.16D;
     private static final double WATER_DRAG = 0.9D;
     private static final double LAND_SEEK_SPEED = 0.045D;
+    private static final double HOSTILE_TARGET_RANGE = 8.0D;
+    private static final double HOSTILE_TARGET_RANGE_SQ = HOSTILE_TARGET_RANGE * HOSTILE_TARGET_RANGE;
+    private static final double ATTACK_REACH_SQ = 1.8D;
+    private static final int ATTACK_COOLDOWN_TICKS = 20;
     private static final String[] VARIANT_NAMES = new String[] {"lucy", "wild", "gold", "cyan", "blue"};
 
     @Nullable
@@ -47,6 +55,9 @@ public class EntityAxolotl extends EntityWaterMob {
     private int landHopCooldown;
     private int playDeadTicks;
     private int swimPauseTicks;
+    private int attackCooldown;
+    @Nullable
+    private EntityLivingBase attackTarget;
     private final AnimationFactor playingDeadAnimator = new AnimationFactor();
     private final AnimationFactor inWaterAnimator = new AnimationFactor();
     private final AnimationFactor onGroundAnimator = new AnimationFactor();
@@ -70,7 +81,13 @@ public class EntityAxolotl extends EntityWaterMob {
         super.applyEntityAttributes();
         getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(14.0D);
         getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(1.0D);
+        getAttackDamageAttribute().setBaseValue(2.0D);
         getEntityAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE).setBaseValue(0.35D);
+    }
+
+    private IAttributeInstance getAttackDamageAttribute() {
+        IAttributeInstance attribute = getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
+        return attribute != null ? attribute : getAttributeMap().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
     }
 
     @Override
@@ -163,6 +180,10 @@ public class EntityAxolotl extends EntityWaterMob {
         }
 
         if (!world.isRemote) {
+            if (attackCooldown > 0) {
+                attackCooldown--;
+            }
+
             updatePlayDeadState();
 
             if (isInWater()) {
@@ -178,10 +199,12 @@ public class EntityAxolotl extends EntityWaterMob {
                         motionY -= 0.005D;
                     }
                 } else {
+                    updateAttackTarget();
                     updateWaterMovement();
                 }
             } else {
                 swimTarget = null;
+                attackTarget = null;
 
                 if (isPlayingDead()) {
                     playDeadTicks = 0;
@@ -228,6 +251,16 @@ public class EntityAxolotl extends EntityWaterMob {
     }
 
     private void updateWaterMovement() {
+        if (attackTarget != null && attackTarget.isEntityAlive()) {
+            swimTarget = null;
+            swimPauseTicks = 0;
+            moveToward(attackTarget.posX, attackTarget.posY + attackTarget.height * 0.5D, attackTarget.posZ, 0.12D, 0.28D);
+            getLookHelper().setLookPositionWithEntity(attackTarget, 30.0F, 30.0F);
+            tryAttackTarget();
+            limitMotion(0.22D, 0.14D);
+            return;
+        }
+
         if (swimPauseTicks > 0) {
             swimPauseTicks--;
             motionX *= 0.94D;
@@ -261,6 +294,56 @@ public class EntityAxolotl extends EntityWaterMob {
         }
 
         limitMotion(0.16D, 0.10D);
+    }
+
+    private void updateAttackTarget() {
+        if (attackTarget != null && !isValidAttackTarget(attackTarget)) {
+            attackTarget = null;
+        }
+
+        if (attackTarget == null || ticksExisted % 20 == 0) {
+            EntityGuardian guardian = findNearestGuardianTarget();
+            if (guardian != null) {
+                attackTarget = guardian;
+            }
+        }
+    }
+
+    @Nullable
+    private EntityGuardian findNearestGuardianTarget() {
+        AxisAlignedBB area = getEntityBoundingBox().grow(HOSTILE_TARGET_RANGE, HOSTILE_TARGET_RANGE, HOSTILE_TARGET_RANGE);
+        EntityGuardian best = null;
+        double bestDistance = HOSTILE_TARGET_RANGE_SQ;
+
+        for (EntityGuardian guardian : world.getEntitiesWithinAABB(EntityGuardian.class, area)) {
+            if (!isValidAttackTarget(guardian)) {
+                continue;
+            }
+
+            double distance = getDistanceSq(guardian);
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                best = guardian;
+            }
+        }
+
+        return best;
+    }
+
+    private boolean isValidAttackTarget(EntityLivingBase target) {
+        return target instanceof EntityGuardian
+                && target.isEntityAlive()
+                && target.isInWater()
+                && getDistanceSq(target) <= HOSTILE_TARGET_RANGE_SQ;
+    }
+
+    private void tryAttackTarget() {
+        if (attackCooldown > 0 || attackTarget == null || getDistanceSq(attackTarget) > ATTACK_REACH_SQ) {
+            return;
+        }
+
+        attackEntityAsMob(attackTarget);
+        attackCooldown = ATTACK_COOLDOWN_TICKS;
     }
 
     private void updateLandMovement() {
@@ -448,6 +531,15 @@ public class EntityAxolotl extends EntityWaterMob {
         }
 
         return super.attackEntityFrom(source, amount);
+    }
+
+    @Override
+    public boolean attackEntityAsMob(Entity entityIn) {
+        boolean attacked = entityIn.attackEntityFrom(DamageSource.causeMobDamage(this), (float)getAttackDamageAttribute().getAttributeValue());
+        if (attacked) {
+            playSound(ModSoundHandler.ENTITY_AXOLOTL_ATTACK, 1.0F, 1.0F);
+        }
+        return attacked;
     }
 
     private boolean shouldStartPlayingDead(DamageSource source, float amount, float healthBeforeDamage) {

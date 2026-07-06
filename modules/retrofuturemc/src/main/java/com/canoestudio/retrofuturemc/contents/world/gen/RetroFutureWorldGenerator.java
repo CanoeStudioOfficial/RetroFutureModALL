@@ -40,8 +40,8 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
     private static final IBlockState STONE = Blocks.STONE.getDefaultState().withProperty(BlockStone.VARIANT, BlockStone.EnumType.STONE);
     private static final IBlockState DEEPSLATE = ModBlocks.DeepSlate.getDefaultState();
     private static final int GEODE_RARITY = 24;
-    private static final int GEODE_MIN_Y = 15;
-    private static final int GEODE_MAX_Y = 35;
+    private static final int GEODE_MIN_Y = 6;
+    private static final int GEODE_MAX_Y = 30;
     private static final int GEODE_MIN_OFFSET = -16;
     private static final int GEODE_MAX_OFFSET = 16;
     private static final int GEODE_MIN_OUTER_WALL_DISTANCE = 4;
@@ -135,12 +135,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
     }
 
     private boolean shouldGenerateAmethystGeode(World world, Random random, int blockX, int blockZ) {
-        if (random.nextInt(GEODE_RARITY) != 0) {
-            return false;
-        }
-
-        Biome biome = world.getBiome(new BlockPos(blockX + 8, 0, blockZ + 8));
-        return !BiomeDictionary.hasType(biome, BiomeDictionary.Type.OCEAN);
+        return random.nextInt(GEODE_RARITY) == 0;
     }
 
     private boolean generateAmethystGeode(World world, Random random, BlockPos origin) {

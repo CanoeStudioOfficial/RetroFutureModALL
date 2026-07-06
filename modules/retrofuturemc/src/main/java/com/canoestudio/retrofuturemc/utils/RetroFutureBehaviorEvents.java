@@ -6,6 +6,7 @@ import com.canoestudio.retrofuturemc.contents.blocks.CopperBehavior;
 import com.canoestudio.retrofuturemc.contents.blocks.LightningRodBlock;
 import com.canoestudio.retrofuturemc.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturemc.contents.items.ModItems;
+import com.canoestudio.retrofuturemc.contents.mobs.axolotl.EntityAxolotl;
 import com.canoestudio.retrofuturemc.sounds.ModSoundHandler;
 import net.minecraft.block.BlockDispenser;
 import net.minecraft.block.Block;
@@ -15,7 +16,9 @@ import net.minecraft.dispenser.IBehaviorDispenseItem;
 import net.minecraft.dispenser.IBlockSource;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.ai.EntityAINearestAttackableTarget;
 import net.minecraft.entity.effect.EntityLightningBolt;
+import net.minecraft.entity.monster.EntityGuardian;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.projectile.EntityPotion;
 import net.minecraft.entity.projectile.EntitySmallFireball;
@@ -117,7 +120,15 @@ public class RetroFutureBehaviorEvents {
     @SubscribeEvent
     public void onEntityJoinWorld(EntityJoinWorldEvent event) {
         Entity entity = event.getEntity();
-        if (!(entity instanceof EntityLightningBolt) || event.getWorld().isRemote) {
+        if (event.getWorld().isRemote) {
+            return;
+        }
+
+        if (entity instanceof EntityGuardian) {
+            addGuardianAxolotlTarget((EntityGuardian) entity);
+        }
+
+        if (!(entity instanceof EntityLightningBolt)) {
             return;
         }
 
@@ -142,6 +153,10 @@ public class RetroFutureBehaviorEvents {
         entity.setPosition(rodPos.getX() + 0.5D, rodPos.getY() + 1.0D - LIGHTNING_STRIKE_EPSILON, rodPos.getZ() + 0.5D);
         activateLightningRodAt(world, rodPos);
         clearCopperAroundLightning(world, rodPos);
+    }
+
+    private void addGuardianAxolotlTarget(EntityGuardian guardian) {
+        guardian.targetTasks.addTask(3, new EntityAINearestAttackableTarget<>(guardian, EntityAxolotl.class, true));
     }
 
     private boolean handleCopperInteraction(World world, BlockPos pos, IBlockState state, EntityPlayer player, ItemStack stack, PlayerInteractEvent.RightClickBlock event) {
@@ -272,8 +287,11 @@ public class RetroFutureBehaviorEvents {
         if (inPowderSnow && wearsLeatherBoots(entity) && !entity.isSneaking() && entity.motionY <= 0.0D) {
             BlockPos surface = world.getBlockState(feet).getBlock() == ModBlocks.POWDER_SNOW ? feet : belowFeet;
             double targetY = surface.getY() + 1.0D;
-            if (entity.posY < targetY && entity.posY > surface.getY() + 0.2D) {
-                entity.setPosition(entity.posX, targetY, entity.posZ);
+            double minY = entity.getEntityBoundingBox().minY;
+            if (minY >= targetY - 0.18D && minY <= targetY + 0.08D && !entity.collidedHorizontally) {
+                if (minY < targetY) {
+                    entity.setPosition(entity.posX, entity.posY + targetY - minY, entity.posZ);
+                }
                 entity.motionY = 0.0D;
                 entity.fallDistance = 0.0F;
                 entity.onGround = true;

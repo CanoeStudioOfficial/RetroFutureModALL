@@ -2,7 +2,6 @@ package com.canoestudio.retrofuturemc.contents.mobs.goat;
 
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
 
@@ -16,6 +15,14 @@ public class ModelGoat extends ModelBase {
     private final ModelRenderer rightHindLeg;
     private final ModelRenderer leftFrontLeg;
     private final ModelRenderer rightFrontLeg;
+    private final ModelRenderer babyHead;
+    private final ModelRenderer babyLeftHorn;
+    private final ModelRenderer babyRightHorn;
+    private final ModelRenderer babyBody;
+    private final ModelRenderer babyLeftHindLeg;
+    private final ModelRenderer babyRightHindLeg;
+    private final ModelRenderer babyLeftFrontLeg;
+    private final ModelRenderer babyRightFrontLeg;
 
     public ModelGoat() {
         textureWidth = 64;
@@ -63,18 +70,72 @@ public class ModelGoat extends ModelBase {
         rightFrontLeg = new ModelRenderer(this, 35, 2);
         rightFrontLeg.setRotationPoint(-3.0F, 14.0F, -6.0F);
         rightFrontLeg.addBox(0.0F, 0.0F, 0.0F, 3, 10, 3);
+
+        babyLeftHindLeg = new ModelRenderer(this, 29, 12);
+        babyLeftHindLeg.setRotationPoint(1.5F, 19.5F, 3.0F);
+        babyLeftHindLeg.addBox(-1.0F, -0.5F, -1.0F, 2, 5, 2);
+
+        babyRightHindLeg = new ModelRenderer(this, 21, 12);
+        babyRightHindLeg.setRotationPoint(-1.5F, 19.5F, 3.0F);
+        babyRightHindLeg.addBox(-1.0F, -0.5F, -1.0F, 2, 5, 2);
+
+        babyRightFrontLeg = new ModelRenderer(this, 21, 5);
+        babyRightFrontLeg.setRotationPoint(-1.5F, 19.5F, -2.0F);
+        babyRightFrontLeg.addBox(-1.0F, -0.5F, -1.0F, 2, 5, 2);
+
+        babyLeftFrontLeg = new ModelRenderer(this, 29, 5);
+        babyLeftFrontLeg.setRotationPoint(1.5F, 19.5F, -2.0F);
+        babyLeftFrontLeg.addBox(-1.0F, -0.5F, -1.0F, 2, 5, 2);
+
+        babyBody = new ModelRenderer(this, 0, 10);
+        babyBody.setRotationPoint(0.0F, 17.8F, 0.0F);
+        babyBody.addBox(-3.0F, -2.3F, -4.5F, 6, 5, 9);
+        babyBody.setTextureOffset(0, 24).addBox(-2.5F, -2.2F, -4.0F, 5, 4, 8);
+
+        babyHead = new ModelRenderer(this, 0, 0);
+        babyHead.setRotationPoint(0.0F, 15.5F, -3.0F);
+        babyHead.addBox(-2.0F, -3.8126F, -5.1548F, 4, 4, 6);
+
+        babyRightHorn = new ModelRenderer(this, 24, 0);
+        babyRightHorn.mirror = true;
+        babyRightHorn.setRotationPoint(-1.5F, -1.5F, -1.0F);
+        babyRightHorn.rotateAngleX = -0.3926991F;
+        babyRightHorn.addBox(0.0F, -4.5F, 0.0F, 1, 2, 1);
+        babyHead.addChild(babyRightHorn);
+
+        babyLeftHorn = new ModelRenderer(this, 24, 0);
+        babyLeftHorn.mirror = true;
+        babyLeftHorn.setRotationPoint(-1.5F, -1.5F, -1.0F);
+        babyLeftHorn.rotateAngleX = -0.3926991F;
+        babyLeftHorn.addBox(2.0F, -4.5F, 0.0F, 1, 2, 1);
+        babyHead.addChild(babyLeftHorn);
+
+        ModelRenderer babyRightEar = new ModelRenderer(this, 0, 12);
+        babyRightEar.mirror = true;
+        babyRightEar.setRotationPoint(-1.7F, -2.3126F, 0.1452F);
+        babyRightEar.rotateAngleY = -0.5236F;
+        babyRightEar.addBox(-2.0F, -0.5F, -0.5F, 2, 1, 1);
+        babyHead.addChild(babyRightEar);
+
+        ModelRenderer babyLeftEar = new ModelRenderer(this, 0, 12);
+        babyLeftEar.setRotationPoint(1.7F, -2.3126F, 0.1452F);
+        babyLeftEar.rotateAngleY = 0.5236F;
+        babyLeftEar.addBox(0.0F, -0.5F, -0.5F, 2, 1, 1);
+        babyHead.addChild(babyLeftEar);
+
+        ModelRenderer babyHeadMain = new ModelRenderer(this, 0, 0);
+        babyHeadMain.setRotationPoint(0.0F, -1.3126F, -1.1548F);
+        babyHeadMain.addBox(-2.0F, -2.5F, -4.0F, 4, 4, 6);
+        babyHead.addChild(babyHeadMain);
     }
 
     @Override
     public void render(Entity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scale) {
         setRotationAngles(limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch, scale, entityIn);
 
-        if (isChild) {
-            GlStateManager.pushMatrix();
-            GlStateManager.scale(0.55F, 0.55F, 0.55F);
-            GlStateManager.translate(0.0F, 20.0F * scale, 0.0F);
-            renderParts(scale);
-            GlStateManager.popMatrix();
+        EntityGoat goat = entityIn instanceof EntityGoat ? (EntityGoat)entityIn : null;
+        if (goat != null && goat.isChild()) {
+            renderBabyParts(scale);
         } else {
             renderParts(scale);
         }
@@ -89,6 +150,15 @@ public class ModelGoat extends ModelBase {
         rightFrontLeg.render(scale);
     }
 
+    private void renderBabyParts(float scale) {
+        babyHead.render(scale);
+        babyBody.render(scale);
+        babyLeftHindLeg.render(scale);
+        babyRightHindLeg.render(scale);
+        babyLeftFrontLeg.render(scale);
+        babyRightFrontLeg.render(scale);
+    }
+
     @Override
     public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch, float scaleFactor, Entity entityIn) {
         resetPose();
@@ -96,6 +166,19 @@ public class ModelGoat extends ModelBase {
         EntityGoat goat = entityIn instanceof EntityGoat ? (EntityGoat)entityIn : null;
         float partialTicks = MathHelper.clamp(ageInTicks - entityIn.ticksExisted, 0.0F, 1.0F);
         float ramHeadRot = goat == null ? 0.0F : goat.getRammingXHeadRot(partialTicks);
+        if (goat != null && goat.isChild()) {
+            setBabyRotationAngles(limbSwing, limbSwingAmount, netHeadYaw, headPitch, ramHeadRot, entityIn);
+        } else {
+            setAdultRotationAngles(limbSwing, limbSwingAmount, netHeadYaw, headPitch, ramHeadRot, entityIn);
+        }
+
+        leftHorn.isHidden = goat != null && !goat.hasLeftHorn();
+        rightHorn.isHidden = goat != null && !goat.hasRightHorn();
+        babyLeftHorn.isHidden = goat != null && !goat.hasLeftHorn();
+        babyRightHorn.isHidden = goat != null && !goat.hasRightHorn();
+    }
+
+    private void setAdultRotationAngles(float limbSwing, float limbSwingAmount, float netHeadYaw, float headPitch, float ramHeadRot, Entity entityIn) {
         float walk = Math.min(limbSwingAmount, 1.0F);
         float walkSwing = limbSwing * 0.6662F;
 
@@ -111,16 +194,29 @@ public class ModelGoat extends ModelBase {
         head.rotateAngleY = netHeadYaw * 0.017453292F * 0.75F;
         head.rotateAngleX = headPitch * 0.017453292F + ramHeadRot;
 
-        if (isChild) {
-            head.rotateAngleX += 0.3926991F;
-        }
-
-        applyAirborneAnimation(entityIn, walk);
-        leftHorn.isHidden = goat != null && !goat.hasLeftHorn();
-        rightHorn.isHidden = goat != null && !goat.hasRightHorn();
+        applyAdultAirborneAnimation(entityIn, walk);
     }
 
-    private void applyAirborneAnimation(Entity entityIn, float walk) {
+    private void setBabyRotationAngles(float limbSwing, float limbSwingAmount, float netHeadYaw, float headPitch, float ramHeadRot, Entity entityIn) {
+        float walk = Math.min(limbSwingAmount, 1.0F);
+        float walkSwing = limbSwing * 0.6662F;
+
+        babyLeftHindLeg.rotateAngleX = MathHelper.cos(walkSwing) * 0.95F * walk;
+        babyRightHindLeg.rotateAngleX = MathHelper.cos(walkSwing + (float)Math.PI) * 0.95F * walk;
+        babyLeftFrontLeg.rotateAngleX = MathHelper.cos(walkSwing + (float)Math.PI) * 1.05F * walk;
+        babyRightFrontLeg.rotateAngleX = MathHelper.cos(walkSwing) * 1.05F * walk;
+
+        float bodyBob = MathHelper.sin(walkSwing * 2.0F) * 0.22F * walk;
+        babyBody.rotationPointY = 17.8F + bodyBob;
+        babyHead.rotationPointY = 15.5F + bodyBob * 0.35F;
+
+        babyHead.rotateAngleY = netHeadYaw * 0.017453292F * 0.75F;
+        babyHead.rotateAngleX = ramHeadRot != 0.0F ? ramHeadRot : headPitch * 0.017453292F + 0.3926991F;
+
+        applyBabyAirborneAnimation(entityIn, walk);
+    }
+
+    private void applyAdultAirborneAnimation(Entity entityIn, float walk) {
         if (entityIn.onGround || entityIn.motionY < 0.02D || walk > 0.8F) {
             return;
         }
@@ -132,6 +228,20 @@ public class ModelGoat extends ModelBase {
         rightFrontLeg.rotateAngleX -= 0.45F * airborne;
         leftHindLeg.rotateAngleX += 0.35F * airborne;
         rightHindLeg.rotateAngleX += 0.35F * airborne;
+    }
+
+    private void applyBabyAirborneAnimation(Entity entityIn, float walk) {
+        if (entityIn.onGround || entityIn.motionY < 0.02D || walk > 0.8F) {
+            return;
+        }
+
+        float airborne = MathHelper.clamp((float)entityIn.motionY * 2.0F, 0.0F, 1.0F);
+        babyBody.rotateAngleX += 0.10F * airborne;
+        babyHead.rotateAngleX -= 0.07F * airborne;
+        babyLeftFrontLeg.rotateAngleX -= 0.35F * airborne;
+        babyRightFrontLeg.rotateAngleX -= 0.35F * airborne;
+        babyLeftHindLeg.rotateAngleX += 0.28F * airborne;
+        babyRightHindLeg.rotateAngleX += 0.28F * airborne;
     }
 
     private void resetPose() {
@@ -154,5 +264,22 @@ public class ModelGoat extends ModelBase {
         rightHindLeg.rotateAngleX = 0.0F;
         leftFrontLeg.rotateAngleX = 0.0F;
         rightFrontLeg.rotateAngleX = 0.0F;
+
+        babyHead.rotationPointX = 0.0F;
+        babyHead.rotationPointY = 15.5F;
+        babyHead.rotationPointZ = -3.0F;
+        babyHead.rotateAngleX = 0.4363F;
+        babyHead.rotateAngleY = 0.0F;
+        babyHead.rotateAngleZ = 0.0F;
+
+        babyBody.rotationPointY = 17.8F;
+        babyBody.rotateAngleX = 0.0F;
+        babyBody.rotateAngleY = 0.0F;
+        babyBody.rotateAngleZ = 0.0F;
+
+        babyLeftHindLeg.rotateAngleX = 0.0F;
+        babyRightHindLeg.rotateAngleX = 0.0F;
+        babyLeftFrontLeg.rotateAngleX = 0.0F;
+        babyRightFrontLeg.rotateAngleX = 0.0F;
     }
 }

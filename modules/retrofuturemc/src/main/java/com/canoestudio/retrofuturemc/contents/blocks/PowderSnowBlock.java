@@ -20,8 +20,6 @@ import javax.annotation.Nullable;
 import static com.canoestudio.retrofuturemc.contents.tab.CreativeTab.CREATIVE_TABS;
 
 public class PowderSnowBlock extends Block {
-    private static final AxisAlignedBB FALLING_COLLISION_AABB = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.9D, 1.0D);
-
     public PowderSnowBlock() {
         super(Material.SNOW);
         setTranslationKey(Tags.MOD_ID + ".powder_snow");
@@ -62,8 +60,14 @@ public class PowderSnowBlock extends Block {
     @Override
     public void onEntityCollision(World worldIn, BlockPos pos, IBlockState state, Entity entityIn) {
         entityIn.motionX *= 0.9D;
-        entityIn.motionY *= 1.5D;
         entityIn.motionZ *= 0.9D;
+        if (entityIn.motionY < -0.05D) {
+            entityIn.motionY *= 0.55D;
+        } else if (entityIn.motionY > 0.0D) {
+            entityIn.motionY *= 0.7D;
+        }
+        entityIn.fallDistance = 0.0F;
+
         if (!worldIn.isRemote && entityIn.isBurning() && (entityIn instanceof EntityLivingBase || worldIn.getGameRules().getBoolean("mobGriefing"))) {
             entityIn.extinguish();
             worldIn.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
