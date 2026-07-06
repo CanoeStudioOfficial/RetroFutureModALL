@@ -10,6 +10,7 @@ import com.canoestudio.retrofuturemc.contents.mobs.goat.RenderGoat;
 import com.canoestudio.retrofuturemc.contents.mobs.glowsquid.EntityGlowSquid;
 import com.canoestudio.retrofuturemc.contents.mobs.glowsquid.RenderGlowSquid;
 import com.canoestudio.retrofuturemc.utils.PowderSnowHudHandler;
+import com.canoestudio.retrofuturemc.utils.RetroFutureClientCoreIntegration;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -31,6 +32,7 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void init(FMLInitializationEvent event) {
         super.init(event);
+        RetroFutureClientCoreIntegration.register();
     }
 
     @Override

@@ -10,7 +10,6 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
-import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -64,12 +63,8 @@ public class SpyglassHandler {
         }
     }
 
-    @SubscribeEvent
-    public static void onFOVUpdate(FOVUpdateEvent event) {
-        float interpolatedScale = previousFovScale + (fovScale - previousFovScale) * Minecraft.getMinecraft().getRenderPartialTicks();
-        if (interpolatedScale < 1.0F) {
-            event.setNewfov(event.getFov() * interpolatedScale);
-        }
+    public static float getFovMultiplier(float partialTicks) {
+        return previousFovScale + (fovScale - previousFovScale) * MathHelper.clamp(partialTicks, 0.0F, 1.0F);
     }
 
     @SubscribeEvent
@@ -127,9 +122,9 @@ public class SpyglassHandler {
         );
         GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 
-        drawMask(width, height, left, top, size);
         mc.getTextureManager().bindTexture(OVERLAY);
         Gui.drawModalRectWithCustomSizedTexture(left, top, 0.0F, 0.0F, size, size, size, size);
+        drawMask(width, height, left, top, size);
 
         GlStateManager.disableBlend();
     }

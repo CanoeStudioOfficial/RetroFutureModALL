@@ -11,7 +11,8 @@ public class RetroZoomClientHandler {
 
     @SubscribeEvent
     public void updateFov(FOVUpdateEvent event) {
-        RetroZoomRegistry.ActiveZoom zoom = RetroZoomRegistry.getActiveZoom(event.getEntity(), 0.0F);
+        RetroZoomRegistry.ActiveZoom zoom = RetroZoomRegistry.getActiveZoom(event.getEntity(),
+                Minecraft.getMinecraft().getRenderPartialTicks());
         if (zoom != null) {
             event.setNewfov(event.getFov() * zoom.getFovMultiplier());
         }

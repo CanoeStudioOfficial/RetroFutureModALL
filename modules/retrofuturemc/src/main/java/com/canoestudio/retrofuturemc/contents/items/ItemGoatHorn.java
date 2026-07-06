@@ -2,6 +2,9 @@ package com.canoestudio.retrofuturemc.contents.items;
 
 import com.canoestudio.retrofuturemc.retrofuturemc.Tags;
 import com.canoestudio.retrofuturemc.sounds.ModSoundHandler;
+import com.canoestudio.retrofuturemccore.api.gameevent.RetroGameEvent;
+import com.canoestudio.retrofuturemccore.api.gameevent.RetroGameEvents;
+import com.canoestudio.retrofuturemccore.api.item.RetroCooldowns;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
@@ -72,13 +75,24 @@ public class ItemGoatHorn extends Item {
     @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand handIn) {
         ItemStack stack = playerIn.getHeldItem(handIn);
+        return useHorn(worldIn, playerIn, handIn, stack);
+    }
+
+    public static ActionResult<ItemStack> useHorn(World worldIn, EntityPlayer playerIn, EnumHand handIn, ItemStack stack) {
+        if (RetroCooldowns.hasCooldown(playerIn, stack)) {
+            return new ActionResult<>(EnumActionResult.FAIL, stack);
+        }
+
         int variant = getVariant(stack);
         SoundEvent sound = VARIANT_SOUNDS[variant];
-        worldIn.playSound(null, playerIn.posX, playerIn.posY, playerIn.posZ, sound, SoundCategory.RECORDS, 16.0F, 1.0F);
+        if (!worldIn.isRemote) {
+            worldIn.playSound(null, playerIn.posX, playerIn.posY, playerIn.posZ, sound, SoundCategory.RECORDS, 16.0F, 1.0F);
+            RetroGameEvents.emit(worldIn, RetroGameEvent.INSTRUMENT_PLAY, playerIn);
+        }
         playerIn.setActiveHand(handIn);
 
         if (!playerIn.capabilities.isCreativeMode) {
-            playerIn.getCooldownTracker().setCooldown(this, COOLDOWN_TICKS);
+            RetroCooldowns.setCooldown(playerIn, stack, COOLDOWN_TICKS);
         }
 
         return new ActionResult<>(EnumActionResult.SUCCESS, stack);

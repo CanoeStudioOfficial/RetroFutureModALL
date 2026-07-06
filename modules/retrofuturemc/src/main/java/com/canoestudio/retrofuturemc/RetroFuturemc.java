@@ -3,6 +3,7 @@ package com.canoestudio.retrofuturemc;
 import com.canoestudio.retrofuturemc.utils.proxy.CommonProxy;
 import com.canoestudio.retrofuturemc.retrofuturemc.Tags;
 import com.canoestudio.retrofuturemc.utils.RetroFutureBehaviorEvents;
+import com.canoestudio.retrofuturemc.utils.RetroFutureCoreIntegration;
 import net.minecraftforge.common.MinecraftForge;
 
 import net.minecraftforge.fml.common.Mod;
@@ -13,7 +14,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-@Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION, dependencies = "required-after:fluidlogged_api@[3.2.0,);required-after:moderncaveterrain@[2.1.0,)")
+@Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION, dependencies = "required-after:retrofuturemccore@[1.0.0,);required-after:fluidlogged_api@[3.2.0,);required-after:moderncaveterrain@[2.1.0,)")
 public class RetroFuturemc {
     public static final Logger LOGGER = LogManager.getLogger(Tags.MOD_NAME);
 
@@ -26,6 +27,7 @@ public class RetroFuturemc {
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         proxy.init(event);
+        RetroFutureCoreIntegration.register();
         MinecraftForge.EVENT_BUS.register(new RetroFutureBehaviorEvents());
     }
 

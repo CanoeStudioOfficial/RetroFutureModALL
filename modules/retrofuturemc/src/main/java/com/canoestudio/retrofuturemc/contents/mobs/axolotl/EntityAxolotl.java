@@ -1,13 +1,14 @@
 package com.canoestudio.retrofuturemc.contents.mobs.axolotl;
 
 import net.minecraft.block.material.Material;
+import com.canoestudio.retrofuturemccore.api.tag.RetroTagRegistry;
+import com.canoestudio.retrofuturemccore.api.tag.RetroTags;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
-import net.minecraft.entity.monster.EntityGuardian;
 import net.minecraft.entity.passive.EntityWaterMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -310,28 +311,28 @@ public class EntityAxolotl extends EntityWaterMob {
         }
 
         if (attackTarget == null || ticksExisted % 20 == 0) {
-            EntityGuardian guardian = findNearestGuardianTarget();
-            if (guardian != null) {
-                attackTarget = guardian;
+            EntityLivingBase huntTarget = findNearestHuntTarget();
+            if (huntTarget != null) {
+                attackTarget = huntTarget;
             }
         }
     }
 
     @Nullable
-    private EntityGuardian findNearestGuardianTarget() {
+    private EntityLivingBase findNearestHuntTarget() {
         AxisAlignedBB area = getEntityBoundingBox().grow(HOSTILE_TARGET_RANGE, HOSTILE_TARGET_RANGE, HOSTILE_TARGET_RANGE);
-        EntityGuardian best = null;
+        EntityLivingBase best = null;
         double bestDistance = HOSTILE_TARGET_RANGE_SQ;
 
-        for (EntityGuardian guardian : world.getEntitiesWithinAABB(EntityGuardian.class, area)) {
-            if (!isValidAttackTarget(guardian)) {
+        for (EntityLivingBase target : world.getEntitiesWithinAABB(EntityLivingBase.class, area)) {
+            if (!isValidAttackTarget(target)) {
                 continue;
             }
 
-            double distance = getDistanceSq(guardian);
+            double distance = getDistanceSq(target);
             if (distance < bestDistance) {
                 bestDistance = distance;
-                best = guardian;
+                best = target;
             }
         }
 
@@ -339,7 +340,8 @@ public class EntityAxolotl extends EntityWaterMob {
     }
 
     private boolean isValidAttackTarget(EntityLivingBase target) {
-        return target instanceof EntityGuardian
+        return target != this
+                && RetroTagRegistry.containsEntity(RetroTags.AXOLOTL_HUNT_TARGETS, target)
                 && target.isEntityAlive()
                 && target.isInWater()
                 && getDistanceSq(target) <= HOSTILE_TARGET_RANGE_SQ;
