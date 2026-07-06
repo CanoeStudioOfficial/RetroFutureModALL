@@ -15,6 +15,7 @@ import git.jbredwards.fluidlogged_api.api.util.FluidState;
 import git.jbredwards.fluidlogged_api.api.util.FluidloggedUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStone;
+import net.minecraft.block.BlockTallGrass;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLiving;
@@ -62,12 +63,20 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
     private static final double GEODE_CRYSTAL_PLACEMENT_CHANCE = 0.35D;
     private static final int LEGACY_CAVE_MIN_Y = 8;
     private static final int LEGACY_CAVE_MAX_Y = 58;
-    private static final int LEGACY_CAVE_DECORATION_ATTEMPTS = 64;
+    private static final int LEGACY_CAVE_CENTER_ATTEMPTS = 8;
     private static final int LEGACY_CAVE_AIR_SCAN_DISTANCE = 24;
-    private static final int LEGACY_CAVE_SURFACE_SCAN_DISTANCE = 14;
-    private static final int LEGACY_LUSH_PATCH_RADIUS = 4;
-    private static final int LEGACY_DRIPSTONE_PATCH_RADIUS = 5;
-    private static final long LEGACY_CAVE_POSITION_SEED_SALT = 0x52464C4547434156L;
+    private static final int LEGACY_LUSH_CAVE_RARITY = 9;
+    private static final int LEGACY_DRIPSTONE_CAVE_RARITY = 19;
+    private static final int LEGACY_LUSH_RADIUS_BASE = 13;
+    private static final int LEGACY_LUSH_RADIUS_VARIATION = 8;
+    private static final int LEGACY_LUSH_HEIGHT_BASE = 6;
+    private static final int LEGACY_LUSH_HEIGHT_VARIATION = 5;
+    private static final int LEGACY_DRIPSTONE_RADIUS_BASE = 12;
+    private static final int LEGACY_DRIPSTONE_RADIUS_VARIATION = 7;
+    private static final int LEGACY_DRIPSTONE_HEIGHT_BASE = 7;
+    private static final int LEGACY_DRIPSTONE_HEIGHT_VARIATION = 5;
+    private static final long LEGACY_LUSH_CAVE_SEED_SALT = 0x52464C5553485041L;
+    private static final long LEGACY_DRIPSTONE_CAVE_SEED_SALT = 0x5246445249505041L;
     private static final long LEGACY_CAVE_REGION_SEED_SALT = 0x5246434156454249L;
     private static final long LEGACY_LUSH_REGION_SEED_SALT = 0x52464C5553484341L;
     private static final long LEGACY_DRIPSTONE_REGION_SEED_SALT = 0x5246445249504341L;
@@ -89,7 +98,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
                     blockZ + random.nextInt(16)));
         }
 
-        decorateLegacyCaves(world, new Random(getLegacyCaveSeed(world, chunkX, chunkZ, LEGACY_CAVE_POSITION_SEED_SALT)), blockX, blockZ);
+        decorateLegacyCaves(world, chunkX, chunkZ, blockX, blockZ);
         spawnAquaticCaveMobs(world, random, blockX, blockZ);
     }
 
@@ -337,31 +346,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
         }
     }
 
-    private void decorateLegacyCaves(World world, Random random, int blockX, int blockZ) {
-        CaveStyle style = chooseLegacyCaveStyle(world, blockX, blockZ);
-        if (style == CaveStyle.NORMAL) {
-            return;
-        }
-
-        for (int i = 0; i < LEGACY_CAVE_DECORATION_ATTEMPTS; i++) {
-            BlockPos start = new BlockPos(
-                    blockX + random.nextInt(16),
-                    randomRange(random, LEGACY_CAVE_MIN_Y, Math.min(LEGACY_CAVE_MAX_Y, world.getActualHeight() - 8)),
-                    blockZ + random.nextInt(16));
-            BlockPos caveAir = findCaveAir(world, start, LEGACY_CAVE_AIR_SCAN_DISTANCE);
-            if (caveAir == null || !isInsideChunk(caveAir, blockX, blockZ)) {
-                continue;
-            }
-
-            if (style == CaveStyle.LUSH) {
-                decorateLushCave(world, random, caveAir, blockX, blockZ, getLegacyLushStrength(world, caveAir));
-            } else if (style == CaveStyle.DRIPSTONE) {
-                decorateDripstoneCave(world, random, caveAir, blockX, blockZ, getLegacyDripstoneStrength(world, caveAir));
-            }
-        }
-    }
-
-    private CaveStyle chooseLegacyCaveStyle(World world, int blockX, int blockZ) {
+    private void decorateLegacyCaves(World world, int chunkX, int chunkZ, int blockX, int blockZ) {
         BlockPos surfacePos = new BlockPos(blockX + 8, 0, blockZ + 8);
         Biome biome = world.getBiome(surfacePos);
         if (BiomeDictionary.hasType(biome, BiomeDictionary.Type.OCEAN)
@@ -369,58 +354,100 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
                 || BiomeDictionary.hasType(biome, BiomeDictionary.Type.BEACH)
                 || BiomeDictionary.hasType(biome, BiomeDictionary.Type.NETHER)
                 || BiomeDictionary.hasType(biome, BiomeDictionary.Type.END)) {
-            return CaveStyle.NORMAL;
+            return;
         }
 
-        double region = smoothNoise(world.getSeed() ^ LEGACY_CAVE_REGION_SEED_SALT, blockX * 0.004D, 0.0D, blockZ * 0.004D);
-        double lushScore = getLegacyLushBiomeBias(biome)
-                + smoothNoise(world.getSeed() ^ LEGACY_LUSH_REGION_SEED_SALT, blockX * 0.011D, 0.0D, blockZ * 0.011D) * 0.45D
-                - Math.max(0.0D, region) * 0.25D;
-        double dripstoneScore = getLegacyDripstoneBiomeBias(biome)
-                + smoothNoise(world.getSeed() ^ LEGACY_DRIPSTONE_REGION_SEED_SALT, blockX * 0.010D, 0.0D, blockZ * 0.010D) * 0.45D
-                + Math.max(0.0D, region) * 0.20D;
-
-        if (lushScore < 0.30D && dripstoneScore < 0.32D) {
-            return CaveStyle.NORMAL;
+        Random lushRandom = new Random(getLegacyCaveSeed(world, chunkX, chunkZ, LEGACY_LUSH_CAVE_SEED_SALT));
+        if (lushRandom.nextInt(LEGACY_LUSH_CAVE_RARITY) == 0 || getLegacyLushRegionStrength(world, blockX + 8, blockZ + 8) > 0.76D) {
+            tryGenerateLegacyCavePatch(world, lushRandom, blockX, blockZ, CaveStyle.LUSH);
         }
 
-        return lushScore >= dripstoneScore ? CaveStyle.LUSH : CaveStyle.DRIPSTONE;
+        Random dripstoneRandom = new Random(getLegacyCaveSeed(world, chunkX, chunkZ, LEGACY_DRIPSTONE_CAVE_SEED_SALT));
+        double lushRegion = getLegacyLushRegionStrength(world, blockX + 8, blockZ + 8);
+        double dripstoneRegion = getLegacyDripstoneRegionStrength(world, blockX + 8, blockZ + 8);
+        if (lushRegion < 0.64D && (dripstoneRandom.nextInt(LEGACY_DRIPSTONE_CAVE_RARITY) == 0 || dripstoneRegion > 0.82D)) {
+            tryGenerateLegacyCavePatch(world, dripstoneRandom, blockX, blockZ, CaveStyle.DRIPSTONE);
+        }
     }
 
-    private double getLegacyLushBiomeBias(Biome biome) {
-        double bias = 0.0D;
-        if (BiomeDictionary.hasType(biome, BiomeDictionary.Type.LUSH)
-                || BiomeDictionary.hasType(biome, BiomeDictionary.Type.JUNGLE)
-                || BiomeDictionary.hasType(biome, BiomeDictionary.Type.SWAMP)
-                || BiomeDictionary.hasType(biome, BiomeDictionary.Type.FOREST)) {
-            bias += 0.45D;
+    private void tryGenerateLegacyCavePatch(World world, Random random, int blockX, int blockZ, CaveStyle style) {
+        BlockPos center = findLegacyCavePatchCenter(world, random, blockX, blockZ);
+        if (center == null) {
+            return;
         }
-        if (BiomeDictionary.hasType(biome, BiomeDictionary.Type.WET)) {
-            bias += 0.28D;
+
+        int radiusX;
+        int radiusY;
+        int radiusZ;
+        if (style == CaveStyle.LUSH) {
+            radiusX = LEGACY_LUSH_RADIUS_BASE + random.nextInt(LEGACY_LUSH_RADIUS_VARIATION + 1);
+            radiusY = LEGACY_LUSH_HEIGHT_BASE + random.nextInt(LEGACY_LUSH_HEIGHT_VARIATION + 1);
+            radiusZ = LEGACY_LUSH_RADIUS_BASE + random.nextInt(LEGACY_LUSH_RADIUS_VARIATION + 1);
+        } else {
+            radiusX = LEGACY_DRIPSTONE_RADIUS_BASE + random.nextInt(LEGACY_DRIPSTONE_RADIUS_VARIATION + 1);
+            radiusY = LEGACY_DRIPSTONE_HEIGHT_BASE + random.nextInt(LEGACY_DRIPSTONE_HEIGHT_VARIATION + 1);
+            radiusZ = LEGACY_DRIPSTONE_RADIUS_BASE + random.nextInt(LEGACY_DRIPSTONE_RADIUS_VARIATION + 1);
         }
-        if (BiomeDictionary.hasType(biome, BiomeDictionary.Type.DRY)
-                || BiomeDictionary.hasType(biome, BiomeDictionary.Type.SANDY)
-                || BiomeDictionary.hasType(biome, BiomeDictionary.Type.SNOWY)) {
-            bias -= 0.32D;
-        }
-        return bias;
+
+        generateLegacyCavePatch(world, random, center, blockX, blockZ, radiusX, radiusY, radiusZ, style);
     }
 
-    private double getLegacyDripstoneBiomeBias(Biome biome) {
-        double bias = 0.12D;
-        if (BiomeDictionary.hasType(biome, BiomeDictionary.Type.MOUNTAIN)
-                || BiomeDictionary.hasType(biome, BiomeDictionary.Type.HILLS)
-                || BiomeDictionary.hasType(biome, BiomeDictionary.Type.DRY)
-                || BiomeDictionary.hasType(biome, BiomeDictionary.Type.SANDY)
-                || BiomeDictionary.hasType(biome, BiomeDictionary.Type.MESA)) {
-            bias += 0.38D;
+    private BlockPos findLegacyCavePatchCenter(World world, Random random, int blockX, int blockZ) {
+        int maxY = Math.min(LEGACY_CAVE_MAX_Y, world.getActualHeight() - 8);
+        for (int i = 0; i < LEGACY_CAVE_CENTER_ATTEMPTS; i++) {
+            BlockPos start = new BlockPos(
+                    blockX + random.nextInt(16),
+                    randomRange(random, LEGACY_CAVE_MIN_Y, maxY),
+                    blockZ + random.nextInt(16));
+            BlockPos caveAir = findCaveAir(world, start, LEGACY_CAVE_AIR_SCAN_DISTANCE);
+            if (caveAir != null && isInsideChunk(caveAir, blockX, blockZ)) {
+                return caveAir;
+            }
         }
-        if (BiomeDictionary.hasType(biome, BiomeDictionary.Type.WET)
-                || BiomeDictionary.hasType(biome, BiomeDictionary.Type.SWAMP)
-                || BiomeDictionary.hasType(biome, BiomeDictionary.Type.JUNGLE)) {
-            bias -= 0.24D;
+
+        return null;
+    }
+
+    private void generateLegacyCavePatch(World world, Random random, BlockPos center, int blockX, int blockZ,
+                                         int radiusX, int radiusY, int radiusZ, CaveStyle style) {
+        double radiusX2 = radiusX * radiusX;
+        double radiusY2 = radiusY * radiusY;
+        double radiusZ2 = radiusZ * radiusZ;
+
+        for (int x = -radiusX; x <= radiusX; x++) {
+            for (int y = -radiusY; y <= radiusY; y++) {
+                for (int z = -radiusZ; z <= radiusZ; z++) {
+                    double normalizedDistance = x * x / radiusX2 + y * y / radiusY2 + z * z / radiusZ2;
+                    if (normalizedDistance > 1.0D || random.nextDouble() < normalizedDistance * 0.18D) {
+                        continue;
+                    }
+
+                    BlockPos pos = center.add(x, y, z);
+                    if (!isInsideChunk(pos, blockX, blockZ) || !isCaveDecorationTarget(world, pos)) {
+                        continue;
+                    }
+
+                    double strength = 1.0D - normalizedDistance * 0.45D;
+                    if (style == CaveStyle.LUSH) {
+                        decorateLushCaveBlock(world, random, pos, blockX, blockZ, strength);
+                    } else if (style == CaveStyle.DRIPSTONE) {
+                        decorateDripstoneCaveBlock(world, random, pos, blockX, blockZ, strength);
+                    }
+                }
+            }
         }
-        return bias;
+    }
+
+    private double getLegacyLushRegionStrength(World world, int x, int z) {
+        double noise = smoothNoise(world.getSeed() ^ LEGACY_LUSH_REGION_SEED_SALT, x * 0.009D, 0.0D, z * 0.009D);
+        double detail = smoothNoise(world.getSeed() ^ LEGACY_CAVE_REGION_SEED_SALT, x * 0.028D, 0.0D, z * 0.028D);
+        return clamp(0.5D + noise * 0.42D + detail * 0.12D, 0.0D, 1.0D);
+    }
+
+    private double getLegacyDripstoneRegionStrength(World world, int x, int z) {
+        double noise = smoothNoise(world.getSeed() ^ LEGACY_DRIPSTONE_REGION_SEED_SALT, x * 0.009D, 0.0D, z * 0.009D);
+        double detail = smoothNoise(world.getSeed() ^ LEGACY_CAVE_REGION_SEED_SALT, x * 0.022D, 0.0D, z * 0.022D);
+        return clamp(0.5D + noise * 0.34D + detail * 0.10D, 0.0D, 1.0D);
     }
 
     private double getLegacyLushStrength(World world, BlockPos pos) {
@@ -435,107 +462,94 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
         return clamp(0.72D + noise * 0.28D, 0.35D, 1.0D);
     }
 
-    private void decorateLushCave(World world, Random random, BlockPos caveAir, int blockX, int blockZ, double strength) {
-        BlockPos floor = scanToSolid(world, caveAir, EnumFacing.DOWN, LEGACY_CAVE_SURFACE_SCAN_DISTANCE);
-        BlockPos ceiling = scanToSolid(world, caveAir, EnumFacing.UP, LEGACY_CAVE_SURFACE_SCAN_DISTANCE);
+    private void decorateLushCaveBlock(World world, Random random, BlockPos pos, int blockX, int blockZ, double strength) {
+        IBlockState down = world.getBlockState(pos.down());
+        IBlockState up = world.getBlockState(pos.up());
 
-        if (floor != null && floor.getY() > 3 && isInsideChunk(floor, blockX, blockZ) && isLushGroundReplaceable(world.getBlockState(floor))) {
-            placeMossPatch(world, random, floor.up(), blockX, blockZ, 2 + random.nextInt(LEGACY_LUSH_PATCH_RADIUS), strength);
-            if (random.nextDouble() < 0.36D * strength) {
-                placeClayAndDripleafPatch(world, random, floor.up(), blockX, blockZ, strength);
-            }
-            if (random.nextDouble() < 0.10D * strength) {
-                world.setBlockState(floor, ModBlocks.ROOTED_DIRT.getDefaultState(), 2);
-            }
-        }
-
-        if (ceiling != null && ceiling.getY() < world.getActualHeight() - 2 && isInsideChunk(ceiling, blockX, blockZ)) {
-            if (random.nextDouble() < 0.60D * strength) {
-                placeCeilingMoss(world, random, ceiling, blockX, blockZ, 1 + random.nextInt(3), strength);
-            }
-            BlockPos hangingPos = ceiling.down();
-            if (isReplaceableCavePlantTarget(world, hangingPos) && random.nextDouble() < 0.55D * strength) {
-                placeCaveVine(world, random, hangingPos, blockX, blockZ);
-            } else if (isReplaceableCavePlantTarget(world, hangingPos) && random.nextDouble() < 0.12D * strength) {
-                world.setBlockState(hangingPos, ModBlocks.SPORE_BLOSSOM.getDefaultState(), 2);
-            } else if (isReplaceableCavePlantTarget(world, hangingPos) && random.nextDouble() < 0.18D * strength) {
-                world.setBlockState(hangingPos, ModBlocks.HANGING_ROOTS.getDefaultState(), 2);
-            }
-        }
-
-        if (random.nextDouble() < 0.16D * strength) {
-            placeGlowLichen(world, random, caveAir);
+        if (isLushGroundReplaceable(down)) {
+            decorateLushFloor(world, random, pos, blockX, blockZ, strength);
+        } else if (isLushGroundReplaceable(up)) {
+            decorateLushCeiling(world, random, pos, blockX, blockZ, strength);
+        } else if (random.nextDouble() < 0.16D * strength) {
+            decorateLushWall(world, random, pos);
         }
     }
 
-    private void placeMossPatch(World world, Random random, BlockPos center, int blockX, int blockZ, int radius, double strength) {
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-                if (dx * dx + dz * dz > radius * radius + random.nextInt(3)) {
-                    continue;
-                }
+    private void decorateLushFloor(World world, Random random, BlockPos plantPos, int blockX, int blockZ, double strength) {
+        BlockPos floorPos = plantPos.down();
+        int floorType = random.nextInt(100);
 
-                BlockPos plantPos = center.add(dx, 0, dz);
-                BlockPos groundPos = plantPos.down();
-                if (!isInsideChunk(plantPos, blockX, blockZ)
-                        || !isReplaceableCavePlantTarget(world, plantPos)
-                        || !isLushGroundReplaceable(world.getBlockState(groundPos))) {
-                    continue;
-                }
-
-                world.setBlockState(groundPos, ModBlocks.MOSS_BLOCK.getDefaultState(), 2);
-                if (random.nextDouble() < 0.28D * strength && isReplaceableCavePlantTarget(world, plantPos)) {
-                    world.setBlockState(plantPos, ModBlocks.MOSS_CARPET.getDefaultState(), 2);
-                } else if (random.nextDouble() < 0.05D * strength && isReplaceableCavePlantTarget(world, plantPos)) {
-                    world.setBlockState(plantPos, (random.nextBoolean() ? ModBlocks.Azalea : ModBlocks.Flowering_Azalea).getDefaultState(), 2);
-                } else if (random.nextDouble() < 0.07D * strength && isReplaceableCavePlantTarget(world, plantPos)) {
-                    world.setBlockState(plantPos, Blocks.TALLGRASS.getDefaultState(), 2);
-                }
-            }
-        }
-    }
-
-    private void placeCeilingMoss(World world, Random random, BlockPos ceiling, int blockX, int blockZ, int radius, double strength) {
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-                if (dx * dx + dz * dz > radius * radius + random.nextInt(3)) {
-                    continue;
-                }
-
-                BlockPos support = ceiling.add(dx, 0, dz);
-                BlockPos below = support.down();
-                if (!isInsideChunk(support, blockX, blockZ)
-                        || !isReplaceableCavePlantTarget(world, below)
-                        || !isLushGroundReplaceable(world.getBlockState(support))
-                        || random.nextDouble() > 0.56D * strength) {
-                    continue;
-                }
-
-                world.setBlockState(support, ModBlocks.MOSS_BLOCK.getDefaultState(), 2);
-            }
-        }
-    }
-
-    private void placeClayAndDripleafPatch(World world, Random random, BlockPos center, int blockX, int blockZ, double strength) {
-        int count = 5 + (int)(8.0D * strength);
-        for (int i = 0; i < count; i++) {
-            BlockPos plantPos = center.add(random.nextInt(9) - 4, 0, random.nextInt(9) - 4);
-            BlockPos groundPos = plantPos.down();
-            if (!isInsideChunk(plantPos.up(3), blockX, blockZ)
-                    || !isReplaceableCavePlantTarget(world, plantPos)
-                    || !isLushGroundReplaceable(world.getBlockState(groundPos))) {
-                continue;
+        if (floorType < 72) {
+            world.setBlockState(floorPos, ModBlocks.MOSS_BLOCK.getDefaultState(), 2);
+            if (!world.isAirBlock(plantPos)) {
+                return;
             }
 
-            world.setBlockState(groundPos, Blocks.CLAY.getDefaultState(), 2);
+            int decorationType = random.nextInt(100);
+            if (decorationType < 22) {
+                world.setBlockState(plantPos, ModBlocks.MOSS_CARPET.getDefaultState(), 2);
+            } else if (decorationType < 27) {
+                world.setBlockState(plantPos, ModBlocks.Azalea.getDefaultState(), 2);
+            } else if (decorationType < 31) {
+                world.setBlockState(plantPos, ModBlocks.Flowering_Azalea.getDefaultState(), 2);
+            } else if (decorationType < 62) {
+                world.setBlockState(plantPos, Blocks.TALLGRASS.getDefaultState()
+                        .withProperty(BlockTallGrass.TYPE, BlockTallGrass.EnumType.GRASS), 2);
+            }
+        } else if (floorType < 84) {
+            world.setBlockState(floorPos, Blocks.CLAY.getDefaultState(), 2);
             EnumFacing facing = EnumFacing.HORIZONTALS[random.nextInt(EnumFacing.HORIZONTALS.length)];
-            if (random.nextDouble() < 0.54D && canPlaceSmallDripleaf(world, plantPos)) {
+            if (random.nextBoolean() && canPlaceSmallDripleaf(world, plantPos)) {
                 ((SmallDripleaf)ModBlocks.SMALL_DRIPLEAF).placeAt(world, plantPos, facing, 2);
-            } else if (random.nextDouble() < 0.62D) {
+            } else {
                 int height = 1 + random.nextInt(3);
                 if (canPlaceBigDripleaf(world, plantPos, height)) {
                     placeBigDripleaf(world, plantPos, facing, height);
                 }
+            }
+        } else if (random.nextDouble() < 0.08D * strength) {
+            world.setBlockState(floorPos, ModBlocks.ROOTED_DIRT.getDefaultState(), 2);
+        }
+    }
+
+    private void decorateLushCeiling(World world, Random random, BlockPos hangingPos, int blockX, int blockZ, double strength) {
+        BlockPos ceilingPos = hangingPos.up();
+        if (random.nextBoolean()) {
+            world.setBlockState(ceilingPos, ModBlocks.MOSS_BLOCK.getDefaultState(), 2);
+        }
+
+        if (!world.isAirBlock(hangingPos)) {
+            return;
+        }
+
+        int decorationType = random.nextInt(100);
+        if (decorationType < 5) {
+            world.setBlockState(hangingPos, ModBlocks.SPORE_BLOSSOM.getDefaultState(), 2);
+        } else if (decorationType < 24) {
+            placeCaveVine(world, random, hangingPos, blockX, blockZ);
+        } else if (decorationType < 36) {
+            world.setBlockState(hangingPos, ModBlocks.HANGING_ROOTS.getDefaultState(), 2);
+        }
+    }
+
+    private void decorateLushWall(World world, Random random, BlockPos pos) {
+        if (!world.isAirBlock(pos)) {
+            return;
+        }
+
+        for (EnumFacing facing : EnumFacing.HORIZONTALS) {
+            BlockPos support = pos.offset(facing);
+            if (!isLushGroundReplaceable(world.getBlockState(support))
+                    || !world.getBlockState(support).isSideSolid(world, support, facing.getOpposite())) {
+                continue;
+            }
+
+            if (random.nextInt(10) == 0) {
+                world.setBlockState(support, ModBlocks.MOSS_BLOCK.getDefaultState(), 2);
+            }
+            if (random.nextInt(5) == 0) {
+                world.setBlockState(pos, ((GlowLichenBlock)ModBlocks.GLOW_LICHEN).getStateForFace(facing), 2);
+                return;
             }
         }
     }
@@ -566,53 +580,41 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
         }
     }
 
-    private void decorateDripstoneCave(World world, Random random, BlockPos caveAir, int blockX, int blockZ, double strength) {
-        BlockPos floor = scanToSolid(world, caveAir, EnumFacing.DOWN, LEGACY_CAVE_SURFACE_SCAN_DISTANCE);
-        BlockPos ceiling = scanToSolid(world, caveAir, EnumFacing.UP, LEGACY_CAVE_SURFACE_SCAN_DISTANCE);
+    private void decorateDripstoneCaveBlock(World world, Random random, BlockPos pos, int blockX, int blockZ, double strength) {
+        IBlockState down = world.getBlockState(pos.down());
+        IBlockState up = world.getBlockState(pos.up());
 
-        if (floor != null && ceiling != null && random.nextDouble() < 0.18D * strength) {
-            placeDripstoneCluster(world, random, floor, blockX, blockZ, 2 + random.nextInt(LEGACY_DRIPSTONE_PATCH_RADIUS), strength);
-            return;
-        }
-
-        if (floor != null && isInsideChunk(floor, blockX, blockZ) && random.nextDouble() < 0.52D * strength) {
-            placePointedDripstone(world, floor.up(), EnumFacing.UP, 1 + random.nextInt(3 + (int)(strength * 3.0D)));
-        }
-        if (ceiling != null && isInsideChunk(ceiling, blockX, blockZ) && random.nextDouble() < 0.68D * strength) {
-            placePointedDripstone(world, ceiling.down(), EnumFacing.DOWN, 1 + random.nextInt(4 + (int)(strength * 4.0D)));
-        }
-        if (random.nextDouble() < 0.22D * strength) {
-            placeGlowLichen(world, random, caveAir);
+        if (isDripstoneReplaceable(down)) {
+            decorateDripstoneFloor(world, random, pos, strength);
+        } else if (isDripstoneReplaceable(up)) {
+            decorateDripstoneCeiling(world, random, pos, strength);
+        } else if (random.nextDouble() < 0.04D * strength) {
+            placeGlowLichen(world, random, pos);
         }
     }
 
-    private void placeDripstoneCluster(World world, Random random, BlockPos floor, int blockX, int blockZ, int radius, double strength) {
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-                double distance = Math.sqrt(dx * dx + dz * dz);
-                if (distance > radius || random.nextDouble() > (1.0D - distance / (radius + 1.0D)) * strength + 0.08D) {
-                    continue;
-                }
+    private void decorateDripstoneFloor(World world, Random random, BlockPos pos, double strength) {
+        BlockPos floorPos = pos.down();
+        if (random.nextDouble() < 0.22D * strength) {
+            world.setBlockState(floorPos, ModBlocks.DRIPSTONE_BLOCK.getDefaultState(), 2);
+        }
 
-                BlockPos support = floor.add(dx, 0, dz);
-                BlockPos air = support.up();
-                if (!isInsideChunk(air, blockX, blockZ)
-                        || !isDripstoneReplaceable(world.getBlockState(support))
-                        || !isReplaceableCavePlantTarget(world, air)) {
-                    continue;
-                }
+        double decorationRoll = random.nextDouble();
+        if (decorationRoll < 0.16D * strength) {
+            placePointedDripstone(world, pos, EnumFacing.UP, 1 + random.nextInt(4));
+        } else if (decorationRoll < 0.20D * strength && world.isAirBlock(pos)) {
+            world.setBlockState(pos, Blocks.WATER.getDefaultState(), 2);
+        }
+    }
 
-                world.setBlockState(support, ModBlocks.DRIPSTONE_BLOCK.getDefaultState(), 2);
-                int height = Math.max(1, (int)Math.round((radius - distance + 1.0D) * (0.35D + strength * 0.35D))) + random.nextInt(2);
-                placePointedDripstone(world, air, EnumFacing.UP, height);
+    private void decorateDripstoneCeiling(World world, Random random, BlockPos pos, double strength) {
+        BlockPos ceilingPos = pos.up();
+        if (random.nextDouble() < 0.28D * strength) {
+            world.setBlockState(ceilingPos, ModBlocks.DRIPSTONE_BLOCK.getDefaultState(), 2);
+        }
 
-                BlockPos ceiling = scanToSolid(world, air, EnumFacing.UP, LEGACY_CAVE_SURFACE_SCAN_DISTANCE);
-                if (ceiling != null && isInsideChunk(ceiling, blockX, blockZ) && random.nextDouble() < 0.65D * strength) {
-                    int ceilingHeight = Math.max(1, (int)Math.round((radius - distance + 1.0D) * (0.45D + strength * 0.45D))) + random.nextInt(3);
-                    world.setBlockState(ceiling, ModBlocks.DRIPSTONE_BLOCK.getDefaultState(), 2);
-                    placePointedDripstone(world, ceiling.down(), EnumFacing.DOWN, ceilingHeight);
-                }
-            }
+        if (random.nextDouble() < 0.20D * strength) {
+            placePointedDripstone(world, pos, EnumFacing.DOWN, 1 + random.nextInt(4));
         }
     }
 
@@ -717,6 +719,14 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
                 && hasNearbyNaturalStone(world, pos);
     }
 
+    private boolean isCaveDecorationTarget(World world, BlockPos pos) {
+        IBlockState state = world.getBlockState(pos);
+        return pos.getY() > 3
+                && pos.getY() < world.getActualHeight() - 3
+                && !world.canBlockSeeSky(pos)
+                && (state.getBlock() == Blocks.AIR || state.getMaterial() == Material.WATER);
+    }
+
     private boolean hasNearbyNaturalStone(World world, BlockPos pos) {
         for (EnumFacing facing : EnumFacing.values()) {
             if (isNaturalStone(world.getBlockState(pos.offset(facing)))) {
@@ -724,20 +734,6 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
             }
         }
         return false;
-    }
-
-    private BlockPos scanToSolid(World world, BlockPos start, EnumFacing direction, int distance) {
-        BlockPos pos = start;
-        for (int i = 0; i < distance; i++) {
-            pos = pos.offset(direction);
-            if (pos.getY() <= 1 || pos.getY() >= world.getActualHeight() - 1) {
-                return null;
-            }
-            if (world.getBlockState(pos).getMaterial().isSolid()) {
-                return pos;
-            }
-        }
-        return null;
     }
 
     private void spawnAquaticCaveMobs(World world, Random random, int blockX, int blockZ) {
@@ -861,7 +857,6 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
     }
 
     private enum CaveStyle {
-        NORMAL,
         LUSH,
         DRIPSTONE
     }
