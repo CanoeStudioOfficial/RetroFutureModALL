@@ -1,8 +1,8 @@
 {
   "ambientocclusion": false,
   "textures": {
-    "particle": "retrofuturethewildupdate:block/sculk_vein",
-    "sculk_vein": "retrofuturethewildupdate:block/sculk_vein"
+    "particle": "retrofuturethewildupdate:blocks/sculk_vein",
+    "sculk_vein": "retrofuturethewildupdate:blocks/sculk_vein"
   },
   "elements": [
     {

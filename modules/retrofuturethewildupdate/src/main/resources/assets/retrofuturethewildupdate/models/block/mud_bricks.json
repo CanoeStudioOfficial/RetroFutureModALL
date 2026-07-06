@@ -1,6 +1,6 @@
 {
   "parent": "block/cube_all",
   "textures": {
-    "all": "retrofuturethewildupdate:block/mud_bricks"
+    "all": "retrofuturethewildupdate:blocks/mud_bricks"
   }
 }

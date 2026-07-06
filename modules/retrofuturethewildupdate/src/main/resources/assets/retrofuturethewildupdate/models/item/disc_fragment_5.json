@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "retrofuturethewildupdate:item/disc_fragment_5"
+    "layer0": "retrofuturethewildupdate:items/disc_fragment_5"
   }
 }

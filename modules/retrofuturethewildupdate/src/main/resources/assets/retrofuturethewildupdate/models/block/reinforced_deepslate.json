@@ -1,8 +1,8 @@
 {
   "parent": "block/cube_bottom_top",
   "textures": {
-    "bottom": "retrofuturethewildupdate:block/reinforced_deepslate_bottom",
-    "side": "retrofuturethewildupdate:block/reinforced_deepslate_side",
-    "top": "retrofuturethewildupdate:block/reinforced_deepslate_top"
+    "bottom": "retrofuturethewildupdate:blocks/reinforced_deepslate_bottom",
+    "side": "retrofuturethewildupdate:blocks/reinforced_deepslate_side",
+    "top": "retrofuturethewildupdate:blocks/reinforced_deepslate_top"
   }
 }

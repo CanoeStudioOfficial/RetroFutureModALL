@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "retrofuturethewildupdate:item/tadpole_spawn_egg"
+    "layer0": "retrofuturethewildupdate:items/tadpole_spawn_egg"
   }
 }

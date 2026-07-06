@@ -1,8 +1,8 @@
 {
   "parent": "block/block",
   "textures": {
-    "side": "retrofuturethewildupdate:block/mangrove_roots_side",
-    "top": "retrofuturethewildupdate:block/mangrove_roots_top",
+    "side": "retrofuturethewildupdate:blocks/mangrove_roots_side",
+    "top": "retrofuturethewildupdate:blocks/mangrove_roots_top",
     "particle": "#side"
   },
   "elements": [

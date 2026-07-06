@@ -1,8 +1,8 @@
 {
   "ambientocclusion": false,
   "textures": {
-    "particle": "retrofuturethewildupdate:block/frogspawn",
-    "texture": "retrofuturethewildupdate:block/frogspawn"
+    "particle": "retrofuturethewildupdate:blocks/frogspawn",
+    "texture": "retrofuturethewildupdate:blocks/frogspawn"
   },
   "elements": [
     {

@@ -1,11 +1,11 @@
 {
   "parent": "block/block",
   "textures": {
-    "bottom": "retrofuturethewildupdate:block/sculk_shrieker_bottom",
-    "side": "retrofuturethewildupdate:block/sculk_shrieker_side",
-    "top": "retrofuturethewildupdate:block/sculk_shrieker_top",
-    "inner_top": "retrofuturethewildupdate:block/sculk_shrieker_inner_top",
-    "particle": "retrofuturethewildupdate:block/sculk_shrieker_bottom"
+    "bottom": "retrofuturethewildupdate:blocks/sculk_shrieker_bottom",
+    "side": "retrofuturethewildupdate:blocks/sculk_shrieker_side",
+    "top": "retrofuturethewildupdate:blocks/sculk_shrieker_top",
+    "inner_top": "retrofuturethewildupdate:blocks/sculk_shrieker_inner_top",
+    "particle": "retrofuturethewildupdate:blocks/sculk_shrieker_bottom"
   },
   "elements": [
     {

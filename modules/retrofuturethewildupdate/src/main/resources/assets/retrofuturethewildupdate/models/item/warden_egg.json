@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "retrofuturethewildupdate:item/warden_spawn_egg"
+    "layer0": "retrofuturethewildupdate:items/warden_spawn_egg"
   }
 }

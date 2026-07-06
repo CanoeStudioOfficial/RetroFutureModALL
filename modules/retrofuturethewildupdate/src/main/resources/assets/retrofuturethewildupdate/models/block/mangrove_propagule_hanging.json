@@ -1,8 +1,8 @@
 {
   "parent": "block/block",
   "textures": {
-    "propagule": "retrofuturethewildupdate:block/mangrove_propagule_hanging",
-    "particle": "retrofuturethewildupdate:block/mangrove_propagule_hanging"
+    "propagule": "retrofuturethewildupdate:blocks/mangrove_propagule_hanging",
+    "particle": "retrofuturethewildupdate:blocks/mangrove_propagule_hanging"
   },
   "elements": [
     {

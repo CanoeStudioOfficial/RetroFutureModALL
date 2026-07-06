@@ -1,7 +1,7 @@
 {
   "parent": "block/cube_column",
   "textures": {
-    "end": "retrofuturethewildupdate:block/muddy_mangrove_roots_top",
-    "side": "retrofuturethewildupdate:block/muddy_mangrove_roots_side"
+    "end": "retrofuturethewildupdate:blocks/muddy_mangrove_roots_top",
+    "side": "retrofuturethewildupdate:blocks/muddy_mangrove_roots_side"
   }
 }

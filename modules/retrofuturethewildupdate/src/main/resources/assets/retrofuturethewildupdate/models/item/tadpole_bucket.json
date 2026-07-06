@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "retrofuturethewildupdate:item/tadpole_bucket"
+    "layer0": "retrofuturethewildupdate:items/tadpole_bucket"
   }
 }

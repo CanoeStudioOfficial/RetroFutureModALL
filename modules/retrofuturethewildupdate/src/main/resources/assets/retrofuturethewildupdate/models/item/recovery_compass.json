@@ -1,6 +1,6 @@
 {
   "parent": "item/generated",
   "textures": {
-    "layer0": "retrofuturethewildupdate:item/recovery_compass_00"
+    "layer0": "retrofuturethewildupdate:items/recovery_compass_00"
   }
 }

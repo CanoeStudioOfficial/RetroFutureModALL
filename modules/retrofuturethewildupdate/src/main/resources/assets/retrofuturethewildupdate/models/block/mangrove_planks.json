@@ -1,6 +1,6 @@
 {
   "parent": "block/cube_all",
   "textures": {
-    "all": "retrofuturethewildupdate:block/mangrove_planks"
+    "all": "retrofuturethewildupdate:blocks/mangrove_planks"
   }
 }

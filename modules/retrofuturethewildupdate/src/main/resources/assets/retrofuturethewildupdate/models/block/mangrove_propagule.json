@@ -1,8 +1,8 @@
 {
   "ambientocclusion": false,
   "textures": {
-    "particle": "retrofuturethewildupdate:block/mangrove_propagule",
-    "sapling": "retrofuturethewildupdate:block/mangrove_propagule"
+    "particle": "retrofuturethewildupdate:blocks/mangrove_propagule",
+    "sapling": "retrofuturethewildupdate:blocks/mangrove_propagule"
   },
   "elements": [
     {

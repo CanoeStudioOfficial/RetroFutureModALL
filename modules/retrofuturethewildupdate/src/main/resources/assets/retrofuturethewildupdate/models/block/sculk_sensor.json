@@ -1,11 +1,11 @@
 {
   "parent": "block/block",
   "textures": {
-    "bottom": "retrofuturethewildupdate:block/sculk_sensor_bottom",
-    "side": "retrofuturethewildupdate:block/sculk_sensor_side",
-    "tendrils": "retrofuturethewildupdate:block/sculk_sensor_tendril_inactive",
-    "top": "retrofuturethewildupdate:block/sculk_sensor_top",
-    "particle": "retrofuturethewildupdate:block/sculk_sensor_bottom"
+    "bottom": "retrofuturethewildupdate:blocks/sculk_sensor_bottom",
+    "side": "retrofuturethewildupdate:blocks/sculk_sensor_side",
+    "tendrils": "retrofuturethewildupdate:blocks/sculk_sensor_tendril_inactive",
+    "top": "retrofuturethewildupdate:blocks/sculk_sensor_top",
+    "particle": "retrofuturethewildupdate:blocks/sculk_sensor_bottom"
   },
   "elements": [
     {

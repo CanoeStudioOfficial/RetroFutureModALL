@@ -1,7 +1,7 @@
 {
   "parent": "block/cube_column",
   "textures": {
-    "end": "retrofuturethewildupdate:block/pearlescent_froglight_top",
-    "side": "retrofuturethewildupdate:block/pearlescent_froglight_side"
+    "end": "retrofuturethewildupdate:blocks/pearlescent_froglight_top",
+    "side": "retrofuturethewildupdate:blocks/pearlescent_froglight_side"
   }
 }
