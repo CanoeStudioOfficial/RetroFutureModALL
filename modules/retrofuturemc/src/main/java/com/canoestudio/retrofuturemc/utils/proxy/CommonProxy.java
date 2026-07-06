@@ -1,7 +1,6 @@
 package com.canoestudio.retrofuturemc.utils.proxy;
 
 import com.canoestudio.retrofuturemc.contents.world.gen.RetroFutureWorldGenerator;
-import com.canoestudio.retrofuturemc.contents.world.gen.cave.RetroFutureCaveBiomes;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -11,7 +10,6 @@ public class CommonProxy {
 
 
     public void preInit(FMLPreInitializationEvent event) {
-        RetroFutureCaveBiomes.register();
         GameRegistry.registerWorldGenerator(new RetroFutureWorldGenerator(), 20);
 
     }
