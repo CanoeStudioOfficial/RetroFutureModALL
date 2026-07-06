@@ -189,14 +189,19 @@ public class DripleafStem extends BlockBush implements IGrowable, IFluidloggable
     public ItemStack getItem(World worldIn, BlockPos pos, IBlockState state) { return new ItemStack(ModBlocks.BIG_DRIPLEAF); }
 
     @Override
-    public boolean canGrow(World worldIn, BlockPos pos, IBlockState state, boolean isClient) { return true; }
+    public boolean canGrow(World worldIn, BlockPos pos, IBlockState state, boolean isClient) { return BigDripleaf.canGrowWithBonemeal(worldIn, pos); }
 
     @Override
-    public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, IBlockState state) { return true; }
+    public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, IBlockState state) { return BigDripleaf.canGrowWithBonemeal(worldIn, pos); }
 
     public void grow(World worldIn, Random rand, BlockPos pos, IBlockState state)
     {
-        BlockPos topPos = findTopPosition(worldIn, pos);
+        if (!BigDripleaf.canGrowWithBonemeal(worldIn, pos))
+        {
+            return;
+        }
+
+        BlockPos topPos = BigDripleaf.findTopPosition(worldIn, pos);
         IBlockState topState = worldIn.getBlockState(topPos);
         EnumFacing facing = topState.getValue(FACING);
         
@@ -263,24 +268,6 @@ public class DripleafStem extends BlockBush implements IGrowable, IFluidloggable
         {
             world.scheduleUpdate(pos, fluidState.getState().getBlock(), fluidState.getState().getBlock().tickRate(world));
         }
-    }
-
-    private BlockPos findTopPosition(World world, BlockPos pos)
-    {
-        BlockPos checkPos = pos;
-        while (true)
-        {
-            IBlockState upState = world.getBlockState(checkPos.up());
-            if (upState.getBlock() == ModBlocks.DRIPLEAF_STEM || upState.getBlock() == ModBlocks.BIG_DRIPLEAF)
-            {
-                checkPos = checkPos.up();
-            }
-            else
-            {
-                break;
-            }
-        }
-        return checkPos;
     }
 
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer)

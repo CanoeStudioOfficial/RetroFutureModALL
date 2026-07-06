@@ -104,6 +104,21 @@ public final class CopperBehavior {
         return true;
     }
 
+    public static boolean canLightningClean(IBlockState state) {
+        CopperInfo info = info(state.getBlock());
+        return info != null && !info.waxed && info.previous != null;
+    }
+
+    public static boolean lightningClean(World world, BlockPos pos, IBlockState state) {
+        CopperInfo info = info(state.getBlock());
+        if (info == null || info.waxed || info.previous == null) {
+            return false;
+        }
+
+        world.setBlockState(pos, copyCompatibleProperties(state, info.previous.getDefaultState()), 3);
+        return true;
+    }
+
     public static void tryWeather(World world, BlockPos pos, IBlockState state, Random rand) {
         CopperInfo info = info(state.getBlock());
         if (world.isRemote || info == null || info.waxed || info.next == null || rand.nextFloat() >= BASE_CHANCE) {

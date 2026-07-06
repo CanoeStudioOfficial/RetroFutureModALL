@@ -41,6 +41,7 @@ import static com.canoestudio.retrofuturemc.contents.tab.CreativeTab.CREATIVE_TA
 public class BigDripleaf extends BlockBush implements IGrowable, IFluidloggable {
     public static final String name = "Big_Dripleaf";
     public static final SoundType DRIPLEAF = new SoundType(1.0F, 1.0F, ModSoundHandler.BLOCK_BIG_DRIPLEAF_BREAK, ModSoundHandler.BLOCK_BIG_DRIPLEAF_STEP, ModSoundHandler.BLOCK_BIG_DRIPLEAF_PLACE, ModSoundHandler.BLOCK_BIG_DRIPLEAF_HIT, ModSoundHandler.BLOCK_BIG_DRIPLEAF_FALL);
+    public static final int MAX_GROWTH_HEIGHT = 5;
 
     protected static final AxisAlignedBB HALF_AABB = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.5D, 1.0D);
     protected static final AxisAlignedBB DRIP_AABB = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.9375D, 1.0D);
@@ -300,7 +301,7 @@ public class BigDripleaf extends BlockBush implements IGrowable, IFluidloggable 
         
         if (heldItem.getItem() == Items.DYE && heldItem.getMetadata() == 15)
         {
-            if (canGrowWithBonemeal(worldIn, pos, state))
+            if (canGrowWithBonemeal(worldIn, pos))
             {
                 if (!worldIn.isRemote)
                 {
@@ -317,7 +318,7 @@ public class BigDripleaf extends BlockBush implements IGrowable, IFluidloggable 
         return false;
     }
 
-    private boolean canGrowWithBonemeal(World world, BlockPos pos, IBlockState state)
+    public static boolean canGrowWithBonemeal(World world, BlockPos pos)
     {
         BlockPos topPos = findTopPosition(world, pos);
         IBlockState topState = world.getBlockState(topPos);
@@ -326,18 +327,23 @@ public class BigDripleaf extends BlockBush implements IGrowable, IFluidloggable 
         {
             return false;
         }
+
+        if (getPlantHeight(world, pos) >= MAX_GROWTH_HEIGHT)
+        {
+            return false;
+        }
         
         BlockPos aboveTop = topPos.up();
         return canGrowInto(world, aboveTop);
     }
 
-    private BlockPos findTopPosition(World world, BlockPos pos)
+    public static BlockPos findTopPosition(World world, BlockPos pos)
     {
         BlockPos checkPos = pos;
         while (true)
         {
             IBlockState upState = world.getBlockState(checkPos.up());
-            if (upState.getBlock() == ModBlocks.BIG_DRIPLEAF || upState.getBlock() == ModBlocks.DRIPLEAF_STEM)
+            if (isBigDripleafPart(upState.getBlock()))
             {
                 checkPos = checkPos.up();
             }
@@ -347,6 +353,36 @@ public class BigDripleaf extends BlockBush implements IGrowable, IFluidloggable 
             }
         }
         return checkPos;
+    }
+
+    public static BlockPos findBottomPosition(World world, BlockPos pos)
+    {
+        BlockPos checkPos = pos;
+        while (true)
+        {
+            IBlockState downState = world.getBlockState(checkPos.down());
+            if (isBigDripleafPart(downState.getBlock()))
+            {
+                checkPos = checkPos.down();
+            }
+            else
+            {
+                break;
+            }
+        }
+        return checkPos;
+    }
+
+    public static int getPlantHeight(World world, BlockPos pos)
+    {
+        BlockPos bottomPos = findBottomPosition(world, pos);
+        BlockPos topPos = findTopPosition(world, pos);
+        return topPos.getY() - bottomPos.getY() + 1;
+    }
+
+    public static boolean isBigDripleafPart(Block block)
+    {
+        return block == ModBlocks.BIG_DRIPLEAF || block == ModBlocks.DRIPLEAF_STEM;
     }
 
     private void growWithBonemeal(World world, BlockPos pos, IBlockState state)
@@ -359,7 +395,7 @@ public class BigDripleaf extends BlockBush implements IGrowable, IFluidloggable 
         setFluidloggableBlock(world, topPos.up(), this.getDefaultState().withProperty(FACING, facing), 3);
     }
 
-    private boolean canGrowInto(World world, BlockPos pos)
+    public static boolean canGrowInto(World world, BlockPos pos)
     {
         IBlockState state = world.getBlockState(pos);
         return state.getBlock().isReplaceable(world, pos) || state.getBlock() == Blocks.AIR || state.getMaterial() == Material.WATER || FluidloggedUtils.getFluidState(world, pos, state).getFluid() == FluidRegistry.WATER;
@@ -449,17 +485,17 @@ public class BigDripleaf extends BlockBush implements IGrowable, IFluidloggable 
 
     @Override
     public boolean canGrow(World worldIn, BlockPos pos, IBlockState state, boolean isClient) { 
-        return canGrowWithBonemeal(worldIn, pos, state); 
+        return canGrowWithBonemeal(worldIn, pos); 
     }
 
     @Override
     public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, IBlockState state) { 
-        return true; 
+        return canGrowWithBonemeal(worldIn, pos); 
     }
 
     public void grow(World worldIn, Random rand, BlockPos pos, IBlockState state)
     {
-        if (canGrowWithBonemeal(worldIn, pos, state))
+        if (canGrowWithBonemeal(worldIn, pos))
         {
             growWithBonemeal(worldIn, pos, state);
         }

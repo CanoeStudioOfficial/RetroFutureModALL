@@ -397,23 +397,23 @@ public class RetroFutureBehaviorEvents {
     }
 
     private void clearCopperAroundLightning(World world, BlockPos center) {
-        scrapeCopperAt(world, center);
+        cleanCopperAt(world, center);
 
         Random rand = world.rand;
         BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(center);
         for (int i = 0; i < 10; ++i) {
             pos.setPos(center.getX() + rand.nextInt(5) - 2, center.getY() + rand.nextInt(5) - 2, center.getZ() + rand.nextInt(5) - 2);
-            scrapeCopperAt(world, pos);
+            cleanCopperAt(world, pos);
         }
     }
 
-    private boolean scrapeCopperAt(World world, BlockPos pos) {
+    private boolean cleanCopperAt(World world, BlockPos pos) {
         if (!world.isBlockLoaded(pos, false)) {
             return false;
         }
 
         IBlockState state = world.getBlockState(pos);
-        return CopperBehavior.canScrape(state) && CopperBehavior.scrape(world, pos, state);
+        return CopperBehavior.canLightningClean(state) && CopperBehavior.lightningClean(world, pos, state);
     }
 
     private void updateFreeze(EntityLivingBase entity, boolean freezing) {
