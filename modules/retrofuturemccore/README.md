@@ -190,6 +190,67 @@ RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MAX_HEALTH, 14.
 
 `RetroEntityAttributes` registers missing attributes when needed, useful for 1.12 entities where newer behavior expects attributes such as attack damage.
 
+## Client Models And Renderers
+
+Use `RetroModelRegistry` from your client proxy or `ModelRegistryEvent` subscriber. It wraps Forge 1.12.2's `ModelLoader` and `RenderingRegistry` APIs behind a smaller modern-style facade:
+
+```java
+@Mod.EventBusSubscriber(value = Side.CLIENT, modid = "examplemod")
+public final class ClientModelEvents {
+    @SubscribeEvent
+    public static void registerModels(ModelRegistryEvent event) {
+        RetroModelRegistry.registerItems(ModItems.GOAT_HORN, ModItems.SPYGLASS);
+        RetroModelRegistry.registerBlockItems(ModBlocks.COPPER_BLOCK, ModBlocks.LIGHTNING_ROD);
+    }
+}
+```
+
+Custom metadata or model paths are supported:
+
+```java
+RetroModelRegistry.registerItem(ModItems.GOAT_HORN, 1,
+    new ResourceLocation("examplemod", "goat_horn_sing"), "inventory");
+```
+
+Register complex renderers through the same facade:
+
+```java
+@Override
+public void preInit(FMLPreInitializationEvent event) {
+    super.preInit(event);
+    RetroModelRegistry.registerEntityRenderer(EntityGoat.class, RenderGoat::new);
+}
+```
+
+For simple living entities, core can create a 1.12 `RenderLiving` for you:
+
+```java
+RetroModelRegistry.registerLivingRenderer(
+    EntityTadpole.class,
+    ModelTadpole::new,
+    new ResourceLocation("examplemod", "textures/entity/tadpole/tadpole.png"),
+    0.14F
+);
+```
+
+Variant textures and small pre-render transforms can stay inline:
+
+```java
+RetroModelRegistry.registerLivingRenderer(
+    EntityFrog.class,
+    ModelFrog::new,
+    frog -> new ResourceLocation("examplemod", "textures/entity/frog/frog_" + frog.getVariantName() + ".png"),
+    0.3F,
+    context -> {
+        if (context.getEntity().isChild()) {
+            GlStateManager.scale(0.55F, 0.55F, 0.55F);
+        }
+    }
+);
+```
+
+This is not a direct port of modern `ModelLayer` / baked model internals. It is a 1.12.2-safe compatibility layer that keeps client-only rendering code in client entry points while removing repeated boilerplate from content mods.
+
 ## Components
 
 Register and attach components:
