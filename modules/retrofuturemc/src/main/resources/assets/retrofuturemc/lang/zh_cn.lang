@@ -176,3 +176,5 @@ subtitles.entity.glow_squid.squirt=发光鱿鱼喷墨
 item.retrofuturemc.axolotl_bucket.name=美西螈桶
 item.retrofuturemc.music_disc_otherside.name=音乐唱片
 item.record.music_disc_otherside.desc=Lena Raine - otherside
+subtitles.item.spyglass.use=望远镜展开
+subtitles.item.spyglass.stop_using=望远镜收回

@@ -88,6 +88,7 @@ public class ItemAxolotlBucket extends Item {
                 axolotl.setVariant(tag.getInteger(VARIANT_KEY));
             }
             axolotl.enablePersistence();
+            axolotl.resetBucketReleasePose(player.rotationYaw);
             world.spawnEntity(axolotl);
         }
 

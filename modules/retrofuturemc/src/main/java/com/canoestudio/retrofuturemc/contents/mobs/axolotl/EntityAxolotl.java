@@ -56,6 +56,7 @@ public class EntityAxolotl extends EntityWaterMob {
     private int playDeadTicks;
     private int swimPauseTicks;
     private int attackCooldown;
+    private int bucketReleaseTicks;
     @Nullable
     private EntityLivingBase attackTarget;
     private final AnimationFactor playingDeadAnimator = new AnimationFactor();
@@ -198,6 +199,13 @@ public class EntityAxolotl extends EntityWaterMob {
                     if (motionY > -0.005D) {
                         motionY -= 0.005D;
                     }
+                } else if (bucketReleaseTicks > 0) {
+                    bucketReleaseTicks--;
+                    swimTarget = null;
+                    motionX *= 0.6D;
+                    motionY *= 0.45D;
+                    motionZ *= 0.6D;
+                    rotationPitch += (0.0F - rotationPitch) * 0.5F;
                 } else {
                     updateAttackTarget();
                     updateWaterMovement();
@@ -491,6 +499,11 @@ public class EntityAxolotl extends EntityWaterMob {
             float linear = MathHelper.clamp(tick / (float)ANIMATION_BLEND_TICKS, 0.0F, 1.0F);
             return (1.0F - MathHelper.cos(linear * (float)Math.PI)) * 0.5F;
         }
+
+        private void reset(boolean active) {
+            ticks = active ? ANIMATION_BLEND_TICKS : 0;
+            ticksOld = ticks;
+        }
     }
 
     private void updateBodyRotation() {
@@ -560,6 +573,29 @@ public class EntityAxolotl extends EntityWaterMob {
         motionY *= 0.25D;
         motionZ *= 0.25D;
         addPotionEffect(new PotionEffect(MobEffects.REGENERATION, TOTAL_PLAY_DEAD_TIME, 0));
+    }
+
+    public void resetBucketReleasePose(float yaw) {
+        rotationYaw = yaw;
+        prevRotationYaw = yaw;
+        renderYawOffset = yaw;
+        prevRenderYawOffset = yaw;
+        rotationYawHead = yaw;
+        prevRotationYawHead = yaw;
+        rotationPitch = 0.0F;
+        prevRotationPitch = 0.0F;
+        motionX = 0.0D;
+        motionY = 0.0D;
+        motionZ = 0.0D;
+        swimTarget = null;
+        waterTarget = null;
+        swimPauseTicks = 0;
+        targetCooldown = 12;
+        bucketReleaseTicks = 12;
+        movingAnimator.reset(false);
+        inWaterAnimator.reset(isInWater());
+        onGroundAnimator.reset(false);
+        playingDeadAnimator.reset(false);
     }
 
     @Override

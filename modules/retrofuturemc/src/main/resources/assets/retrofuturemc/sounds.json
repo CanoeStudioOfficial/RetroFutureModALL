@@ -80,6 +80,23 @@
       { "name": "retrofuturemc:item/bucket/fill_axolotl3", "pitch": 1.0 }
     ]
   },
+  "item.spyglass.use": {
+    "subtitle": "subtitles.item.spyglass.use",
+    "sounds": [
+      { "name": "retrofuturemc:item/spyglass/use", "pitch": 1.15, "volume": 0.5 },
+      { "name": "retrofuturemc:item/spyglass/use", "pitch": 1.33, "volume": 0.5 },
+      { "name": "retrofuturemc:item/spyglass/use", "pitch": 1.4, "volume": 0.5 },
+      { "name": "retrofuturemc:item/spyglass/use", "pitch": 1.55, "volume": 0.5 }
+    ]
+  },
+  "item.spyglass.stop_using": {
+    "subtitle": "subtitles.item.spyglass.stop_using",
+    "sounds": [
+      { "name": "retrofuturemc:item/spyglass/stop", "volume": 0.5 },
+      { "name": "retrofuturemc:item/spyglass/stop", "pitch": 0.8, "volume": 0.5 },
+      { "name": "retrofuturemc:item/spyglass/stop", "pitch": 0.9, "volume": 0.5 }
+    ]
+  },
   "entity.goat.ambient": {
     "subtitle": "subtitles.entity.goat.ambient",
     "sounds": [

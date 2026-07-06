@@ -116,6 +116,8 @@ public class ModSoundHandler {
     public static SoundEvent ENTITY_AXOLOTL_SWIM = new ModSoundEvent("entity.axolotl.swim");
     public static SoundEvent ITEM_BUCKET_EMPTY_AXOLOTL = new ModSoundEvent("item.bucket.empty_axolotl");
     public static SoundEvent ITEM_BUCKET_FILL_AXOLOTL = new ModSoundEvent("item.bucket.fill_axolotl");
+    public static SoundEvent ITEM_SPYGLASS_USE = new ModSoundEvent("item.spyglass.use");
+    public static SoundEvent ITEM_SPYGLASS_STOP_USING = new ModSoundEvent("item.spyglass.stop_using");
 
     public static SoundEvent ENTITY_GOAT_AMBIENT = new ModSoundEvent("entity.goat.ambient");
     public static SoundEvent ENTITY_GOAT_DEATH = new ModSoundEvent("entity.goat.death");
