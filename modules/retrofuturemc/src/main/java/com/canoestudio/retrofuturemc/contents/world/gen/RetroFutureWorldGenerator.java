@@ -76,6 +76,8 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
     public static final int PRIMER_CAVE_AIR_SCAN_DISTANCE = 24;
     private static final int LUSH_SURFACE_SCAN_DISTANCE = 16;
     public static final int MODERN_CAVE_TERRAIN_DECORATION_ATTEMPTS = 128;
+    private static final int MODERN_CAVE_TERRAIN_COLUMN_STEP = 4;
+    private static final int MODERN_CAVE_TERRAIN_VERTICAL_STEP = 3;
     private static final long WORLD_CAVE_POSITION_SEED_SALT = 0x5246574341564550L;
     private static final long WORLD_CAVE_FEATURE_SEED_SALT = 0x5246574341564546L;
     private static final long MODERN_CAVE_POSITION_SEED_SALT = 0x4D435442494F4D45L;
@@ -89,8 +91,12 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
     private static final int MODERN_UNDERGROUND_BIOME_PRIORITY = 80;
     private static final double MODERN_UNDERGROUND_MIN_DEPTH = 0.2D;
     private static final double MODERN_UNDERGROUND_MAX_DEPTH = 0.9D;
-    private static final double MODERN_LUSH_MIN_HUMIDITY = 0.35D;
-    private static final double MODERN_DRIPSTONE_MIN_CONTINENTALNESS = 0.35D;
+    private static final double MODERN_LUSH_SUPPORT_HUMIDITY = 0.30D;
+    private static final double MODERN_LUSH_TARGET_HUMIDITY = 0.70D;
+    private static final double MODERN_DRIPSTONE_SUPPORT_CONTINENTALNESS = 0.35D;
+    private static final double MODERN_DRIPSTONE_TARGET_CONTINENTALNESS = 0.80D;
+    private static final double MODERN_SELECTOR_MIN_WEIGHT = 0.06D;
+    private static final long MODERN_UNDERGROUND_REGION_SEED_SALT = 0x5246554E44474249L;
     private static final boolean GENERATE_LUSH_CAVES = true;
     private static final boolean GENERATE_DRIPSTONE_CAVES = true;
     private static boolean modernCaveTerrainBiomesRegistered;
@@ -115,7 +121,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
                 .caveBiomeType(ModernCaveTerrainCaveBiomeType.GENERIC_3D)
                 .yRange(MODERN_UNDERGROUND_BIOME_MIN_Y, MODERN_UNDERGROUND_BIOME_MAX_Y)
                 .priority(MODERN_UNDERGROUND_BIOME_PRIORITY)
-                .selector((world, sample) -> getModernLushSelectionWeight(sample))
+                .selector((world, sample) -> getModernLushSelectionWeight(world, sample))
                 .decorator(decorator)
                 .build();
     }
@@ -127,7 +133,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
                 .caveBiomeType(ModernCaveTerrainCaveBiomeType.GENERIC_3D)
                 .yRange(MODERN_UNDERGROUND_BIOME_MIN_Y, MODERN_UNDERGROUND_BIOME_MAX_Y)
                 .priority(MODERN_UNDERGROUND_BIOME_PRIORITY)
-                .selector((world, sample) -> getModernDripstoneSelectionWeight(sample))
+                .selector((world, sample) -> getModernDripstoneSelectionWeight(world, sample))
                 .decorator(decorator)
                 .build();
     }
@@ -179,6 +185,8 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
             }
         }
 
+        decorateModernBiomeGrid(context, definition, targetStyle, decorationRandom, minY, maxY);
+
         for (int i = 0; i < MODERN_CAVE_TERRAIN_DECORATION_ATTEMPTS; i++) {
             int x = positionRandom.nextInt(16);
             int z = positionRandom.nextInt(16);
@@ -188,21 +196,64 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
                 continue;
             }
 
-            ModernCaveTerrainUndergroundBiomeSample biomeSample = context.sampleUndergroundBiomeLocal(x, y, z);
-            if (!matchesModernDefinition(definition, biomeSample)) {
-                continue;
-            }
+            tryDecorateModernPrimer(context, definition, targetStyle, decorationRandom, x, y, z);
+        }
+    }
 
-            double strength = getModernCaveStyleStrength(biomeSample, targetStyle);
-            if (strength <= 0.0D) {
-                continue;
-            }
-            if (targetStyle == CaveStyle.LUSH) {
-                decorateLushPrimer(context, decorationRandom, x, y, z, strength);
-            } else if (targetStyle == CaveStyle.DRIPSTONE) {
-                decorateDripstonePrimer(context, decorationRandom, x, y, z, strength);
+    private void decorateModernBiomeGrid(ModernCaveTerrainCaveDecorationContext context,
+                                         ModernCaveTerrainUndergroundBiomeDefinition definition,
+                                         CaveStyle targetStyle, Random random, int minY, int maxY) {
+        int maxPlacements = targetStyle == CaveStyle.LUSH ? 20 : 24;
+        int placements = 0;
+        int yOffset = random.nextInt(MODERN_CAVE_TERRAIN_VERTICAL_STEP);
+
+        for (int xBase = 0; xBase < 16 && placements < maxPlacements; xBase += MODERN_CAVE_TERRAIN_COLUMN_STEP) {
+            for (int zBase = 0; zBase < 16 && placements < maxPlacements; zBase += MODERN_CAVE_TERRAIN_COLUMN_STEP) {
+                int x = Math.min(15, xBase + 1 + random.nextInt(Math.max(1, MODERN_CAVE_TERRAIN_COLUMN_STEP - 1)));
+                int z = Math.min(15, zBase + 1 + random.nextInt(Math.max(1, MODERN_CAVE_TERRAIN_COLUMN_STEP - 1)));
+
+                for (int y = minY + yOffset; y <= maxY && placements < maxPlacements; y += MODERN_CAVE_TERRAIN_VERTICAL_STEP) {
+                    if (!isAir(context.getBlockState(x, y, z))) {
+                        continue;
+                    }
+                    ModernCaveTerrainUndergroundBiomeSample sample = context.sampleUndergroundBiomeLocal(x, y, z);
+                    if (!matchesModernDefinition(definition, sample)) {
+                        continue;
+                    }
+                    double strength = getModernCaveStyleStrength(sample, targetStyle);
+                    if (random.nextDouble() > 0.30D + strength * 0.42D) {
+                        continue;
+                    }
+                    if (tryDecorateModernPrimer(context, definition, targetStyle, random, x, y, z)) {
+                        placements++;
+                    }
+                    break;
+                }
             }
         }
+    }
+
+    private boolean tryDecorateModernPrimer(ModernCaveTerrainCaveDecorationContext context,
+                                            ModernCaveTerrainUndergroundBiomeDefinition definition,
+                                            CaveStyle targetStyle, Random random, int x, int y, int z) {
+        ModernCaveTerrainUndergroundBiomeSample biomeSample = context.sampleUndergroundBiomeLocal(x, y, z);
+        if (!matchesModernDefinition(definition, biomeSample)) {
+            return false;
+        }
+
+        double strength = getModernCaveStyleStrength(biomeSample, targetStyle);
+        if (strength <= 0.0D) {
+            return false;
+        }
+        if (targetStyle == CaveStyle.LUSH) {
+            decorateLushPrimer(context, random, x, y, z, strength);
+            return true;
+        }
+        if (targetStyle == CaveStyle.DRIPSTONE) {
+            decorateDripstonePrimer(context, random, x, y, z, strength);
+            return true;
+        }
+        return false;
     }
 
     public static boolean isModernCaveTerrainActive(World world) {
@@ -306,8 +357,8 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
             return CaveStyle.NORMAL;
         }
 
-        double lushScore = getModernLushSelectionWeight(sample);
-        double dripstoneScore = getModernDripstoneSelectionWeight(sample);
+        double lushScore = getModernLushSelectionWeight(null, sample);
+        double dripstoneScore = getModernDripstoneSelectionWeight(null, sample);
         if (lushScore <= 0.0D && dripstoneScore <= 0.0D) {
             return CaveStyle.NORMAL;
         }
@@ -319,41 +370,46 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
 
     public static double getModernCaveStyleStrength(ModernCaveTerrainUndergroundBiomeSample sample, CaveStyle style) {
         if (style == CaveStyle.LUSH) {
-            return clamp(getModernLushScore(sample) * getDepthBandStrength(sample) * getEdgeStrength(sample), 0.0D, 1.0D);
+            return getModernLushDecorationStrength(sample);
         }
         if (style == CaveStyle.DRIPSTONE) {
-            return clamp(getModernDripstoneScore(sample) * getDepthBandStrength(sample) * getEdgeStrength(sample), 0.0D, 1.0D);
+            return getModernDripstoneDecorationStrength(sample);
         }
         return 0.0D;
     }
 
-    private static double getModernLushSelectionWeight(ModernCaveTerrainUndergroundBiomeSample sample) {
+    private static double getModernLushSelectionWeight(World world, ModernCaveTerrainUndergroundBiomeSample sample) {
         if (!canSelectModernUndergroundBiome(sample)) {
             return 0.0D;
         }
 
-        double humidity = getModernLushScore(sample);
         double depth = getDepthBandStrength(sample);
-        double edge = getEdgeStrength(sample);
-        double weirdness = clampedMap(sample.getWeirdness(), -0.55D, 0.75D, 0.72D, 1.08D);
+        double humidity = getModernLushScore(sample);
+        double highHumidity = clampedMap(sample.getHumidity(), MODERN_LUSH_TARGET_HUMIDITY, 1.0D, 0.0D, 1.0D);
+        double region = getModernRegionStrength(world, sample, CaveStyle.LUSH);
         double surface = getLushSurfaceBias(sample.getSurfaceBiome());
-        double dripstoneCompetition = clampedMap(sample.getContinentalness(), MODERN_DRIPSTONE_MIN_CONTINENTALNESS, 0.95D, 1.0D, 0.62D);
-        return clamp(humidity * depth * edge * weirdness * surface * dripstoneCompetition, 0.0D, 1.0D);
+        double caveShape = getEdgeStrength(sample);
+        double competition = clampedMap(getModernDripstoneScore(sample), 0.45D, 1.0D, 1.0D, 0.68D);
+        double climate = humidity * 0.68D + highHumidity * 0.22D + getWetSurfaceSupport(sample.getSurfaceBiome()) * 0.10D;
+        double weight = depth * caveShape * region * surface * competition * climate;
+        return weight >= MODERN_SELECTOR_MIN_WEIGHT ? clamp(weight, 0.0D, 1.0D) : 0.0D;
     }
 
-    private static double getModernDripstoneSelectionWeight(ModernCaveTerrainUndergroundBiomeSample sample) {
+    private static double getModernDripstoneSelectionWeight(World world, ModernCaveTerrainUndergroundBiomeSample sample) {
         if (!canSelectModernUndergroundBiome(sample)) {
             return 0.0D;
         }
 
-        double continentalness = getModernDripstoneScore(sample);
         double depth = getDepthBandStrength(sample);
-        double edge = getEdgeStrength(sample);
-        double dryness = clampedMap(sample.getHumidity(), 0.88D, -0.15D, 0.45D, 1.08D);
-        double weirdness = clampedMap(Math.abs(sample.getWeirdness()), 0.08D, 0.92D, 0.82D, 1.08D);
+        double continentalness = getModernDripstoneScore(sample);
+        double highContinentalness = clampedMap(sample.getContinentalness(), MODERN_DRIPSTONE_TARGET_CONTINENTALNESS, 1.0D, 0.0D, 1.0D);
+        double region = getModernRegionStrength(world, sample, CaveStyle.DRIPSTONE);
         double surface = getDripstoneSurfaceBias(sample.getSurfaceBiome());
-        double lushCompetition = clampedMap(sample.getHumidity(), MODERN_LUSH_MIN_HUMIDITY, 0.98D, 1.0D, 0.58D);
-        return clamp(continentalness * depth * edge * dryness * weirdness * surface * lushCompetition, 0.0D, 1.0D);
+        double caveShape = getEdgeStrength(sample);
+        double competition = clampedMap(getModernLushScore(sample), 0.52D, 1.0D, 1.0D, 0.66D);
+        double climate = continentalness * 0.70D + highContinentalness * 0.22D + getDryStoneSurfaceSupport(sample.getSurfaceBiome()) * 0.08D;
+        double weight = depth * caveShape * region * surface * competition * climate;
+        return weight >= MODERN_SELECTOR_MIN_WEIGHT ? clamp(weight, 0.0D, 1.0D) : 0.0D;
     }
 
     private static boolean canSelectModernUndergroundBiome(ModernCaveTerrainUndergroundBiomeSample sample) {
@@ -364,11 +420,55 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
     }
 
     private static double getModernLushScore(ModernCaveTerrainUndergroundBiomeSample sample) {
-        return clampedMap(sample.getHumidity(), MODERN_LUSH_MIN_HUMIDITY, 1.0D, 0.0D, 1.0D);
+        return clampedMap(sample.getHumidity(), MODERN_LUSH_SUPPORT_HUMIDITY, MODERN_LUSH_TARGET_HUMIDITY, 0.0D, 1.0D);
     }
 
     private static double getModernDripstoneScore(ModernCaveTerrainUndergroundBiomeSample sample) {
-        return clampedMap(sample.getContinentalness(), MODERN_DRIPSTONE_MIN_CONTINENTALNESS, 1.0D, 0.0D, 1.0D);
+        return clampedMap(sample.getContinentalness(), MODERN_DRIPSTONE_SUPPORT_CONTINENTALNESS, MODERN_DRIPSTONE_TARGET_CONTINENTALNESS, 0.0D, 1.0D);
+    }
+
+    private static double getModernLushDecorationStrength(ModernCaveTerrainUndergroundBiomeSample sample) {
+        if (!canSelectModernUndergroundBiome(sample)) {
+            return 0.0D;
+        }
+
+        double humidity = clampedMap(sample.getHumidity(), 0.05D, MODERN_LUSH_TARGET_HUMIDITY, 0.25D, 1.0D);
+        return clamp(humidity * getDepthBandStrength(sample) * getEdgeStrength(sample) * getLushSurfaceBias(sample.getSurfaceBiome()),
+                0.12D, 1.0D);
+    }
+
+    private static double getModernDripstoneDecorationStrength(ModernCaveTerrainUndergroundBiomeSample sample) {
+        if (!canSelectModernUndergroundBiome(sample)) {
+            return 0.0D;
+        }
+
+        double continentalness = clampedMap(sample.getContinentalness(), 0.10D, MODERN_DRIPSTONE_TARGET_CONTINENTALNESS, 0.25D, 1.0D);
+        return clamp(continentalness * getDepthBandStrength(sample) * getEdgeStrength(sample) * getDripstoneSurfaceBias(sample.getSurfaceBiome()),
+                0.12D, 1.0D);
+    }
+
+    private static double getModernRegionStrength(World world, ModernCaveTerrainUndergroundBiomeSample sample, CaveStyle style) {
+        double region = getModernUndergroundRegion(world, sample);
+        if (style == CaveStyle.LUSH) {
+            double humidityPull = clampedMap(sample.getHumidity(), -0.10D, MODERN_LUSH_TARGET_HUMIDITY, -0.12D, 0.24D);
+            return clampedMap(region + humidityPull, -0.28D, 0.58D, 0.18D, 1.0D);
+        }
+        if (style == CaveStyle.DRIPSTONE) {
+            double stonePull = clampedMap(sample.getContinentalness(), 0.00D, MODERN_DRIPSTONE_TARGET_CONTINENTALNESS, -0.10D, 0.24D);
+            return clampedMap(-region + stonePull, -0.30D, 0.58D, 0.18D, 1.0D);
+        }
+        return 0.0D;
+    }
+
+    private static double getModernUndergroundRegion(World world, ModernCaveTerrainUndergroundBiomeSample sample) {
+        long seed = (world != null ? world.getSeed() : 0L) ^ MODERN_UNDERGROUND_REGION_SEED_SALT;
+        double x = sample.getBlockX();
+        double y = sample.getBlockY();
+        double z = sample.getBlockZ();
+        double broad = smoothNoise(seed, x * 0.0045D, 0.0D, z * 0.0045D);
+        double middle = smoothNoise(seed ^ 0x4D435442494F4D32L, x * 0.010D, y * 0.011D, z * 0.010D);
+        double detail = smoothNoise(seed ^ 0x4D435442494F4D33L, x * 0.024D, y * 0.018D, z * 0.024D);
+        return clamp(broad * 0.62D + middle * 0.30D + detail * 0.08D, -1.0D, 1.0D);
     }
 
     private static double getDepthBandStrength(ModernCaveTerrainUndergroundBiomeSample sample) {
@@ -415,6 +515,14 @@ public class RetroFutureWorldGenerator implements IWorldGenerator, ModernCaveTer
             bias -= 0.16D;
         }
         return clamp(bias, 0.7D, 1.2D);
+    }
+
+    private static double getWetSurfaceSupport(Biome biome) {
+        return getLushSurfaceBias(biome) > 1.0D ? 1.0D : 0.0D;
+    }
+
+    private static double getDryStoneSurfaceSupport(Biome biome) {
+        return getDripstoneSurfaceBias(biome) > 1.0D ? 1.0D : 0.0D;
     }
 
     private static boolean hasBiomeType(Biome biome, BiomeDictionary.Type type) {
