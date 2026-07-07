@@ -1,0 +1,8 @@
+{
+  "parent": "block/inner_stairs",
+  "textures": {
+    "bottom": "retrofuturelushcave:blocks/deepslate_bricks",
+    "top": "retrofuturelushcave:blocks/deepslate_bricks",
+    "side": "retrofuturelushcave:blocks/deepslate_bricks"
+  }
+}

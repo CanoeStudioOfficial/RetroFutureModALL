@@ -1,8 +1,0 @@
-{
-  "parent": "block/stairs",
-  "textures": {
-    "bottom": "retrofuturemc:blocks/polished_deepslate",
-    "top": "retrofuturemc:blocks/polished_deepslate",
-    "side": "retrofuturemc:blocks/polished_deepslate"
-  }
-}

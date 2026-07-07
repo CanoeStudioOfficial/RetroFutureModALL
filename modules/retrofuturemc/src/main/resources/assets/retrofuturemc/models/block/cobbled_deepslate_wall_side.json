@@ -1,4 +1,0 @@
-{
-  "parent": "block/wall_side",
-  "textures": { "wall": "retrofuturemc:blocks/cobbled_deepslate" }
-}

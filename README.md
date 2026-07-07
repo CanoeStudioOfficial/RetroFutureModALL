@@ -4,7 +4,7 @@ Multi-module RetroFuturaGradle workspace for Minecraft 1.12.2 Forge mods.
 
 ## Included Mods
 
-- `retrofuturemc` from `RetroFutureLushCaves`
+- `retrofuturelushcave` from `RetroFutureLushCaves`
 - `retrofuturethewildupdate` from `RetroFuture-The Wild Update`
 
 ## Build
@@ -18,7 +18,7 @@ Build every mod:
 Build one mod:
 
 ```powershell
-.\gradlew.bat :retrofuturemc:build
+.\gradlew.bat :retrofuturelushcave:build
 .\gradlew.bat :retrofuturethewildupdate:build
 ```
 

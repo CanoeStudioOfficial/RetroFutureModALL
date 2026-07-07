@@ -1,6 +1,6 @@
 package com.canoestudio.retrofuturethewildupdate.proxy;
 
-import com.canoestudio.retrofuturemccore.api.world.RetroWorldgenRegistry;
+import com.canoestudio.retrofuturelushcavecore.api.world.RetroWorldgenRegistry;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.block.ModBlocks;
 import com.canoestudio.retrofuturethewildupdate.world.biome.ModBiomes;

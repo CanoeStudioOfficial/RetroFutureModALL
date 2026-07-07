@@ -1,6 +1,6 @@
 package com.canoestudio.retrofuturetrailsandtales.block;
 
-import com.canoestudio.retrofuturemccore.api.block.RetroSignRegistry;
+import com.canoestudio.retrofuturelushcavecore.api.block.RetroSignRegistry;
 import com.canoestudio.retrofuturetrailsandtales.RTAT;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;

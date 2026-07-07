@@ -10,7 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION,
-    dependencies = "required-after:retrofuturemccore@[1.0.0,);required-after:retrofuturemc@[1.0.0,);required-after:retrofuturethewildupdate@[1.0.0,)")
+    dependencies = "required-after:retrofuturelushcavecore@[1.0.0,);required-after:retrofuturelushcave@[1.0.0,);required-after:retrofuturethewildupdate@[1.0.0,)")
 public class RTAT {
 
     public static final Logger LOGGER = LogManager.getLogger(Tags.MOD_NAME);

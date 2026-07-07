@@ -1,7 +1,7 @@
 package com.canoestudio.retrofuturethewildupdate.entity;
 
-import com.canoestudio.retrofuturemccore.api.block.RetroBoatRegistry;
-import com.canoestudio.retrofuturemccore.api.entity.RetroEntityRegistry;
+import com.canoestudio.retrofuturelushcavecore.api.block.RetroBoatRegistry;
+import com.canoestudio.retrofuturelushcavecore.api.entity.RetroEntityRegistry;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;

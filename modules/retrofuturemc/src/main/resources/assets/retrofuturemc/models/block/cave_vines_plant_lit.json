@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:block/cross",
-  "textures": {
-    "cross": "retrofuturemc:blocks/cave_vines_plant_lit"
-  }
-}

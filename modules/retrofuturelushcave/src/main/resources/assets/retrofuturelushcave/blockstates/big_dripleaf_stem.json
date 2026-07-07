@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=west": {
+      "model": "retrofuturelushcave:big_dripleaf_stem",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "retrofuturelushcave:big_dripleaf_stem"
+    },
+    "facing=north": {
+      "model": "retrofuturelushcave:big_dripleaf_stem",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "retrofuturelushcave:big_dripleaf_stem",
+      "y": 270
+    }
+  }
+}

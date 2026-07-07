@@ -1,6 +1,0 @@
-{
-  "variants": {
-    "berries=false": {"model": "retrofuturemc:cave_vines_plant"},
-    "berries=true": {"model": "retrofuturemc:cave_vines_plant_lit"}
-  }
-}

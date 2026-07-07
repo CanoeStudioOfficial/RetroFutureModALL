@@ -1,6 +1,6 @@
 package com.canoestudio.retrofuturethewildupdate.proxy;
 
-import com.canoestudio.retrofuturemccore.api.client.model.RetroModelRegistry;
+import com.canoestudio.retrofuturelushcavecore.api.client.model.RetroModelRegistry;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.block.ModBlocks;
 import com.canoestudio.retrofuturethewildupdate.client.models.ModelFrog;

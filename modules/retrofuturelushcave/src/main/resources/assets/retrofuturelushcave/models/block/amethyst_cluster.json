@@ -1,0 +1,6 @@
+{
+  "parent": "block/cross",
+  "textures": {
+    "cross": "retrofuturelushcave:blocks/amethyst_cluster"
+  }
+}

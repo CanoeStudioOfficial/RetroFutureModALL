@@ -1,9 +1,9 @@
 package com.canoestudio.retrofuturethewildupdate.block;
 
-import com.canoestudio.retrofuturemccore.api.block.RetroBlockFamily;
-import com.canoestudio.retrofuturemccore.api.block.RetroBoatSet;
-import com.canoestudio.retrofuturemccore.api.block.RetroSignSet;
-import com.canoestudio.retrofuturemccore.api.block.RetroWoodSet;
+import com.canoestudio.retrofuturelushcavecore.api.block.RetroBlockFamily;
+import com.canoestudio.retrofuturelushcavecore.api.block.RetroBoatSet;
+import com.canoestudio.retrofuturelushcavecore.api.block.RetroSignSet;
+import com.canoestudio.retrofuturelushcavecore.api.block.RetroWoodSet;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityMangroveBoat;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityMangroveChestBoat;

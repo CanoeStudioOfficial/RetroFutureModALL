@@ -1,4 +1,0 @@
-{
-  "parent": "block/wall_inventory",
-  "textures": { "wall": "retrofuturemc:blocks/deepslate_tiles" }
-}

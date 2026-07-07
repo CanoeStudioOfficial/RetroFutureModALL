@@ -1,8 +1,8 @@
 package com.canoestudio.retrofuturethewildupdate.world.gen;
 
-import com.canoestudio.retrofuturemccore.api.world.RetroAncientCityPlacement;
-import com.canoestudio.retrofuturemccore.api.world.RetroStructurePlacement;
-import com.canoestudio.retrofuturemccore.api.world.RetroWorldgenRegistry;
+import com.canoestudio.retrofuturelushcavecore.api.world.RetroAncientCityPlacement;
+import com.canoestudio.retrofuturelushcavecore.api.world.RetroStructurePlacement;
+import com.canoestudio.retrofuturelushcavecore.api.world.RetroWorldgenRegistry;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.block.BlockSculkVein;
 import com.canoestudio.retrofuturethewildupdate.block.ModBlocks;
@@ -253,12 +253,12 @@ public class WildUpdateWorldGenerator implements IWorldGenerator {
                     boolean floor = pos.getY() == floorY;
                     if (floor) {
                         world.setBlockState(pos, random.nextInt(6) == 0
-                            ? com.canoestudio.retrofuturemc.contents.blocks.ModBlocks.CRACKED_DEEPSLATE_BRICKS.getDefaultState()
-                            : com.canoestudio.retrofuturemc.contents.blocks.ModBlocks.DEEPSLATE_BRICKS.getDefaultState(), 2);
+                            ? com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks.CRACKED_DEEPSLATE_BRICKS.getDefaultState()
+                            : com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks.DEEPSLATE_BRICKS.getDefaultState(), 2);
                     } else if (edge && random.nextInt(5) != 0) {
                         world.setBlockState(pos, random.nextBoolean()
-                            ? com.canoestudio.retrofuturemc.contents.blocks.ModBlocks.DEEPSLATE_TILES.getDefaultState()
-                            : com.canoestudio.retrofuturemc.contents.blocks.ModBlocks.DEEPSLATE_BRICKS.getDefaultState(), 2);
+                            ? com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks.DEEPSLATE_TILES.getDefaultState()
+                            : com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks.DEEPSLATE_BRICKS.getDefaultState(), 2);
                     } else if (pos.getY() > floorY) {
                         world.setBlockState(pos, Blocks.AIR.getDefaultState(), 2);
                     }
@@ -270,7 +270,7 @@ public class WildUpdateWorldGenerator implements IWorldGenerator {
             for (int i = 1; i <= 6; i++) {
                 BlockPos pos = center.offset(facing, i).down(2);
                 if (isInsideChunk(pos, blockX, blockZ)) {
-                    world.setBlockState(pos, com.canoestudio.retrofuturemc.contents.blocks.ModBlocks.POLISHED_DEEPSLATE.getDefaultState(), 2);
+                    world.setBlockState(pos, com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks.POLISHED_DEEPSLATE.getDefaultState(), 2);
                 }
             }
         }
@@ -291,7 +291,7 @@ public class WildUpdateWorldGenerator implements IWorldGenerator {
 
         BlockPos chiseled = new BlockPos(center.getX(), floorY, center.getZ() - 5);
         if (isInsideChunk(chiseled, blockX, blockZ)) {
-            world.setBlockState(chiseled, com.canoestudio.retrofuturemc.contents.blocks.ModBlocks.CHISELED_DEEPSLATE.getDefaultState(), 2);
+            world.setBlockState(chiseled, com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks.CHISELED_DEEPSLATE.getDefaultState(), 2);
         }
     }
 
@@ -403,10 +403,10 @@ public class WildUpdateWorldGenerator implements IWorldGenerator {
     private static boolean isNaturalDeepBlock(IBlockState state) {
         Block block = state.getBlock();
         return block == Blocks.STONE
-            || block == com.canoestudio.retrofuturemc.contents.blocks.ModBlocks.DeepSlate
-            || block == com.canoestudio.retrofuturemc.contents.blocks.ModBlocks.TUFF
-            || block == com.canoestudio.retrofuturemc.contents.blocks.ModBlocks.DEEPSLATE_BRICKS
-            || block == com.canoestudio.retrofuturemc.contents.blocks.ModBlocks.DEEPSLATE_TILES;
+            || block == com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks.DeepSlate
+            || block == com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks.TUFF
+            || block == com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks.DEEPSLATE_BRICKS
+            || block == com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks.DEEPSLATE_TILES;
     }
 
     private static boolean isInsideChunk(BlockPos pos, int blockX, int blockZ) {

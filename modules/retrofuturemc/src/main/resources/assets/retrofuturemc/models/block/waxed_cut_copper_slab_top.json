@@ -1,8 +1,0 @@
-{
-  "parent": "block/upper_slab",
-  "textures": {
-    "bottom": "retrofuturemc:blocks/waxed_cut_copper",
-    "top": "retrofuturemc:blocks/waxed_cut_copper",
-    "side": "retrofuturemc:blocks/waxed_cut_copper"
-  }
-}

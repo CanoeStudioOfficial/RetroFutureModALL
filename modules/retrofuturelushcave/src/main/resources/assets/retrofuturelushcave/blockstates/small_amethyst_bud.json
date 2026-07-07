@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=down": { "model": "retrofuturelushcave:small_amethyst_bud", "x": 180 },
+    "facing=east": { "model": "retrofuturelushcave:small_amethyst_bud", "x": 90, "y": 90 },
+    "facing=north": { "model": "retrofuturelushcave:small_amethyst_bud", "x": 90 },
+    "facing=south": { "model": "retrofuturelushcave:small_amethyst_bud", "x": 90, "y": 180 },
+    "facing=up": { "model": "retrofuturelushcave:small_amethyst_bud" },
+    "facing=west": { "model": "retrofuturelushcave:small_amethyst_bud", "x": 90, "y": 270 }
+  }
+}

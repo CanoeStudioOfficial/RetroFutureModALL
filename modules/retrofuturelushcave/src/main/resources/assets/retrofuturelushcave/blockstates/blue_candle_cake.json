@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "retrofuturelushcave:blue_candle_cake"
+    },
+    "lit=true": {
+      "model": "retrofuturelushcave:blue_candle_cake_lit"
+    }
+  }
+}

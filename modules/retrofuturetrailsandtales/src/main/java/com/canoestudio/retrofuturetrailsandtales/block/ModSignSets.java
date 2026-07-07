@@ -1,6 +1,6 @@
 package com.canoestudio.retrofuturetrailsandtales.block;
 
-import com.canoestudio.retrofuturemccore.api.block.RetroSignSet;
+import com.canoestudio.retrofuturelushcavecore.api.block.RetroSignSet;
 import com.canoestudio.retrofuturetrailsandtales.RTAT;
 import com.canoestudio.retrofuturetrailsandtales.item.ModItems;
 import net.minecraft.util.ResourceLocation;

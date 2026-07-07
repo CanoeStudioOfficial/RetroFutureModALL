@@ -1,8 +1,0 @@
-{
-  "parent": "block/stairs",
-  "textures": {
-    "bottom": "retrofuturemc:blocks/exposed_cut_copper",
-    "top": "retrofuturemc:blocks/exposed_cut_copper",
-    "side": "retrofuturemc:blocks/exposed_cut_copper"
-  }
-}

@@ -1,6 +1,6 @@
 package com.canoestudio.retrofuturethewildupdate.item;
 
-import com.canoestudio.retrofuturemccore.api.block.RetroBoatRegistry;
+import com.canoestudio.retrofuturelushcavecore.api.block.RetroBoatRegistry;
 import com.canoestudio.retrofuturethewildupdate.block.ModWoodSets;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.sounds.ModSounds;

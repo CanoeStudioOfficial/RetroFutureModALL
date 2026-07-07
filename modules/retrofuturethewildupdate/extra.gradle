@@ -1,4 +1,4 @@
 dependencies {
-    implementation project(':retrofuturemccore')
-    implementation project(':retrofuturemc')
+    implementation project(':retrofuturelushcavecore')
+    implementation project(':retrofuturelushcave')
 }

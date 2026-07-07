@@ -1,0 +1,7 @@
+{
+  "parent": "retrofuturelushcave:block/template_azalea",
+  "textures": {
+    "top": "retrofuturelushcave:blocks/azalea_top",
+    "side": "retrofuturelushcave:blocks/azalea_side"
+  }
+}

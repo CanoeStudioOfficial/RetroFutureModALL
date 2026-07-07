@@ -1,0 +1,8 @@
+repositories {
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    implementation project(':retrofuturelushcavecore')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+}

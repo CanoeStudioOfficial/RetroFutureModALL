@@ -27,11 +27,11 @@ public class BlockMud extends BlockWildSimple {
     private static boolean hasDryingDripstoneBelow(World world, BlockPos pos) {
         for (int i = 1; i <= 4; i++) {
             IBlockState below = world.getBlockState(pos.down(i));
-            if (below.getBlock() == com.canoestudio.retrofuturemc.contents.blocks.ModBlocks.POINTED_DRIPSTONE) {
+            if (below.getBlock() == com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks.POINTED_DRIPSTONE) {
                 return true;
             }
             if (!below.getMaterial().isReplaceable() && below.getMaterial() != Material.WATER
-                && below.getBlock() != com.canoestudio.retrofuturemc.contents.blocks.ModBlocks.DRIPSTONE_BLOCK) {
+                && below.getBlock() != com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks.DRIPSTONE_BLOCK) {
                 return false;
             }
         }

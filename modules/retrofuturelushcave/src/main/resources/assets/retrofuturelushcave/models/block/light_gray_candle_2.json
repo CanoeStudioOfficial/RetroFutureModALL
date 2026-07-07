@@ -1,0 +1,6 @@
+{
+    "parent":  "retrofuturelushcave:block/candles_2",
+    "textures":  {
+                     "all":  "retrofuturelushcave:blocks/light_gray_candle"
+                 }
+}

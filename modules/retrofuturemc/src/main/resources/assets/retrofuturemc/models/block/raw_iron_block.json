@@ -1,6 +1,0 @@
-{
-  "parent": "block/cube_all",
-  "textures": {
-    "all": "retrofuturemc:blocks/raw_iron_block"
-  }
-}

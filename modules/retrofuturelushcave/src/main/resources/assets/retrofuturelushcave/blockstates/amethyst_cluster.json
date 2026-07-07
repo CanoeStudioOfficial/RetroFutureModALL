@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "facing=down": { "model": "retrofuturelushcave:amethyst_cluster", "x": 180 },
+    "facing=east": { "model": "retrofuturelushcave:amethyst_cluster", "x": 90, "y": 90 },
+    "facing=north": { "model": "retrofuturelushcave:amethyst_cluster", "x": 90 },
+    "facing=south": { "model": "retrofuturelushcave:amethyst_cluster", "x": 90, "y": 180 },
+    "facing=up": { "model": "retrofuturelushcave:amethyst_cluster" },
+    "facing=west": { "model": "retrofuturelushcave:amethyst_cluster", "x": 90, "y": 270 }
+  }
+}

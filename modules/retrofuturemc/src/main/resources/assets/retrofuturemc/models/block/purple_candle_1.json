@@ -1,6 +1,0 @@
-{
-    "parent":  "retrofuturemc:block/candles_1",
-    "textures":  {
-                     "all":  "retrofuturemc:blocks/purple_candle"
-                 }
-}

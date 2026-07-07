@@ -1,0 +1,4 @@
+{
+  "parent": "retrofuturelushcave:block/pointed_dripstone",
+  "textures": { "cross": "retrofuturelushcave:blocks/pointed_dripstone_down_frustum" }
+}

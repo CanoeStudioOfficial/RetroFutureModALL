@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "half=bottom,variant=default": { "model": "retrofuturelushcave:deepslate_brick_slab" },
+    "half=top,variant=default": { "model": "retrofuturelushcave:deepslate_brick_slab_top" }
+  }
+}

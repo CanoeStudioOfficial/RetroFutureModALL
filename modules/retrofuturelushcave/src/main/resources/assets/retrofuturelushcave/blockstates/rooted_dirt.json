@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "normal": [
+      { "model": "retrofuturelushcave:rooted_dirt" },
+      { "model": "retrofuturelushcave:rooted_dirt", "y": 90 },
+      { "model": "retrofuturelushcave:rooted_dirt", "y": 180 },
+      { "model": "retrofuturelushcave:rooted_dirt", "y": 270 }
+    ]
+  }
+}

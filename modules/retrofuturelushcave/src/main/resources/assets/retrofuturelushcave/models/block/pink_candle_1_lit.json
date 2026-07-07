@@ -1,0 +1,6 @@
+{
+    "parent":  "retrofuturelushcave:block/candles_1",
+    "textures":  {
+                     "all":  "retrofuturelushcave:blocks/pink_candle_lit"
+                 }
+}
