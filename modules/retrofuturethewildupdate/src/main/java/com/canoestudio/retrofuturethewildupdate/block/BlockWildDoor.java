@@ -3,10 +3,13 @@ package com.canoestudio.retrofuturethewildupdate.block;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.SoundType;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 import java.util.Random;
@@ -25,13 +28,16 @@ public class BlockWildDoor extends BlockDoor {
     }
 
     @Override
-    public Item getItemDropped(net.minecraft.block.state.IBlockState state, Random rand, int fortune) {
-        return state.getValue(HALF) == EnumDoorHalf.UPPER ? net.minecraft.init.Items.AIR : Item.getItemFromBlock(this);
+    public Item getItemDropped(IBlockState state, Random rand, int fortune) {
+        return state.getValue(HALF) == EnumDoorHalf.UPPER ? Items.AIR : getDoorItem();
     }
 
     @Override
-    public ItemStack getItem(World worldIn, net.minecraft.util.math.BlockPos pos,
-                             net.minecraft.block.state.IBlockState state) {
-        return new ItemStack(Item.getItemFromBlock(this));
+    public ItemStack getItem(World worldIn, BlockPos pos, IBlockState state) {
+        return new ItemStack(getDoorItem());
+    }
+
+    public Item getDoorItem() {
+        return ModBlocks.MANGROVE_DOOR_ITEM == null ? Items.AIR : ModBlocks.MANGROVE_DOOR_ITEM;
     }
 }

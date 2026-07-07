@@ -45,6 +45,7 @@ public final class ModBlocks {
     public static final Block MANGROVE_FENCE = new BlockWildFence("mangrove_fence", Material.WOOD, MapColor.RED, SoundType.WOOD, 2.0f, 3.0f, CreativeTabs.DECORATIONS);
     public static final Block MANGROVE_FENCE_GATE = new BlockWildFenceGate("mangrove_fence_gate", SoundType.WOOD, 2.0f, 3.0f, CreativeTabs.REDSTONE);
     public static final Block MANGROVE_DOOR = new BlockWildDoor("mangrove_door", Material.WOOD, SoundType.WOOD, 3.0f, 3.0f, CreativeTabs.REDSTONE);
+    public static Item MANGROVE_DOOR_ITEM;
     public static final Block MANGROVE_TRAPDOOR = new BlockWildTrapDoor("mangrove_trapdoor", Material.WOOD, SoundType.WOOD, 3.0f, 3.0f, CreativeTabs.REDSTONE);
     public static final Block MANGROVE_PRESSURE_PLATE = new BlockWildPressurePlate("mangrove_pressure_plate", Material.WOOD, BlockPressurePlate.Sensitivity.EVERYTHING, SoundType.WOOD, 0.5f, 0.5f, CreativeTabs.REDSTONE);
     public static final Block MANGROVE_BUTTON = new BlockWildButton("mangrove_button", true, SoundType.WOOD, 0.5f, 0.5f, CreativeTabs.REDSTONE);
@@ -134,10 +135,11 @@ public final class ModBlocks {
             return new ItemSlab(block, MANGROVE_SLAB, DOUBLE_MANGROVE_SLAB).setRegistryName(block.getRegistryName());
         }
         if (block == MANGROVE_DOOR) {
-            return new ItemDoor(block)
+            MANGROVE_DOOR_ITEM = new ItemDoor(block)
                 .setRegistryName(block.getRegistryName())
                 .setTranslationKey(RTWU.ID + ".mangrove_door")
                 .setCreativeTab(CreativeTabs.REDSTONE);
+            return MANGROVE_DOOR_ITEM;
         }
         return new ItemBlock(block).setRegistryName(block.getRegistryName());
     }

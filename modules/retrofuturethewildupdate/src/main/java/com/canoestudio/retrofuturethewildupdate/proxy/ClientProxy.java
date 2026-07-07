@@ -66,7 +66,8 @@ public class ClientProxy extends CommonProxy {
             ModItems.RECOVERY_COMPASS,
             ModItems.TADPOLE_BUCKET,
             ModItems.FROG_SPAWN_EGG,
-            ModItems.TADPOLE_SPAWN_EGG
+            ModItems.TADPOLE_SPAWN_EGG,
+            ModBlocks.MANGROVE_DOOR_ITEM
         );
         RetroModelRegistry.registerBlockItems(
             ModBlocks.SCULK,
@@ -89,7 +90,6 @@ public class ClientProxy extends CommonProxy {
             ModBlocks.MANGROVE_SLAB,
             ModBlocks.MANGROVE_FENCE,
             ModBlocks.MANGROVE_FENCE_GATE,
-            ModBlocks.MANGROVE_DOOR,
             ModBlocks.MANGROVE_TRAPDOOR,
             ModBlocks.MANGROVE_PRESSURE_PLATE,
             ModBlocks.MANGROVE_BUTTON,
