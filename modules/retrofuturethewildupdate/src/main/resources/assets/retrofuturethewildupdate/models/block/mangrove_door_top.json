@@ -1,0 +1,7 @@
+﻿{
+  "parent": "block/door_top",
+  "textures": {
+    "bottom": "retrofuturethewildupdate:blocks/mangrove_door_bottom",
+    "top": "retrofuturethewildupdate:blocks/mangrove_door_top"
+  }
+}

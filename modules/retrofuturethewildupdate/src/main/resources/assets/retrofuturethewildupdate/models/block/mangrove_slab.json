@@ -1,0 +1,8 @@
+﻿{
+  "parent": "block/half_slab",
+  "textures": {
+    "bottom": "retrofuturethewildupdate:blocks/mangrove_planks",
+    "side": "retrofuturethewildupdate:blocks/mangrove_planks",
+    "top": "retrofuturethewildupdate:blocks/mangrove_planks"
+  }
+}

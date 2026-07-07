@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "MMM",
+    "MMM"
+  ],
+  "key": {
+    "M": {
+      "item": "retrofuturethewildupdate:mangrove_planks"
+    }
+  },
+  "result": {
+    "item": "retrofuturethewildupdate:mangrove_trapdoor",
+    "count": 2
+  }
+}

@@ -1,0 +1,6 @@
+﻿{
+  "parent": "block/button_pressed",
+  "textures": {
+    "texture": "retrofuturethewildupdate:blocks/mangrove_planks"
+  }
+}

@@ -1,0 +1,6 @@
+﻿{
+  "parent": "block/wall_inventory",
+  "textures": {
+    "wall": "retrofuturethewildupdate:blocks/mud_bricks"
+  }
+}

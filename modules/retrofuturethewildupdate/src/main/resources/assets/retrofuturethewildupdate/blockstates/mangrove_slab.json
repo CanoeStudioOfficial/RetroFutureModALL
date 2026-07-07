@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "half=bottom,variant=default": { "model": "retrofuturethewildupdate:mangrove_slab" },
+    "half=top,variant=default": { "model": "retrofuturethewildupdate:mangrove_slab_top" }
+  }
+}

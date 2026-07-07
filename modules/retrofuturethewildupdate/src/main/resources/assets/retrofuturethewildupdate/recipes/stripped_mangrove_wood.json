@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "MM",
+    "MM"
+  ],
+  "key": {
+    "M": {
+      "item": "retrofuturethewildupdate:stripped_mangrove_log"
+    }
+  },
+  "result": {
+    "item": "retrofuturethewildupdate:stripped_mangrove_wood",
+    "count": 3
+  }
+}

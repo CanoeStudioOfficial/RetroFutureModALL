@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "SMS",
+    "SMS"
+  ],
+  "key": {
+    "M": {
+      "item": "retrofuturethewildupdate:mangrove_planks"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "retrofuturethewildupdate:mangrove_fence_gate"
+  }
+}

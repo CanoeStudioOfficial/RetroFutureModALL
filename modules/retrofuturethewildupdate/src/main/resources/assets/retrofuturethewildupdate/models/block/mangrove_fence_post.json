@@ -1,0 +1,6 @@
+﻿{
+  "parent": "block/fence_post",
+  "textures": {
+    "texture": "retrofuturethewildupdate:blocks/mangrove_planks"
+  }
+}

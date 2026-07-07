@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "powered=false": {
+      "model": "retrofuturethewildupdate:mangrove_pressure_plate"
+    },
+    "powered=true": {
+      "model": "retrofuturethewildupdate:mangrove_pressure_plate_down"
+    }
+  }
+}

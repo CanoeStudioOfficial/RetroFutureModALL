@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=down,powered=false": { "model": "retrofuturethewildupdate:mangrove_button", "x": 180 },
+    "facing=down,powered=true": { "model": "retrofuturethewildupdate:mangrove_button_pressed", "x": 180 },
+    "facing=up,powered=false": { "model": "retrofuturethewildupdate:mangrove_button" },
+    "facing=up,powered=true": { "model": "retrofuturethewildupdate:mangrove_button_pressed" },
+    "facing=north,powered=false": { "model": "retrofuturethewildupdate:mangrove_button", "x": 90, "uvlock": true },
+    "facing=north,powered=true": { "model": "retrofuturethewildupdate:mangrove_button_pressed", "x": 90, "uvlock": true },
+    "facing=south,powered=false": { "model": "retrofuturethewildupdate:mangrove_button", "x": 90, "y": 180, "uvlock": true },
+    "facing=south,powered=true": { "model": "retrofuturethewildupdate:mangrove_button_pressed", "x": 90, "y": 180, "uvlock": true },
+    "facing=west,powered=false": { "model": "retrofuturethewildupdate:mangrove_button", "x": 90, "y": 270, "uvlock": true },
+    "facing=west,powered=true": { "model": "retrofuturethewildupdate:mangrove_button_pressed", "x": 90, "y": 270, "uvlock": true },
+    "facing=east,powered=false": { "model": "retrofuturethewildupdate:mangrove_button", "x": 90, "y": 90, "uvlock": true },
+    "facing=east,powered=true": { "model": "retrofuturethewildupdate:mangrove_button_pressed", "x": 90, "y": 90, "uvlock": true }
+  }
+}
