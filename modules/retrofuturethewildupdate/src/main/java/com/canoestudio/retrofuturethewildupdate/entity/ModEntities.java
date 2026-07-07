@@ -1,5 +1,6 @@
 package com.canoestudio.retrofuturethewildupdate.entity;
 
+import com.canoestudio.retrofuturemccore.api.block.RetroBoatRegistry;
 import com.canoestudio.retrofuturemccore.api.entity.RetroEntityRegistry;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import net.minecraft.util.ResourceLocation;
@@ -39,10 +40,7 @@ public class ModEntities {
             .tracker(64, 3, true)
             .egg(0x6d5335, 0x160a03)
             .register(registry);
-        RetroEntityRegistry.builder(EntityMangroveBoat.class, MANGROVE_BOAT_NAME, entityId++)
-            .factory(EntityMangroveBoat::new)
-            .name(RTWU.ID + ".mangrove_boat")
-            .tracker(80, 3, true)
-            .register(registry);
+        RetroBoatRegistry.registerBoatEntity(registry, EntityMangroveBoat.class, MANGROVE_BOAT_NAME, entityId++,
+            RTWU.ID + ".mangrove_boat", EntityMangroveBoat::new);
     }
 }

@@ -36,12 +36,32 @@ public final class RetroBoatRegistry {
         }
     }
 
+    public static void registerItems(IForgeRegistry<Item> registry, RetroBoatSet set) {
+        if (registry == null || set == null) {
+            return;
+        }
+        registerItem(registry, set.getBoatItem());
+        registerItem(registry, set.getChestBoatItem());
+    }
+
     public static <E extends Entity> EntityEntry registerBoatEntity(IForgeRegistry<EntityEntry> registry,
             Class<E> entityClass, ResourceLocation id, int networkId, Function<World, E> factory) {
+        return registerBoatEntity(registry, entityClass, id, networkId, id.toString(), factory);
+    }
+
+    public static <E extends Entity> EntityEntry registerBoatEntity(IForgeRegistry<EntityEntry> registry,
+            Class<E> entityClass, ResourceLocation id, int networkId, String name, Function<World, E> factory) {
+        return registerBoatEntity(registry, entityClass, id, networkId, name, DEFAULT_TRACKING_RANGE,
+                DEFAULT_UPDATE_FREQUENCY, true, factory);
+    }
+
+    public static <E extends Entity> EntityEntry registerBoatEntity(IForgeRegistry<EntityEntry> registry,
+            Class<E> entityClass, ResourceLocation id, int networkId, String name, int trackingRange,
+            int updateFrequency, boolean sendVelocityUpdates, Function<World, E> factory) {
         return RetroEntityRegistry.builder(entityClass, id, networkId)
                 .factory(factory)
-                .name(id.toString())
-                .tracker(DEFAULT_TRACKING_RANGE, DEFAULT_UPDATE_FREQUENCY, true)
+                .name(name)
+                .tracker(trackingRange, updateFrequency, sendVelocityUpdates)
                 .register(registry);
     }
 

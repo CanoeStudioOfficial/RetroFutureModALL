@@ -5,9 +5,11 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.block.Block;
+import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.registries.IForgeRegistry;
 
 public final class RetroSignRegistry {
     private static final Map<ResourceLocation, RetroSignSet> SETS = new LinkedHashMap<ResourceLocation, RetroSignSet>();
@@ -31,6 +33,14 @@ public final class RetroSignRegistry {
         if (tileEntityClass != null && id != null) {
             GameRegistry.registerTileEntity(tileEntityClass, id);
         }
+    }
+
+    public static void registerItems(IForgeRegistry<Item> registry, RetroSignSet set) {
+        if (registry == null || set == null) {
+            return;
+        }
+        registerItem(registry, set.getSignItem());
+        registerItem(registry, set.getHangingSignItem());
     }
 
     public static void registerTileEntities(RetroSignSet set) {
@@ -64,6 +74,12 @@ public final class RetroSignRegistry {
     public static void clear() {
         SETS.clear();
         BY_BLOCK.clear();
+    }
+
+    private static void registerItem(IForgeRegistry<Item> registry, Item item) {
+        if (item != null && item.getRegistryName() != null) {
+            registry.register(item);
+        }
     }
 
     private static ResourceLocation suffix(ResourceLocation id, String suffix) {

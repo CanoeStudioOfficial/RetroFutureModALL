@@ -1,5 +1,9 @@
 package com.canoestudio.retrofuturethewildupdate.world.gen;
 
+import com.canoestudio.retrofuturemccore.api.world.RetroAncientCityPlacement;
+import com.canoestudio.retrofuturemccore.api.world.RetroStructurePlacement;
+import com.canoestudio.retrofuturemccore.api.world.RetroWorldgenRegistry;
+import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.block.BlockSculkVein;
 import com.canoestudio.retrofuturethewildupdate.block.ModBlocks;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityFrog;
@@ -16,6 +20,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -29,9 +34,13 @@ import java.util.Random;
 public class WildUpdateWorldGenerator implements IWorldGenerator {
 
     private static final int SEA_LEVEL_BIAS = 63;
-    private static final int ANCIENT_CITY_RARITY = 230;
     private static final long MANGROVE_SALT = 0x525457554D414E47L;
     private static final long ANCIENT_CITY_SALT = 0x5254575543495459L;
+    private static final RetroStructurePlacement ANCIENT_CITY_PLACEMENT = RetroAncientCityPlacement
+        .builder(new ResourceLocation(RTWU.ID, "ancient_city"))
+        .salt(ANCIENT_CITY_SALT)
+        .biome(WildUpdateWorldGenerator::isDeepDarkCandidate)
+        .build();
 
     private final WorldGenMangroveTree mangroveTree = new WorldGenMangroveTree(true);
 
@@ -46,8 +55,8 @@ public class WildUpdateWorldGenerator implements IWorldGenerator {
         Random chunkRandom = new Random(chunkSeed(world, chunkX, chunkZ, MANGROVE_SALT));
         decorateMangrove(world, chunkRandom, blockX, blockZ);
 
-        Random cityRandom = new Random(chunkSeed(world, chunkX, chunkZ, ANCIENT_CITY_SALT));
-        if (cityRandom.nextInt(ANCIENT_CITY_RARITY) == 0) {
+        Random cityRandom = ANCIENT_CITY_PLACEMENT.createChunkRandom(world, chunkX, chunkZ);
+        if (ANCIENT_CITY_PLACEMENT.shouldStartAt(world, chunkX, chunkZ)) {
             generateAncientCityRuin(world, cityRandom, blockX, blockZ);
         } else if (cityRandom.nextInt(24) == 0) {
             generateDeepDarkPatch(world, cityRandom, blockX, blockZ);
@@ -101,9 +110,17 @@ public class WildUpdateWorldGenerator implements IWorldGenerator {
         if (biome == ModBiomes.MANGROVE_SWAMP || biome == Biomes.SWAMPLAND || biome == Biomes.MUTATED_SWAMPLAND) {
             return true;
         }
-        return BiomeDictionary.hasType(biome, BiomeDictionary.Type.SWAMP)
-            && BiomeDictionary.hasType(biome, BiomeDictionary.Type.WET)
+        return RetroWorldgenRegistry.hasAllTypes(biome, BiomeDictionary.Type.SWAMP, BiomeDictionary.Type.WET)
             && biome.getDefaultTemperature() >= 0.65F;
+    }
+
+    private static boolean isDeepDarkCandidate(Biome biome) {
+        return biome != null && !RetroWorldgenRegistry.hasAnyType(biome,
+            BiomeDictionary.Type.OCEAN,
+            BiomeDictionary.Type.RIVER,
+            BiomeDictionary.Type.BEACH,
+            BiomeDictionary.Type.NETHER,
+            BiomeDictionary.Type.END);
     }
 
     private void replaceMudPatch(World world, Random random, BlockPos center, int blockX, int blockZ, int radius) {

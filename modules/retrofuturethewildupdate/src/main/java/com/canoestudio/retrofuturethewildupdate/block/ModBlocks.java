@@ -1,5 +1,6 @@
 package com.canoestudio.retrofuturethewildupdate.block;
 
+import com.canoestudio.retrofuturemccore.api.block.RetroSignRegistry;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockPressurePlate;
@@ -16,7 +17,6 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.registries.IForgeRegistry;
 
 @Mod.EventBusSubscriber(modid = RTWU.ID)
@@ -103,6 +103,7 @@ public final class ModBlocks {
 
     @SubscribeEvent
     public static void registerBlocks(RegistryEvent.Register<Block> event) {
+        ModWoodSets.mangrove();
         event.getRegistry().registerAll(BLOCKS);
     }
 
@@ -113,7 +114,7 @@ public final class ModBlocks {
             if (block == DOUBLE_MUD_BRICK_SLAB || block == DOUBLE_MANGROVE_SLAB) {
                 continue;
             }
-            if (block == MANGROVE_HANGING_SIGN || block == MANGROVE_WALL_HANGING_SIGN) {
+            if (RetroSignRegistry.isSignBlock(block)) {
                 continue;
             }
             registry.register(createItemBlock(block));
@@ -121,10 +122,10 @@ public final class ModBlocks {
     }
 
     public static void registerTileEntities() {
-        GameRegistry.registerTileEntity(TileEntitySculkSensor.class, key("sculk_sensor"));
-        GameRegistry.registerTileEntity(TileEntitySculkShrieker.class, key("sculk_shrieker"));
-        GameRegistry.registerTileEntity(TileEntitySculkCatalyst.class, key("sculk_catalyst"));
-        GameRegistry.registerTileEntity(TileEntityHangingSign.class, key("hanging_sign"));
+        RetroSignRegistry.registerTileEntity(TileEntitySculkSensor.class, key("sculk_sensor"));
+        RetroSignRegistry.registerTileEntity(TileEntitySculkShrieker.class, key("sculk_shrieker"));
+        RetroSignRegistry.registerTileEntity(TileEntitySculkCatalyst.class, key("sculk_catalyst"));
+        RetroSignRegistry.registerTileEntity(TileEntityHangingSign.class, key("hanging_sign"));
     }
 
     private static ResourceLocation key(String name) {

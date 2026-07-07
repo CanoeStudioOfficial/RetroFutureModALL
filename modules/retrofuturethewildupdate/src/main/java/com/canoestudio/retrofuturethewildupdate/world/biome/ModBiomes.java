@@ -1,7 +1,8 @@
 package com.canoestudio.retrofuturethewildupdate.world.biome;
 
-import com.canoestudio.retrofuturemccore.api.entity.RetroEntityRegistry;
 import com.canoestudio.retrofuturemccore.api.entity.RetroEntitySpawn;
+import com.canoestudio.retrofuturemccore.api.world.RetroBiomeSpawnRegistry;
+import com.canoestudio.retrofuturemccore.api.world.RetroWorldgenRegistry;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityFrog;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityTadpole;
@@ -28,17 +29,35 @@ public final class ModBiomes {
     }
 
     public static void init() {
-        BiomeDictionary.addTypes(MANGROVE_SWAMP,
+        RetroBiomeSpawnRegistry.registerBiome(MANGROVE_SWAMP, BiomeManager.BiomeType.WARM, 7, true,
             BiomeDictionary.Type.SWAMP,
             BiomeDictionary.Type.WET,
             BiomeDictionary.Type.HOT,
             BiomeDictionary.Type.DENSE);
-        BiomeManager.addBiome(BiomeManager.BiomeType.WARM, new BiomeManager.BiomeEntry(MANGROVE_SWAMP, 7));
-        BiomeManager.addSpawnBiome(MANGROVE_SWAMP);
 
-        RetroEntityRegistry.addSpawn(RetroEntitySpawn.of(EntityFrog.class, EnumCreatureType.CREATURE, 12, 2, 5,
-            MANGROVE_SWAMP, Biomes.SWAMPLAND, Biomes.MUTATED_SWAMPLAND));
-        RetroEntityRegistry.addSpawn(RetroEntitySpawn.of(EntityTadpole.class, EnumCreatureType.WATER_CREATURE, 8, 2, 5,
-            MANGROVE_SWAMP, Biomes.SWAMPLAND, Biomes.MUTATED_SWAMPLAND));
+        RetroBiomeSpawnRegistry.addSpawn(EntityFrog.class, EnumCreatureType.CREATURE, 12, 2, 5,
+            ModBiomes::isFrogSpawnBiome);
+        RetroBiomeSpawnRegistry.addSpawn(EntityTadpole.class, EnumCreatureType.WATER_CREATURE, 8, 2, 5,
+            ModBiomes::isTadpoleSpawnBiome);
+    }
+
+    public static RetroEntitySpawn<EntityFrog> mangroveFrogSpawn() {
+        return RetroEntitySpawn.of(EntityFrog.class, EnumCreatureType.CREATURE, 12, 2, 5,
+            MANGROVE_SWAMP, Biomes.SWAMPLAND, Biomes.MUTATED_SWAMPLAND);
+    }
+
+    public static RetroEntitySpawn<EntityTadpole> mangroveTadpoleSpawn() {
+        return RetroEntitySpawn.of(EntityTadpole.class, EnumCreatureType.WATER_CREATURE, 8, 2, 5,
+            MANGROVE_SWAMP, Biomes.SWAMPLAND, Biomes.MUTATED_SWAMPLAND);
+    }
+
+    private static boolean isFrogSpawnBiome(Biome biome) {
+        return isTadpoleSpawnBiome(biome)
+            || (RetroWorldgenRegistry.hasAllTypes(biome, BiomeDictionary.Type.SWAMP, BiomeDictionary.Type.WET)
+                && biome.getDefaultTemperature() >= 0.65F);
+    }
+
+    private static boolean isTadpoleSpawnBiome(Biome biome) {
+        return biome == MANGROVE_SWAMP || biome == Biomes.SWAMPLAND || biome == Biomes.MUTATED_SWAMPLAND;
     }
 }

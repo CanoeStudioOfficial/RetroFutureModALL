@@ -1,18 +1,18 @@
 package com.canoestudio.retrofuturethewildupdate.proxy;
 
+import com.canoestudio.retrofuturemccore.api.world.RetroWorldgenRegistry;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.block.ModBlocks;
 import com.canoestudio.retrofuturethewildupdate.world.biome.ModBiomes;
 import com.canoestudio.retrofuturethewildupdate.world.gen.WildUpdateWorldGenerator;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class CommonProxy {
 
     public void preInit() {
         ModBlocks.registerTileEntities();
-        GameRegistry.registerWorldGenerator(new WildUpdateWorldGenerator(), 30);
+        RetroWorldgenRegistry.registerGenerator(new WildUpdateWorldGenerator(), 30);
     }
 
     public void init() {

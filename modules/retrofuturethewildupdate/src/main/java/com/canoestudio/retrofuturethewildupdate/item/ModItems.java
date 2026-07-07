@@ -1,5 +1,8 @@
 package com.canoestudio.retrofuturethewildupdate.item;
 
+import com.canoestudio.retrofuturemccore.api.block.RetroBoatRegistry;
+import com.canoestudio.retrofuturemccore.api.block.RetroSignRegistry;
+import com.canoestudio.retrofuturethewildupdate.block.ModWoodSets;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.sounds.ModSounds;
 import net.minecraftforge.event.RegistryEvent;
@@ -31,11 +34,11 @@ public class ModItems {
             MUSIC_DISC_5,
             RECOVERY_COMPASS,
             TADPOLE_BUCKET,
-            MANGROVE_BOAT,
-            MANGROVE_HANGING_SIGN,
             FROG_SPAWN_EGG,
             TADPOLE_SPAWN_EGG
         );
+        RetroBoatRegistry.registerItems(event.getRegistry(), ModWoodSets.MANGROVE_BOATS);
+        RetroSignRegistry.registerItems(event.getRegistry(), ModWoodSets.MANGROVE_SIGNS);
     }
 
     private static Item simpleItem(String name, CreativeTabs tab) {
