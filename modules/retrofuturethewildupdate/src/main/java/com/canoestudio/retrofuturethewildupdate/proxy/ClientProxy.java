@@ -6,8 +6,12 @@ import com.canoestudio.retrofuturethewildupdate.block.ModBlocks;
 import com.canoestudio.retrofuturethewildupdate.client.models.ModelFrog;
 import com.canoestudio.retrofuturethewildupdate.client.models.ModelTadpole;
 import com.canoestudio.retrofuturethewildupdate.client.particle.ParticleSonicBoom;
+import com.canoestudio.retrofuturethewildupdate.client.renderer.RenderHangingSign;
+import com.canoestudio.retrofuturethewildupdate.client.renderer.RenderMangroveBoat;
 import com.canoestudio.retrofuturethewildupdate.client.renderer.RenderWarden;
+import com.canoestudio.retrofuturethewildupdate.block.TileEntityHangingSign;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityFrog;
+import com.canoestudio.retrofuturethewildupdate.entity.EntityMangroveBoat;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityTadpole;
 import com.canoestudio.retrofuturethewildupdate.entity.Warden;
 import com.canoestudio.retrofuturethewildupdate.item.ModItems;
@@ -31,6 +35,8 @@ public class ClientProxy extends CommonProxy {
     public void preInit() {
         super.preInit();
         RetroModelRegistry.registerEntityRenderer(Warden.class, RenderWarden::new);
+        RetroModelRegistry.registerEntityRenderer(EntityMangroveBoat.class, RenderMangroveBoat::new);
+        RetroModelRegistry.registerTileEntityRenderer(TileEntityHangingSign.class, new RenderHangingSign());
         RetroModelRegistry.registerLivingRenderer(
             EntityFrog.class,
             ModelFrog::new,
@@ -63,8 +69,11 @@ public class ClientProxy extends CommonProxy {
             ModItems.WARDEN_EGG,
             ModItems.ECHO_SHARD,
             ModItems.DISC_FRAGMENT_5,
+            ModItems.MUSIC_DISC_5,
             ModItems.RECOVERY_COMPASS,
             ModItems.TADPOLE_BUCKET,
+            ModItems.MANGROVE_BOAT,
+            ModItems.MANGROVE_HANGING_SIGN,
             ModItems.FROG_SPAWN_EGG,
             ModItems.TADPOLE_SPAWN_EGG,
             ModBlocks.MANGROVE_DOOR_ITEM

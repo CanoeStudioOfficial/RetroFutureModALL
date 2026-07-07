@@ -4,11 +4,14 @@ import net.minecraft.block.Block;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.entity.RenderLiving;
+import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.item.Item;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.IRenderFactory;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.relauncher.Side;
@@ -98,6 +101,14 @@ public final class RetroModelRegistry {
             return;
         }
         RenderingRegistry.registerEntityRenderingHandler(entityClass, factory);
+    }
+
+    public static <T extends TileEntity> void registerTileEntityRenderer(Class<T> tileEntityClass,
+            TileEntitySpecialRenderer<? super T> renderer) {
+        if (tileEntityClass == null || renderer == null) {
+            return;
+        }
+        ClientRegistry.bindTileEntitySpecialRenderer(tileEntityClass, renderer);
     }
 
     public static <E extends EntityLiving> void registerLivingRenderer(Class<E> entityClass,

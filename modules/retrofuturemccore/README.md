@@ -160,6 +160,113 @@ RetroEventRegistry.registerDrops(new AbstractRetroDropHandler() {
 
 Return `true` from hurt/death/drop handlers to cancel the original Forge event.
 
+## Block Families, Wood Sets, Signs And Boats
+
+Core includes 26.2-inspired family metadata for keeping wood, stone, sign, hanging sign, boat, and chest boat registration consistent across RetroFuture modules:
+
+```java
+RetroBlockFamily mangroveFamily = RetroBlockFamilies.register(
+    RetroBlockFamily.builder(ModBlocks.MANGROVE_PLANKS)
+        .log(ModBlocks.MANGROVE_LOG)
+        .strippedLog(ModBlocks.STRIPPED_MANGROVE_LOG)
+        .stairs(ModBlocks.MANGROVE_STAIRS)
+        .slab(ModBlocks.MANGROVE_SLAB)
+        .fence(ModBlocks.MANGROVE_FENCE)
+        .fenceGate(ModBlocks.MANGROVE_FENCE_GATE)
+        .door(ModBlocks.MANGROVE_DOOR)
+        .trapdoor(ModBlocks.MANGROVE_TRAPDOOR)
+        .button(ModBlocks.MANGROVE_BUTTON)
+        .pressurePlate(ModBlocks.MANGROVE_PRESSURE_PLATE)
+        .hangingSign(ModBlocks.MANGROVE_HANGING_SIGN, ModBlocks.MANGROVE_WALL_HANGING_SIGN)
+        .build()
+);
+```
+
+For full wood sets:
+
+```java
+RetroWoodSet.builder(new ResourceLocation("examplemod", "mangrove"), ModBlocks.MANGROVE_PLANKS)
+    .log(ModBlocks.MANGROVE_LOG)
+    .strippedLog(ModBlocks.STRIPPED_MANGROVE_LOG)
+    .signs(RetroSignSet.builder(new ResourceLocation("examplemod", "mangrove"))
+        .hangingSign(ModBlocks.MANGROVE_HANGING_SIGN, ModBlocks.MANGROVE_WALL_HANGING_SIGN,
+            ModItems.MANGROVE_HANGING_SIGN)
+        .hangingSignTile(TileEntityHangingSign.class)
+        .texture(new ResourceLocation("examplemod", "textures/blocks/mangrove_hanging_sign.png"))
+        .build())
+    .boats(RetroBoatSet.builder(new ResourceLocation("examplemod", "mangrove"))
+        .boat(ModItems.MANGROVE_BOAT, EntityMangroveBoat.class)
+        .chestBoat(ModItems.MANGROVE_CHEST_BOAT, EntityMangroveChestBoat.class)
+        .texture(new ResourceLocation("examplemod", "textures/entity/boat/mangrove.png"))
+        .build())
+    .register();
+```
+
+Use `RetroBlockRegistration.registerBlocks(...)` and `registerSimpleBlockItems(...)` inside Forge registry events when your blocks are normal `ItemBlock`s. Doors, signs, and custom hanging signs usually still need module-specific item classes.
+
+Tile entity registration can stay behind the sign API:
+
+```java
+RetroSignRegistry.registerTileEntities(ModWoodSets.MANGROVE_SIGNS);
+```
+
+Boat entity registration can use the same entity helper defaults:
+
+```java
+RetroBoatRegistry.registerBoatEntity(event.getRegistry(), EntityMangroveBoat.class,
+    new ResourceLocation("examplemod", "mangrove_boat"), nextEntityId++, EntityMangroveBoat::new);
+```
+
+## Recipes, Loot And Resource Data
+
+The datagen helpers create 1.12.2 JSON resources from modern-style recipes. They are meant for build tools or small module-side generators, not for changing recipes at runtime.
+
+```java
+JsonObject recipe = RetroRecipeJsonBuilder.hangingSign(
+    ModBlocks.STRIPPED_MANGROVE_LOG,
+    Items.IRON_BARS,
+    ModItems.MANGROVE_HANGING_SIGN
+);
+
+RetroResourceDataGenerator.writeRecipe(resourcesRoot,
+    new ResourceLocation("examplemod", "mangrove_hanging_sign"), recipe);
+```
+
+Common helpers cover modern wood recipes such as button, door, fence, fence gate, sign, hanging sign, slab, stairs, trapdoor, boat, and chest boat. `RetroLootTableBuilder.selfDrop(block)` is available for simple block loot tables.
+
+## Structures And Biome Generation
+
+`RetroStructurePlacement` gives 1.12 `IWorldGenerator` code a modern spacing/separation/salt placement check:
+
+```java
+private static final RetroStructurePlacement ANCIENT_CITY = RetroAncientCityPlacement
+    .builder(new ResourceLocation("examplemod", "ancient_city"))
+    .biome(biome -> RetroWorldgenRegistry.hasAnyType(biome, BiomeDictionary.Type.SPOOKY))
+    .build();
+
+if (ANCIENT_CITY.shouldStartAt(world, chunkX, chunkZ)) {
+    Random cityRandom = ANCIENT_CITY.createChunkRandom(world, chunkX, chunkZ);
+    BlockPos start = RetroAncientCityPlacement.findDeepStart(world, cityRandom, chunkX << 4, chunkZ << 4,
+        18, state -> state.getBlock() == ModBlocks.DEEPSLATE);
+}
+```
+
+This does not clone modern jigsaw structure generation. It provides stable high-version-like placement inputs for content modules that build equivalent 1.12 structures.
+
+Biome and spawn helpers wrap common Forge 1.12 calls:
+
+```java
+RetroBiomeSpawnRegistry.registerBiome(ModBiomes.MANGROVE_SWAMP, BiomeManager.BiomeType.WARM, 7, true,
+    BiomeDictionary.Type.SWAMP,
+    BiomeDictionary.Type.WET,
+    BiomeDictionary.Type.HOT,
+    BiomeDictionary.Type.DENSE);
+
+RetroBiomeSpawnRegistry.addSpawnToTypes(EntityFrog.class, EnumCreatureType.CREATURE, 12, 2, 5,
+    BiomeDictionary.Type.SWAMP,
+    BiomeDictionary.Type.WET);
+```
+
 ## Entity Helpers
 
 Entity registration:
@@ -220,6 +327,12 @@ public void preInit(FMLPreInitializationEvent event) {
     super.preInit(event);
     RetroModelRegistry.registerEntityRenderer(EntityGoat.class, RenderGoat::new);
 }
+```
+
+Tile entity renderers can also stay behind the core facade:
+
+```java
+RetroModelRegistry.registerTileEntityRenderer(TileEntityHangingSign.class, new RenderHangingSign());
 ```
 
 For simple living entities, core can create a 1.12 `RenderLiving` for you:

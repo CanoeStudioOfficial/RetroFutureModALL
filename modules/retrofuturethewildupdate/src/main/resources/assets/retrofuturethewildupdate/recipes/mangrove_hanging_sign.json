@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "hanging_sign",
+  "pattern": [
+    "I I",
+    "###",
+    "###"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_bars"
+    },
+    "#": {
+      "item": "retrofuturethewildupdate:stripped_mangrove_log"
+    }
+  },
+  "result": {
+    "item": "retrofuturethewildupdate:mangrove_hanging_sign",
+    "count": 6
+  }
+}

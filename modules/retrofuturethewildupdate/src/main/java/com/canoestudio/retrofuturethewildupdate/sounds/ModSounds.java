@@ -24,6 +24,7 @@ public final class ModSounds {
     public static final SoundEvent WARDEN_EMERGE;
     public static final SoundEvent WARDEN_DIG;
     public static final SoundEvent WARDEN_TENDRIL;
+    public static final SoundEvent MUSIC_DISC_5;
 
     private static SoundEvent createEvent(String sound) {
         ResourceLocation name = RTWU.prefix(sound);
@@ -46,7 +47,8 @@ public final class ModSounds {
             WARDEN_SONIC_BOOM,
             WARDEN_EMERGE,
             WARDEN_DIG,
-            WARDEN_TENDRIL
+            WARDEN_TENDRIL,
+            MUSIC_DISC_5
         );
     }
 
@@ -67,5 +69,6 @@ public final class ModSounds {
         WARDEN_EMERGE = createEvent("mob.warden.emerge");
         WARDEN_DIG = createEvent("mob.warden.dig");
         WARDEN_TENDRIL = createEvent("mob.warden.tendril");
+        MUSIC_DISC_5 = createEvent("music_disc.5");
     }
 }

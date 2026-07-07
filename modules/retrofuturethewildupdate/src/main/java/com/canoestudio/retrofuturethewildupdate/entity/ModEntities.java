@@ -17,6 +17,7 @@ public class ModEntities {
     public static final ResourceLocation WARDEN_NAME = new ResourceLocation(RTWU.ID, "warden");
     public static final ResourceLocation FROG_NAME = new ResourceLocation(RTWU.ID, "frog");
     public static final ResourceLocation TADPOLE_NAME = new ResourceLocation(RTWU.ID, "tadpole");
+    public static final ResourceLocation MANGROVE_BOAT_NAME = new ResourceLocation(RTWU.ID, "mangrove_boat");
 
     @SubscribeEvent
     public static void registerEntities(RegistryEvent.Register<EntityEntry> event) {
@@ -37,6 +38,11 @@ public class ModEntities {
             .name(RTWU.ID + ".tadpole")
             .tracker(64, 3, true)
             .egg(0x6d5335, 0x160a03)
+            .register(registry);
+        RetroEntityRegistry.builder(EntityMangroveBoat.class, MANGROVE_BOAT_NAME, entityId++)
+            .factory(EntityMangroveBoat::new)
+            .name(RTWU.ID + ".mangrove_boat")
+            .tracker(80, 3, true)
             .register(registry);
     }
 }

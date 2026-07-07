@@ -53,6 +53,8 @@ public final class ModBlocks {
     public static final Block MANGROVE_ROOTS = new BlockMangroveRoots();
     public static final Block MUDDY_MANGROVE_ROOTS = new BlockWildPillar("muddy_mangrove_roots", Material.WOOD, SoundType.WOOD, 0.7f, 0.7f, CreativeTabs.DECORATIONS);
     public static final Block MANGROVE_PROPAGULE = new BlockMangrovePropagule();
+    public static final Block MANGROVE_HANGING_SIGN = new BlockMangroveHangingSign();
+    public static final Block MANGROVE_WALL_HANGING_SIGN = new BlockMangroveWallHangingSign();
     public static final Block FROGSPAWN = new BlockFrogspawn();
     public static final Block OCHRE_FROGLIGHT = withLight(new BlockWildPillar("ochre_froglight", Material.GLASS, SoundType.GLASS, 0.3f, 0.3f, CreativeTabs.DECORATIONS));
     public static final Block VERDANT_FROGLIGHT = withLight(new BlockWildPillar("verdant_froglight", Material.GLASS, SoundType.GLASS, 0.3f, 0.3f, CreativeTabs.DECORATIONS));
@@ -90,6 +92,8 @@ public final class ModBlocks {
         MANGROVE_ROOTS,
         MUDDY_MANGROVE_ROOTS,
         MANGROVE_PROPAGULE,
+        MANGROVE_HANGING_SIGN,
+        MANGROVE_WALL_HANGING_SIGN,
         FROGSPAWN,
         OCHRE_FROGLIGHT,
         VERDANT_FROGLIGHT,
@@ -109,6 +113,9 @@ public final class ModBlocks {
             if (block == DOUBLE_MUD_BRICK_SLAB || block == DOUBLE_MANGROVE_SLAB) {
                 continue;
             }
+            if (block == MANGROVE_HANGING_SIGN || block == MANGROVE_WALL_HANGING_SIGN) {
+                continue;
+            }
             registry.register(createItemBlock(block));
         }
     }
@@ -117,6 +124,7 @@ public final class ModBlocks {
         GameRegistry.registerTileEntity(TileEntitySculkSensor.class, key("sculk_sensor"));
         GameRegistry.registerTileEntity(TileEntitySculkShrieker.class, key("sculk_shrieker"));
         GameRegistry.registerTileEntity(TileEntitySculkCatalyst.class, key("sculk_catalyst"));
+        GameRegistry.registerTileEntity(TileEntityHangingSign.class, key("hanging_sign"));
     }
 
     private static ResourceLocation key(String name) {
