@@ -70,6 +70,11 @@ public class BlockConduit extends Block implements ITileEntityProvider, RetroWat
     }
 
     @Override
+    public Material getMaterial(IBlockState state) {
+        return this.getWaterloggedMaterial(state, super.getMaterial(state));
+    }
+
+    @Override
     public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
         return AquaticWaterHelper.isWater(worldIn, pos) || worldIn.isAirBlock(pos);
     }
@@ -88,6 +93,16 @@ public class BlockConduit extends Block implements ITileEntityProvider, RetroWat
     @Override
     public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
         AquaticWaterHelper.ensureWaterlogged(worldIn, pos, state, WATERLOGGED);
+    }
+
+    @Override
+    public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
+        this.syncWaterloggedAfterNeighborChanged(worldIn, pos, state);
+        TileEntity tileEntity = worldIn.getTileEntity(pos);
+        if (tileEntity instanceof TileEntityConduit) {
+            ((TileEntityConduit) tileEntity).update();
+            worldIn.addBlockEvent(pos, this, 1, 0);
+        }
     }
 
     @Override

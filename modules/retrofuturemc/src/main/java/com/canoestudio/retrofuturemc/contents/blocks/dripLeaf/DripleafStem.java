@@ -3,10 +3,9 @@ package com.canoestudio.retrofuturemc.contents.blocks.dripLeaf;
 
 import com.canoestudio.retrofuturemc.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturemc.retrofuturemc.Tags;
-import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
-import git.jbredwards.fluidlogged_api.api.util.FluidState;
-import git.jbredwards.fluidlogged_api.api.util.FluidloggedUtils;
-import git.jbredwards.fluidlogged_api.api.world.IWorldProvider;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidState;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidloggableBlock;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockHorizontal;
@@ -28,15 +27,12 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
 
-import javax.annotation.Nonnull;
 import java.util.Random;
 
 import static com.canoestudio.retrofuturemc.contents.tab.CreativeTab.CREATIVE_TABS;
 
-public class DripleafStem extends BlockBush implements IGrowable, IFluidloggable
+public class DripleafStem extends BlockBush implements IGrowable, RetroFluidloggableBlock
 {
     public static final String name = "Big_Dripleaf_Stem";
     public static final PropertyEnum<EnumFacing> FACING = BlockHorizontal.FACING;
@@ -149,41 +145,6 @@ public class DripleafStem extends BlockBush implements IGrowable, IFluidloggable
 
     public boolean isReplaceable(IBlockAccess worldIn, BlockPos pos) { return false; }
 
-    @Override
-    public boolean isFluidValid(@Nonnull IBlockState state, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull Fluid fluid) {
-        return FluidloggedUtils.isCompatibleFluid(FluidRegistry.WATER, fluid);
-    }
-
-    @Override
-    public boolean isFluidloggable(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos, @Nonnull FluidState fluidState) {
-        return fluidState.isEmpty() || fluidState.isFluidloggable() && isFluidValid(state, IWorldProvider.getWorld(world), pos, fluidState.getFluid());
-    }
-
-    @Nonnull
-    @Override
-    public EnumActionResult onFluidFill(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState here, @Nonnull FluidState newFluid, int blockFlags) {
-        return EnumActionResult.PASS;
-    }
-
-    @Nonnull
-    @Override
-    public EnumActionResult onFluidDrain(@Nonnull World world, @Nonnull BlockPos pos, @Nonnull IBlockState here, int blockFlags) {
-        return EnumActionResult.PASS;
-    }
-
-    @Override
-    public boolean canFluidFlow(@Nonnull IBlockAccess world, @Nonnull BlockPos pos, @Nonnull IBlockState here, @Nonnull EnumFacing side) {
-        return true;
-    }
-
-    @Override
-    public boolean canFluidConnect(@Nonnull IBlockAccess world, @Nonnull BlockPos pos, @Nonnull IBlockState here, @Nonnull EnumFacing side) {
-        return true;
-    }
-
-    @Override
-    public boolean overrideApplyDefaultsSetting() { return true; }
-
     public Item getItemDropped(IBlockState state, Random rand, int fortune) { return Item.getItemFromBlock(ModBlocks.BIG_DRIPLEAF); }
 
     public ItemStack getItem(World worldIn, BlockPos pos, IBlockState state) { return new ItemStack(ModBlocks.BIG_DRIPLEAF); }
@@ -219,55 +180,37 @@ public class DripleafStem extends BlockBush implements IGrowable, IFluidloggable
 
     private boolean canGrowInto(World world, BlockPos pos)
     {
-        IBlockState state = world.getBlockState(pos);
-        return state.getBlock().isReplaceable(world, pos) || state.getBlock() == Blocks.AIR || state.getMaterial() == Material.WATER || FluidloggedUtils.getFluidState(world, pos, state).getFluid() == FluidRegistry.WATER;
+        return RetroWaterlogging.canPlaceIntoAirOrWater(world, pos);
     }
 
     private void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState, int flags)
     {
-        FluidState fluidState = getWaterFluidState(world, pos);
-
-        if (fluidState.getFluid() == FluidRegistry.WATER)
-        {
-            world.setBlockState(pos, newState, flags);
-            FluidloggedUtils.setFluidState(world, pos, world.getBlockState(pos), fluidState, false, flags);
-            world.scheduleUpdate(pos, fluidState.getState().getBlock(), fluidState.getState().getBlock().tickRate(world));
-        }
-        else
-        {
-            world.setBlockState(pos, newState, flags);
-        }
+        RetroWaterlogging.setFluidloggableBlock(world, pos, newState, flags);
     }
 
     private boolean hasWaterFluid(World world, BlockPos pos)
     {
-        return getWaterFluidState(world, pos).getFluid() == FluidRegistry.WATER;
+        return RetroWaterlogging.hasWaterFluid(world, pos);
     }
 
-    private FluidState getWaterFluidState(World world, BlockPos pos)
+    private RetroFluidState getWaterFluidState(World world, BlockPos pos)
     {
-        IBlockState state = world.getBlockState(pos);
-        return state.getMaterial() == Material.WATER ? FluidState.of(state) : FluidloggedUtils.getFluidState(world, pos, state);
+        return RetroWaterlogging.getWaterFluidState(world, pos);
     }
 
     private void restoreContainedFluidOrAir(World world, BlockPos pos, IBlockState state, int flags)
     {
-        FluidState fluidState = FluidloggedUtils.getFluidState(world, pos, state);
-        world.setBlockState(pos, fluidState.getFluid() == FluidRegistry.WATER ? fluidState.getState() : Blocks.AIR.getDefaultState(), flags);
-        scheduleFluidTick(world, pos, fluidState);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, flags);
     }
 
     private void scheduleContainedFluidTick(World world, BlockPos pos, IBlockState state)
     {
-        scheduleFluidTick(world, pos, FluidloggedUtils.getFluidState(world, pos, state));
+        RetroWaterlogging.scheduleContainedFluidTick(world, pos, state);
     }
 
-    private void scheduleFluidTick(World world, BlockPos pos, FluidState fluidState)
+    private void scheduleFluidTick(World world, BlockPos pos, RetroFluidState fluidState)
     {
-        if (fluidState.getFluid() == FluidRegistry.WATER)
-        {
-            world.scheduleUpdate(pos, fluidState.getState().getBlock(), fluidState.getState().getBlock().tickRate(world));
-        }
+        RetroWaterlogging.scheduleFluidTick(world, pos, fluidState);
     }
 
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer)

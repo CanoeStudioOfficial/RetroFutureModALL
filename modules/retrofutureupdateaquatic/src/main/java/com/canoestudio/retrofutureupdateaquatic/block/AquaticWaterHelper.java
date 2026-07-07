@@ -1,7 +1,7 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
-import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidCompat;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidState;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.IBlockState;
@@ -27,8 +27,7 @@ final class AquaticWaterHelper {
     }
 
     static boolean canReplaceWater(World world, BlockPos pos) {
-        IBlockState state = world.getBlockState(pos);
-        return isWater(world, pos) || state.getBlock().isReplaceable(world, pos);
+        return RetroWaterlogging.canReplaceWater(world, pos);
     }
 
     static void restoreWater(World world, BlockPos pos) {
@@ -36,7 +35,7 @@ final class AquaticWaterHelper {
     }
 
     static void restoreWater(World world, BlockPos pos, IBlockState replacedState) {
-        RetroFluidCompat.restoreWater(world, pos, replacedState, 3);
+        RetroWaterlogging.restoreWater(world, pos, replacedState);
     }
 
     static RetroFluidState getFluidState(IBlockAccess world, BlockPos pos) {
@@ -44,33 +43,35 @@ final class AquaticWaterHelper {
     }
 
     static RetroFluidState getFluidState(IBlockAccess world, BlockPos pos, IBlockState state) {
-        return RetroFluidCompat.getFluidState(world, pos, state);
+        return RetroWaterlogging.getFluidState(world, pos, state);
     }
 
     static boolean isWater(RetroFluidState fluidState) {
-        return RetroFluidCompat.isWater(fluidState);
+        return RetroWaterlogging.isWater(fluidState);
     }
 
     static boolean isWaterlogged(IBlockState state, IBlockAccess world, BlockPos pos, PropertyBool property) {
-        return RetroFluidCompat.isWaterlogged(state, world, pos, property);
+        return RetroWaterlogging.isWaterlogged(state, world, pos, property);
     }
 
     static IBlockState withActualWaterlogged(IBlockState state, IBlockAccess world, BlockPos pos,
             PropertyBool property) {
-        return RetroFluidCompat.withActualWaterlogged(state, world, pos, property);
+        return RetroWaterlogging.actualState(state, world, pos, property);
     }
 
     static void ensureWaterlogged(World world, BlockPos pos, IBlockState state, PropertyBool property) {
-        RetroFluidCompat.ensureWaterlogged(world, pos, state, property, 3);
+        RetroWaterlogging.onBlockAdded(world, pos, state, property);
     }
 
     static void setWaterloggedProperty(World world, BlockPos pos, IBlockState state, PropertyBool property,
             boolean waterlogged, int flags) {
-        RetroFluidCompat.setWaterloggedProperty(world, pos, state, property, waterlogged, flags);
+        if (state.getValue(property) != waterlogged) {
+            world.setBlockState(pos, state.withProperty(property, waterlogged), flags);
+        }
     }
 
     static void scheduleFluidTick(World world, BlockPos pos, IBlockState state) {
-        RetroFluidCompat.scheduleFluidTick(world, pos, state);
+        RetroWaterlogging.scheduleFluidTick(world, pos, state);
     }
 
     static boolean isSolidTop(World world, BlockPos pos) {

@@ -57,6 +57,11 @@ public class BlockSeaPickle extends BlockBush implements IGrowable, RetroWaterlo
     }
 
     @Override
+    public Material getMaterial(IBlockState state) {
+        return this.getWaterloggedMaterial(state, super.getMaterial(state));
+    }
+
+    @Override
     public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
         return AquaticWaterHelper.isSolidTop(worldIn, pos.down());
     }
@@ -83,6 +88,14 @@ public class BlockSeaPickle extends BlockBush implements IGrowable, RetroWaterlo
     @Override
     public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
         AquaticWaterHelper.ensureWaterlogged(worldIn, pos, state, WATERLOGGED);
+        this.syncWaterloggedAfterNeighborChanged(worldIn, pos, state);
+    }
+
+    @Override
+    public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, net.minecraft.block.Block blockIn,
+            BlockPos fromPos) {
+        this.syncWaterloggedAfterNeighborChanged(worldIn, pos, state);
+        super.neighborChanged(state, worldIn, pos, blockIn, fromPos);
     }
 
     @Override

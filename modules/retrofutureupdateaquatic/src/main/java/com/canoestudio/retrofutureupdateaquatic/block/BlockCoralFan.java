@@ -131,8 +131,14 @@ public class BlockCoralFan extends Block implements RetroWaterloggedBlock {
     }
 
     @Override
+    public Material getMaterial(IBlockState state) {
+        return this.getWaterloggedMaterial(state, super.getMaterial(state));
+    }
+
+    @Override
     public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
         AquaticWaterHelper.ensureWaterlogged(worldIn, pos, state, WATERLOGGED);
+        this.syncWaterloggedAfterNeighborChanged(worldIn, pos, state);
         if (!hasWater(state, worldIn, pos)) {
             worldIn.scheduleUpdate(pos, this, this.tickRate(worldIn));
         }
@@ -142,10 +148,15 @@ public class BlockCoralFan extends Block implements RetroWaterloggedBlock {
     public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
         if (!this.canBlockStay(worldIn, pos, state)) {
             AquaticWaterHelper.restoreWater(worldIn, pos, state);
-        } else if (!hasWater(state, worldIn, pos)) {
+            return;
+        }
+
+        this.syncWaterloggedAfterNeighborChanged(worldIn, pos, state);
+        IBlockState updatedState = worldIn.getBlockState(pos);
+        if (!hasWater(updatedState, worldIn, pos)) {
             worldIn.scheduleUpdate(pos, this, this.tickRate(worldIn));
         } else {
-            AquaticWaterHelper.scheduleFluidTick(worldIn, pos, state);
+            AquaticWaterHelper.scheduleFluidTick(worldIn, pos, updatedState);
         }
     }
 

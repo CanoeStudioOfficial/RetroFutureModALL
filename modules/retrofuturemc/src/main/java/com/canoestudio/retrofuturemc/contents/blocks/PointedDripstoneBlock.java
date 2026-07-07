@@ -1,11 +1,10 @@
 package com.canoestudio.retrofuturemc.contents.blocks;
 
 import com.canoestudio.retrofuturemc.retrofuturemc.Tags;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidState;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidloggableBlock;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import com.google.common.base.Predicate;
-import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
-import git.jbredwards.fluidlogged_api.api.util.FluidState;
-import git.jbredwards.fluidlogged_api.api.util.FluidloggedUtils;
-import git.jbredwards.fluidlogged_api.api.world.IWorldProvider;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -29,19 +28,16 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.util.Random;
 
 import static com.canoestudio.retrofuturemc.contents.tab.CreativeTab.CREATIVE_TABS;
 
-public class PointedDripstoneBlock extends Block implements IFluidloggable {
+public class PointedDripstoneBlock extends Block implements RetroFluidloggableBlock {
     public static final PropertyDirection VERTICAL_DIRECTION = PropertyDirection.create("vertical_direction", new Predicate<EnumFacing>() {
         @Override
         public boolean apply(EnumFacing input) {
@@ -380,64 +376,28 @@ public class PointedDripstoneBlock extends Block implements IFluidloggable {
         return BlockFaceShape.UNDEFINED;
     }
 
-    @Override
-    public boolean isFluidValid(@Nonnull IBlockState state, @Nonnull World world, @Nonnull BlockPos pos, @Nonnull Fluid fluid) {
-        return FluidloggedUtils.isCompatibleFluid(FluidRegistry.WATER, fluid);
-    }
-
-    @Override
-    public boolean isFluidloggable(@Nonnull IBlockState state, @Nonnull IBlockAccess world, @Nonnull BlockPos pos, @Nonnull FluidState fluidState) {
-        if (fluidState.isEmpty()) return true;
-        return isFluidValid(state, IWorldProvider.getWorld(world), pos, fluidState.getFluid())
-                && (fluidState.isSource() || fluidState.getActualHeight(world, pos) >= 1 && FluidloggedUtils.canCreateSource(fluidState.getState(), IWorldProvider.getWorld(world), pos));
-    }
-
-    @Override
-    public boolean canFluidFlow(@Nonnull IBlockAccess world, @Nonnull BlockPos pos, @Nonnull IBlockState here, @Nonnull EnumFacing side) {
-        return true;
-    }
-
-    @Override
-    public boolean overrideApplyDefaultsSetting() {
-        return true;
-    }
-
     private boolean isAirOrWater(World world, BlockPos pos) {
-        IBlockState state = world.getBlockState(pos);
-        return state.getBlock() == Blocks.AIR || state.getMaterial() == Material.WATER;
+        return RetroWaterlogging.canPlaceIntoAirOrWater(world, pos);
     }
 
     private void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState, int flags) {
-        FluidState fluidState = getWaterFluidState(world, pos);
-
-        if (fluidState.getFluid() == FluidRegistry.WATER) {
-            world.setBlockState(pos, newState, flags);
-            FluidloggedUtils.setFluidState(world, pos, world.getBlockState(pos), fluidState, false, flags);
-            scheduleFluidTick(world, pos, fluidState);
-        } else {
-            world.setBlockState(pos, newState, flags);
-        }
+        RetroWaterlogging.setFluidloggableBlock(world, pos, newState, flags);
     }
 
     private void setBlockStateKeepingFluid(World world, BlockPos pos, int flags) {
-        FluidState fluidState = FluidloggedUtils.getFluidState(world, pos, world.getBlockState(pos));
-        world.setBlockState(pos, fluidState.getFluid() == FluidRegistry.WATER ? fluidState.getState() : Blocks.AIR.getDefaultState(), flags);
-        scheduleFluidTick(world, pos, fluidState);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, world.getBlockState(pos), flags);
     }
 
     private boolean hasWaterFluid(World world, BlockPos pos) {
-        return getWaterFluidState(world, pos).getFluid() == FluidRegistry.WATER;
+        return RetroWaterlogging.hasWaterFluid(world, pos);
     }
 
-    private FluidState getWaterFluidState(World world, BlockPos pos) {
-        IBlockState state = world.getBlockState(pos);
-        return state.getMaterial() == Material.WATER ? FluidState.of(state) : FluidloggedUtils.getFluidState(world, pos, state);
+    private RetroFluidState getWaterFluidState(World world, BlockPos pos) {
+        return RetroWaterlogging.getWaterFluidState(world, pos);
     }
 
-    private void scheduleFluidTick(World world, BlockPos pos, FluidState fluidState) {
-        if (fluidState.getFluid() == FluidRegistry.WATER) {
-            world.scheduleUpdate(pos, fluidState.getState().getBlock(), fluidState.getState().getBlock().tickRate(world));
-        }
+    private void scheduleFluidTick(World world, BlockPos pos, RetroFluidState fluidState) {
+        RetroWaterlogging.scheduleFluidTick(world, pos, fluidState);
     }
 
     @Override

@@ -1,8 +1,7 @@
 package com.canoestudio.retrofuturemc.contents.blocks;
 
 import com.canoestudio.retrofuturemc.retrofuturemc.Tags;
-import git.jbredwards.fluidlogged_api.api.util.FluidState;
-import git.jbredwards.fluidlogged_api.api.util.FluidloggedUtils;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -13,7 +12,6 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.FluidRegistry;
 
 import java.util.Random;
 
@@ -60,20 +58,12 @@ public class BuddingAmethystBlock extends net.minecraft.block.Block {
 
         if (nextStage != null) {
             IBlockState newState = nextStage.getDefaultState().withProperty(AmethystClusterBlock.FACING, growDirection);
-            FluidState fluidState = getFluidState(worldIn, growPos, target);
-            worldIn.setBlockState(growPos, newState, 3);
-            if (fluidState.getFluid() == FluidRegistry.WATER) {
-                FluidloggedUtils.setFluidState(worldIn, growPos, worldIn.getBlockState(growPos), fluidState, false, 3);
-            }
+            RetroWaterlogging.setFluidloggableBlock(worldIn, growPos, newState, 3);
         }
     }
 
     private static boolean canClusterGrowAtState(World world, BlockPos pos, IBlockState state) {
-        return state.getBlock() == Blocks.AIR || state.getMaterial() == Material.WATER || FluidloggedUtils.getFluidState(world, pos, state).getFluid() == FluidRegistry.WATER;
-    }
-
-    private static FluidState getFluidState(World world, BlockPos pos, IBlockState state) {
-        return state.getMaterial() == Material.WATER ? FluidState.of(state) : FluidloggedUtils.getFluidState(world, pos, state);
+        return state.getBlock() == Blocks.AIR || state.getMaterial() == Material.WATER || RetroWaterlogging.isWater(world, pos);
     }
 
     @Override

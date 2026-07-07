@@ -11,8 +11,7 @@ import com.canoestudio.retrofuturemc.contents.blocks.dripLeaf.DripleafStem;
 import com.canoestudio.retrofuturemc.contents.blocks.dripLeaf.SmallDripleaf;
 import com.canoestudio.retrofuturemc.contents.mobs.axolotl.EntityAxolotl;
 import com.canoestudio.retrofuturemc.contents.mobs.glowsquid.EntityGlowSquid;
-import git.jbredwards.fluidlogged_api.api.util.FluidState;
-import git.jbredwards.fluidlogged_api.api.util.FluidloggedUtils;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStone;
 import net.minecraft.block.BlockTallGrass;
@@ -29,7 +28,6 @@ import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraft.world.gen.feature.WorldGenMinable;
 import net.minecraftforge.common.BiomeDictionary;
-import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.IWorldGenerator;
 
 import java.util.ArrayList;
@@ -260,11 +258,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
 
             if (canGeodeClusterGrowAtState(world, placePos, target) && canReplaceGeodeBlock(world, placePos, target)) {
                 IBlockState crystalState = crystal.getDefaultState().withProperty(AmethystClusterBlock.FACING, facing);
-                FluidState fluidState = getFluidState(world, placePos, target);
-                world.setBlockState(placePos, crystalState, 3);
-                if (fluidState.getFluid() == FluidRegistry.WATER) {
-                    FluidloggedUtils.setFluidState(world, placePos, world.getBlockState(placePos), fluidState, false, 3);
-                }
+                RetroWaterlogging.setFluidloggableBlock(world, placePos, crystalState, 3);
                 return;
             }
         }
@@ -324,11 +318,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
     private boolean canGeodeClusterGrowAtState(World world, BlockPos pos, IBlockState state) {
         return state.getBlock() == Blocks.AIR
                 || state.getMaterial() == Material.WATER
-                || FluidloggedUtils.getFluidState(world, pos, state).getFluid() == FluidRegistry.WATER;
-    }
-
-    private FluidState getFluidState(World world, BlockPos pos, IBlockState state) {
-        return state.getMaterial() == Material.WATER ? FluidState.of(state) : FluidloggedUtils.getFluidState(world, pos, state);
+                || RetroWaterlogging.isWater(world, pos);
     }
 
     private void notifyAdjacentFluids(World world, BlockPos pos) {

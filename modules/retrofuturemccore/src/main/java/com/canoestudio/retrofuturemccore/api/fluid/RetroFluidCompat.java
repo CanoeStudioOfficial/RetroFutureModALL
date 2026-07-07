@@ -1,8 +1,7 @@
 package com.canoestudio.retrofuturemccore.api.fluid;
 
 import com.canoestudio.retrofuturemccore.RetroFutureMCCore;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import com.canoestudio.retrofuturemccore.internal.fluid.FluidloggedApiBridge;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.IBlockState;
@@ -10,23 +9,12 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fml.common.Loader;
 
 public final class RetroFluidCompat {
 
     private static boolean initialized;
     private static boolean fluidloggedAvailable;
-    private static Class<?> fluidStateClass;
-    private static Method getFluidStateMethod;
-    private static Method fluidStateOfFluidMethod;
-    private static Method setFluidStateMethod;
-    private static Method isCompatibleFluidMethod;
-    private static Method fluidStateIsEmptyMethod;
-    private static Method fluidStateGetFluidMethod;
-    private static Method fluidStateGetStateMethod;
-    private static Object waterSourceState;
 
     private RetroFluidCompat() {
     }
@@ -42,18 +30,9 @@ public final class RetroFluidCompat {
         }
 
         try {
-            Class<?> utilsClass = Class.forName("git.jbredwards.fluidlogged_api.api.util.FluidloggedUtils");
-            fluidStateClass = Class.forName("git.jbredwards.fluidlogged_api.api.util.FluidState");
-            getFluidStateMethod = utilsClass.getMethod("getFluidState", IBlockAccess.class, BlockPos.class,
-                IBlockState.class);
-            fluidStateOfFluidMethod = fluidStateClass.getMethod("of", Fluid.class);
-            setFluidStateMethod = utilsClass.getMethod("setFluidState", World.class, BlockPos.class,
-                IBlockState.class, fluidStateClass, boolean.class, int.class);
-            isCompatibleFluidMethod = utilsClass.getMethod("isCompatibleFluid", Fluid.class, Fluid.class);
-            fluidStateIsEmptyMethod = fluidStateClass.getMethod("isEmpty");
-            fluidStateGetFluidMethod = fluidStateClass.getMethod("getFluid");
-            fluidStateGetStateMethod = fluidStateClass.getMethod("getState");
-            waterSourceState = fluidStateOfFluidMethod.invoke(null, FluidRegistry.WATER);
+            Class.forName("git.jbredwards.fluidlogged_api.api.util.FluidloggedUtils");
+            Class.forName("git.jbredwards.fluidlogged_api.api.util.FluidState");
+            Class.forName("com.canoestudio.retrofuturemccore.internal.fluid.FluidloggedApiBridge");
             fluidloggedAvailable = true;
             RetroFutureMCCore.LOGGER.info("Fluidlogged API detected; RetroFuture fluid bridge is enabled.");
         } catch (ReflectiveOperationException | LinkageError e) {
@@ -81,24 +60,27 @@ public final class RetroFluidCompat {
     }
 
     public static RetroFluidState getFluidState(IBlockAccess world, BlockPos pos, IBlockState state) {
-        if (isVanillaWater(state)) {
+        if (isWaterBlock(state)) {
             return RetroFluidState.ofWater(state);
         }
 
         if (isFluidloggedAvailable()) {
             try {
-                Object nativeState = getFluidStateMethod.invoke(null, world, pos, state);
-                boolean empty = ((Boolean) fluidStateIsEmptyMethod.invoke(nativeState)).booleanValue();
-                if (empty) {
-                    return RetroFluidState.EMPTY;
-                }
-                Fluid fluid = (Fluid) fluidStateGetFluidMethod.invoke(nativeState);
-                boolean water = isCompatibleWater(fluid);
-                IBlockState fluidBlockState = (IBlockState) fluidStateGetStateMethod.invoke(nativeState);
-                return RetroFluidState.ofNative(false, water, fluidBlockState, nativeState);
-            } catch (ReflectiveOperationException | LinkageError e) {
+                return FluidloggedApiBridge.getFluidState(world, pos, state);
+            } catch (LinkageError | RuntimeException e) {
                 RetroFutureMCCore.LOGGER.debug("Failed to query Fluidlogged API state at {}", pos, e);
             }
+        }
+
+        if (state.getBlock() instanceof RetroWaterloggedBlock) {
+            PropertyBool property = ((RetroWaterloggedBlock) state.getBlock()).getWaterloggedProperty();
+            if (state.getValue(property)) {
+                return RetroFluidState.ofWater(Blocks.WATER.getDefaultState());
+            }
+        }
+
+        if (state.getMaterial() == Material.WATER) {
+            return RetroFluidState.ofWater(state);
         }
 
         return RetroFluidState.EMPTY;
@@ -111,15 +93,10 @@ public final class RetroFluidCompat {
         }
 
         if (isFluidloggedAvailable()) {
-            Object nativeState = fluidState.hasNativeState() ? fluidState.getNativeState()
-                : fluidState.isWater() ? waterSourceState : null;
-            if (nativeState != null) {
-                try {
-                    return ((Boolean) setFluidStateMethod.invoke(null, world, pos, here, nativeState, false,
-                        Integer.valueOf(flags))).booleanValue();
-                } catch (ReflectiveOperationException | LinkageError e) {
-                    RetroFutureMCCore.LOGGER.debug("Failed to set Fluidlogged API state at {}", pos, e);
-                }
+            try {
+                return FluidloggedApiBridge.setFluidState(world, pos, here, fluidState, flags);
+            } catch (LinkageError | RuntimeException e) {
+                RetroFutureMCCore.LOGGER.debug("Failed to set Fluidlogged API state at {}", pos, e);
             }
         }
 
@@ -168,21 +145,11 @@ public final class RetroFluidCompat {
     }
 
     public static boolean isVanillaWater(IBlockState state) {
-        return state.getMaterial() == Material.WATER || state.getBlock() == Blocks.WATER
-            || state.getBlock() == Blocks.FLOWING_WATER;
+        return isWaterBlock(state) || state.getMaterial() == Material.WATER;
     }
 
-    private static boolean isCompatibleWater(Fluid fluid) {
-        if (fluid == null) {
-            return false;
-        }
-        if (isFluidloggedAvailable()) {
-            try {
-                return ((Boolean) isCompatibleFluidMethod.invoke(null, FluidRegistry.WATER, fluid)).booleanValue();
-            } catch (ReflectiveOperationException | LinkageError e) {
-                RetroFutureMCCore.LOGGER.debug("Failed to query Fluidlogged API compatibility.", e);
-            }
-        }
-        return FluidRegistry.WATER == fluid;
+    public static boolean isWaterBlock(IBlockState state) {
+        return state.getBlock() == Blocks.WATER
+            || state.getBlock() == Blocks.FLOWING_WATER;
     }
 }
