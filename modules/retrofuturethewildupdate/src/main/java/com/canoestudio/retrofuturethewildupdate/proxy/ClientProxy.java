@@ -15,12 +15,16 @@ import com.canoestudio.retrofuturethewildupdate.entity.EntityMangroveBoat;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityTadpole;
 import com.canoestudio.retrofuturethewildupdate.entity.Warden;
 import com.canoestudio.retrofuturethewildupdate.item.ModItems;
+import net.minecraft.block.BlockDoor;
+import net.minecraft.block.BlockFenceGate;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.block.statemap.StateMap;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -34,6 +38,7 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void preInit() {
         super.preInit();
+        registerBlockStateMappers();
         RetroModelRegistry.registerEntityRenderer(Warden.class, RenderWarden::new);
         RetroModelRegistry.registerEntityRenderer(EntityMangroveBoat.class, RenderMangroveBoat::new);
         RetroModelRegistry.registerTileEntityRenderer(TileEntityHangingSign.class, new RenderHangingSign());
@@ -54,6 +59,17 @@ public class ClientProxy extends CommonProxy {
             TADPOLE_TEXTURE,
             0.14F,
             context -> GlStateManager.scale(0.8F, 0.8F, 0.8F)
+        );
+    }
+
+    private static void registerBlockStateMappers() {
+        ModelLoader.setCustomStateMapper(
+            ModBlocks.MANGROVE_DOOR,
+            new StateMap.Builder().ignore(BlockDoor.POWERED).build()
+        );
+        ModelLoader.setCustomStateMapper(
+            ModBlocks.MANGROVE_FENCE_GATE,
+            new StateMap.Builder().ignore(BlockFenceGate.POWERED).build()
         );
     }
 
