@@ -1,9 +1,8 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
-import git.jbredwards.fluidlogged_api.api.util.FluidState;
-import git.jbredwards.fluidlogged_api.api.util.FluidloggedUtils;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidCompat;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidState;
 import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -11,7 +10,6 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.FluidRegistry;
 
 final class AquaticWaterHelper {
 
@@ -38,57 +36,41 @@ final class AquaticWaterHelper {
     }
 
     static void restoreWater(World world, BlockPos pos, IBlockState replacedState) {
-        if (!world.provider.doesWaterVaporize()) {
-            FluidState fluidState = getFluidState(world, pos, replacedState);
-            world.setBlockState(pos, isWater(fluidState) ? fluidState.getState() : Blocks.WATER.getDefaultState(), 3);
-        } else {
-            world.setBlockToAir(pos);
-        }
+        RetroFluidCompat.restoreWater(world, pos, replacedState, 3);
     }
 
-    static FluidState getFluidState(IBlockAccess world, BlockPos pos) {
+    static RetroFluidState getFluidState(IBlockAccess world, BlockPos pos) {
         return getFluidState(world, pos, world.getBlockState(pos));
     }
 
-    static FluidState getFluidState(IBlockAccess world, BlockPos pos, IBlockState state) {
-        return state.getMaterial() == Material.WATER || state.getBlock() == Blocks.WATER
-            || state.getBlock() == Blocks.FLOWING_WATER
-            ? FluidState.of(state)
-            : FluidloggedUtils.getFluidState(world, pos, state);
+    static RetroFluidState getFluidState(IBlockAccess world, BlockPos pos, IBlockState state) {
+        return RetroFluidCompat.getFluidState(world, pos, state);
     }
 
-    static boolean isWater(FluidState fluidState) {
-        return !fluidState.isEmpty() && FluidloggedUtils.isCompatibleFluid(FluidRegistry.WATER, fluidState.getFluid());
+    static boolean isWater(RetroFluidState fluidState) {
+        return RetroFluidCompat.isWater(fluidState);
     }
 
     static boolean isWaterlogged(IBlockState state, IBlockAccess world, BlockPos pos, PropertyBool property) {
-        return state.getValue(property) || isWater(getFluidState(world, pos, state));
+        return RetroFluidCompat.isWaterlogged(state, world, pos, property);
     }
 
     static IBlockState withActualWaterlogged(IBlockState state, IBlockAccess world, BlockPos pos,
             PropertyBool property) {
-        return state.withProperty(property, isWaterlogged(state, world, pos, property));
+        return RetroFluidCompat.withActualWaterlogged(state, world, pos, property);
     }
 
     static void ensureWaterlogged(World world, BlockPos pos, IBlockState state, PropertyBool property) {
-        if (!world.isRemote && state.getValue(property) && !world.provider.doesWaterVaporize()
-                && !isWater(getFluidState(world, pos, state))) {
-            FluidloggedUtils.setFluidState(world, pos, state, FluidState.of(FluidRegistry.WATER), false, 3);
-        }
+        RetroFluidCompat.ensureWaterlogged(world, pos, state, property, 3);
     }
 
     static void setWaterloggedProperty(World world, BlockPos pos, IBlockState state, PropertyBool property,
             boolean waterlogged, int flags) {
-        if (state.getValue(property) != waterlogged) {
-            world.setBlockState(pos, state.withProperty(property, waterlogged), flags);
-        }
+        RetroFluidCompat.setWaterloggedProperty(world, pos, state, property, waterlogged, flags);
     }
 
     static void scheduleFluidTick(World world, BlockPos pos, IBlockState state) {
-        FluidState fluidState = getFluidState(world, pos, state);
-        if (isWater(fluidState)) {
-            world.scheduleUpdate(pos, fluidState.getState().getBlock(), fluidState.getState().getBlock().tickRate(world));
-        }
+        RetroFluidCompat.scheduleFluidTick(world, pos, state);
     }
 
     static boolean isSolidTop(World world, BlockPos pos) {

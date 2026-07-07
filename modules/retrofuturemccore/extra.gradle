@@ -1,0 +1,3 @@
+dependencies {
+    compileOnly rfg.deobf('curse.maven:fluidlogged-api-485654:7581579')
+}

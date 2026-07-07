@@ -1,6 +1,7 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
 import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -25,7 +26,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockConduit extends Block implements ITileEntityProvider, AquaticFluidloggable {
+public class BlockConduit extends Block implements ITileEntityProvider, RetroWaterloggedBlock {
 
     public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
     private static final AxisAlignedBB AABB =
@@ -92,8 +93,9 @@ public class BlockConduit extends Block implements ITileEntityProvider, AquaticF
     @Override
     public boolean removedByPlayer(IBlockState state, World world, BlockPos pos, EntityPlayer player,
             boolean willHarvest) {
+        boolean wasWaterlogged = AquaticWaterHelper.isWaterlogged(state, world, pos, WATERLOGGED);
         boolean removed = super.removedByPlayer(state, world, pos, player, willHarvest);
-        if (removed && !world.isRemote && AquaticWaterHelper.isWaterlogged(state, world, pos, WATERLOGGED)) {
+        if (removed && !world.isRemote && wasWaterlogged) {
             AquaticWaterHelper.restoreWater(world, pos, state);
         }
         return removed;

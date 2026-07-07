@@ -10,7 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION,
-    dependencies = "required-after:retrofuturemccore@[1.0.0,);required-after:fluidlogged_api")
+    dependencies = "required-after:retrofuturemccore@[1.0.0,);after:fluidlogged_api")
 public class RetroFutureUpdateAquatic {
 
     public static final Logger LOGGER = LogManager.getLogger(Tags.MOD_NAME);

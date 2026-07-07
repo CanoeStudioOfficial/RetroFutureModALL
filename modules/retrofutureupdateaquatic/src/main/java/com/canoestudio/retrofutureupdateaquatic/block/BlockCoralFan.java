@@ -1,6 +1,7 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
 import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.block.Block;
@@ -26,7 +27,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockCoralFan extends Block implements AquaticFluidloggable {
+public class BlockCoralFan extends Block implements RetroWaterloggedBlock {
 
     public static final PropertyDirection FACING = PropertyDirection.create("facing");
     public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");

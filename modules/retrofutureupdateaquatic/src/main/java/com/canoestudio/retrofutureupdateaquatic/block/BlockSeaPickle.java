@@ -1,6 +1,7 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
 import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.block.BlockBush;
@@ -22,7 +23,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockSeaPickle extends BlockBush implements IGrowable, AquaticFluidloggable {
+public class BlockSeaPickle extends BlockBush implements IGrowable, RetroWaterloggedBlock {
 
     public static final PropertyInteger PICKLES = PropertyInteger.create("pickles", 1, 4);
     public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
