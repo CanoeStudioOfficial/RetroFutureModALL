@@ -23,7 +23,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockCoralPlant extends Block {
+public class BlockCoralPlant extends Block implements AquaticFluidloggable {
 
     public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
     private static final AxisAlignedBB AABB = new AxisAlignedBB(0.125D, 0.0D, 0.125D, 0.875D, 0.9375D, 0.875D);
@@ -61,6 +61,11 @@ public class BlockCoralPlant extends Block {
     }
 
     @Override
+    public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
+        return AquaticWaterHelper.withActualWaterlogged(state, worldIn, pos, WATERLOGGED);
+    }
+
+    @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
         return AABB;
     }
@@ -83,6 +88,7 @@ public class BlockCoralPlant extends Block {
 
     @Override
     public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
+        AquaticWaterHelper.ensureWaterlogged(worldIn, pos, state, WATERLOGGED);
         if (!hasWater(state, worldIn, pos)) {
             worldIn.scheduleUpdate(pos, this, this.tickRate(worldIn));
         }
@@ -91,9 +97,11 @@ public class BlockCoralPlant extends Block {
     @Override
     public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
         if (!this.canBlockStay(worldIn, pos, state)) {
-            AquaticWaterHelper.restoreWater(worldIn, pos);
+            AquaticWaterHelper.restoreWater(worldIn, pos, state);
         } else if (!hasWater(state, worldIn, pos)) {
             worldIn.scheduleUpdate(pos, this, this.tickRate(worldIn));
+        } else {
+            AquaticWaterHelper.scheduleFluidTick(worldIn, pos, state);
         }
     }
 
@@ -112,13 +120,13 @@ public class BlockCoralPlant extends Block {
 
     @Override
     public void onPlayerDestroy(World worldIn, BlockPos pos, IBlockState state) {
-        if (state.getValue(WATERLOGGED)) {
-            AquaticWaterHelper.restoreWater(worldIn, pos);
+        if (AquaticWaterHelper.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
+            AquaticWaterHelper.restoreWater(worldIn, pos, state);
         }
     }
 
     private boolean hasWater(IBlockState state, World worldIn, BlockPos pos) {
-        if (state.getValue(WATERLOGGED)) {
+        if (AquaticWaterHelper.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
             return true;
         }
         for (EnumFacing facing : EnumFacing.values()) {
@@ -142,6 +150,11 @@ public class BlockCoralPlant extends Block {
     @Override
     protected BlockStateContainer createBlockState() {
         return new BlockStateContainer(this, WATERLOGGED);
+    }
+
+    @Override
+    public PropertyBool getWaterloggedProperty() {
+        return WATERLOGGED;
     }
 
     @Override

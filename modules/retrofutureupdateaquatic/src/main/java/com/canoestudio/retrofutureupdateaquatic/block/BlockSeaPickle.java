@@ -22,7 +22,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockSeaPickle extends BlockBush implements IGrowable {
+public class BlockSeaPickle extends BlockBush implements IGrowable, AquaticFluidloggable {
 
     public static final PropertyInteger PICKLES = PropertyInteger.create("pickles", 1, 4);
     public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
@@ -50,13 +50,20 @@ public class BlockSeaPickle extends BlockBush implements IGrowable {
     }
 
     @Override
+    public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos) {
+        return AquaticWaterHelper.isWaterlogged(state, world, pos, WATERLOGGED)
+            ? state.getValue(PICKLES) * 3 + 3 : 0;
+    }
+
+    @Override
     public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
         return AquaticWaterHelper.isSolidTop(worldIn, pos.down());
     }
 
     @Override
     public boolean canBlockStay(World worldIn, BlockPos pos, IBlockState state) {
-        return (!state.getValue(WATERLOGGED) || AquaticWaterHelper.isWater(worldIn, pos)
+        return (!AquaticWaterHelper.isWaterlogged(state, worldIn, pos, WATERLOGGED)
+            || AquaticWaterHelper.isWater(worldIn, pos)
             || worldIn.getBlockState(pos).getBlock() == this)
             && AquaticWaterHelper.isSolidTop(worldIn, pos.down());
     }
@@ -68,11 +75,21 @@ public class BlockSeaPickle extends BlockBush implements IGrowable {
     }
 
     @Override
+    public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
+        return AquaticWaterHelper.withActualWaterlogged(state, worldIn, pos, WATERLOGGED);
+    }
+
+    @Override
+    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
+        AquaticWaterHelper.ensureWaterlogged(worldIn, pos, state, WATERLOGGED);
+    }
+
+    @Override
     protected void checkAndDropBlock(World worldIn, BlockPos pos, IBlockState state) {
         if (!this.canBlockStay(worldIn, pos, state)) {
             this.dropBlockAsItem(worldIn, pos, state, 0);
-            if (state.getValue(WATERLOGGED)) {
-                AquaticWaterHelper.restoreWater(worldIn, pos);
+            if (AquaticWaterHelper.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
+                AquaticWaterHelper.restoreWater(worldIn, pos, state);
             } else {
                 worldIn.setBlockToAir(pos);
             }
@@ -81,8 +98,8 @@ public class BlockSeaPickle extends BlockBush implements IGrowable {
 
     @Override
     public void onPlayerDestroy(World worldIn, BlockPos pos, IBlockState state) {
-        if (state.getValue(WATERLOGGED)) {
-            AquaticWaterHelper.restoreWater(worldIn, pos);
+        if (AquaticWaterHelper.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
+            AquaticWaterHelper.restoreWater(worldIn, pos, state);
         }
     }
 
@@ -155,6 +172,11 @@ public class BlockSeaPickle extends BlockBush implements IGrowable {
     @Override
     protected BlockStateContainer createBlockState() {
         return new BlockStateContainer(this, PICKLES, WATERLOGGED);
+    }
+
+    @Override
+    public PropertyBool getWaterloggedProperty() {
+        return WATERLOGGED;
     }
 
     @Override

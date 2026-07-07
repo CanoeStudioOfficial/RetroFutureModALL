@@ -25,7 +25,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockConduit extends Block implements ITileEntityProvider {
+public class BlockConduit extends Block implements ITileEntityProvider, AquaticFluidloggable {
 
     public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
     private static final AxisAlignedBB AABB =
@@ -80,11 +80,21 @@ public class BlockConduit extends Block implements ITileEntityProvider {
     }
 
     @Override
+    public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
+        return AquaticWaterHelper.withActualWaterlogged(state, worldIn, pos, WATERLOGGED);
+    }
+
+    @Override
+    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
+        AquaticWaterHelper.ensureWaterlogged(worldIn, pos, state, WATERLOGGED);
+    }
+
+    @Override
     public boolean removedByPlayer(IBlockState state, World world, BlockPos pos, EntityPlayer player,
             boolean willHarvest) {
         boolean removed = super.removedByPlayer(state, world, pos, player, willHarvest);
-        if (removed && !world.isRemote && state.getValue(WATERLOGGED)) {
-            AquaticWaterHelper.restoreWater(world, pos);
+        if (removed && !world.isRemote && AquaticWaterHelper.isWaterlogged(state, world, pos, WATERLOGGED)) {
+            AquaticWaterHelper.restoreWater(world, pos, state);
         }
         return removed;
     }
@@ -112,6 +122,11 @@ public class BlockConduit extends Block implements ITileEntityProvider {
     @Override
     protected BlockStateContainer createBlockState() {
         return new BlockStateContainer(this, WATERLOGGED);
+    }
+
+    @Override
+    public PropertyBool getWaterloggedProperty() {
+        return WATERLOGGED;
     }
 
     @SideOnly(Side.CLIENT)

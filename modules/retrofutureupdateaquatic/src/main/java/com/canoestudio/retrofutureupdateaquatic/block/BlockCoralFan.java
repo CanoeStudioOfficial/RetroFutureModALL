@@ -26,7 +26,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockCoralFan extends Block {
+public class BlockCoralFan extends Block implements AquaticFluidloggable {
 
     public static final PropertyDirection FACING = PropertyDirection.create("facing");
     public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
@@ -85,6 +85,11 @@ public class BlockCoralFan extends Block {
             .withProperty(WATERLOGGED, AquaticWaterHelper.isWater(worldIn, pos));
     }
 
+    @Override
+    public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
+        return AquaticWaterHelper.withActualWaterlogged(state, worldIn, pos, WATERLOGGED);
+    }
+
     public boolean canBlockStay(World worldIn, BlockPos pos, IBlockState state) {
         return canAttach(worldIn, pos, state.getValue(FACING));
     }
@@ -126,6 +131,7 @@ public class BlockCoralFan extends Block {
 
     @Override
     public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
+        AquaticWaterHelper.ensureWaterlogged(worldIn, pos, state, WATERLOGGED);
         if (!hasWater(state, worldIn, pos)) {
             worldIn.scheduleUpdate(pos, this, this.tickRate(worldIn));
         }
@@ -134,9 +140,11 @@ public class BlockCoralFan extends Block {
     @Override
     public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
         if (!this.canBlockStay(worldIn, pos, state)) {
-            AquaticWaterHelper.restoreWater(worldIn, pos);
+            AquaticWaterHelper.restoreWater(worldIn, pos, state);
         } else if (!hasWater(state, worldIn, pos)) {
             worldIn.scheduleUpdate(pos, this, this.tickRate(worldIn));
+        } else {
+            AquaticWaterHelper.scheduleFluidTick(worldIn, pos, state);
         }
     }
 
@@ -156,13 +164,13 @@ public class BlockCoralFan extends Block {
 
     @Override
     public void onPlayerDestroy(World worldIn, BlockPos pos, IBlockState state) {
-        if (state.getValue(WATERLOGGED)) {
-            AquaticWaterHelper.restoreWater(worldIn, pos);
+        if (AquaticWaterHelper.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
+            AquaticWaterHelper.restoreWater(worldIn, pos, state);
         }
     }
 
     private boolean hasWater(IBlockState state, World worldIn, BlockPos pos) {
-        if (state.getValue(WATERLOGGED)) {
+        if (AquaticWaterHelper.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
             return true;
         }
         for (EnumFacing facing : EnumFacing.values()) {
@@ -194,6 +202,11 @@ public class BlockCoralFan extends Block {
     @Override
     protected BlockStateContainer createBlockState() {
         return new BlockStateContainer(this, FACING, WATERLOGGED);
+    }
+
+    @Override
+    public PropertyBool getWaterloggedProperty() {
+        return WATERLOGGED;
     }
 
     @Override
