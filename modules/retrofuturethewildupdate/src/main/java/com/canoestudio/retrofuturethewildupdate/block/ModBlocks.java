@@ -27,7 +27,7 @@ public final class ModBlocks {
     public static final BlockSculkSensor SCULK_SENSOR = new BlockSculkSensor();
     public static final BlockSculkShrieker SCULK_SHRIEKER = new BlockSculkShrieker();
     public static final BlockSculkCatalyst SCULK_CATALYST = new BlockSculkCatalyst();
-    public static final Block MUD = new BlockWildSimple("mud", Material.GROUND, SoundType.GROUND, 0.5f, 0.5f, CreativeTabs.BUILDING_BLOCKS);
+    public static final Block MUD = new BlockMud();
     public static final Block PACKED_MUD = new BlockWildSimple("packed_mud", Material.ROCK, SoundType.STONE, 1.0f, 3.0f, CreativeTabs.BUILDING_BLOCKS);
     public static final Block MUD_BRICKS = new BlockWildSimple("mud_bricks", Material.ROCK, SoundType.STONE, 1.5f, 3.0f, CreativeTabs.BUILDING_BLOCKS);
     public static final Block MUD_BRICK_STAIRS = new BlockWildStairs("mud_brick_stairs", MUD_BRICKS.getDefaultState(), SoundType.STONE, 1.5f, 3.0f, CreativeTabs.BUILDING_BLOCKS);
@@ -49,6 +49,8 @@ public final class ModBlocks {
     public static final Block MANGROVE_TRAPDOOR = new BlockWildTrapDoor("mangrove_trapdoor", Material.WOOD, SoundType.WOOD, 3.0f, 3.0f, CreativeTabs.REDSTONE);
     public static final Block MANGROVE_PRESSURE_PLATE = new BlockWildPressurePlate("mangrove_pressure_plate", Material.WOOD, BlockPressurePlate.Sensitivity.EVERYTHING, SoundType.WOOD, 0.5f, 0.5f, CreativeTabs.REDSTONE);
     public static final Block MANGROVE_BUTTON = new BlockWildButton("mangrove_button", true, SoundType.WOOD, 0.5f, 0.5f, CreativeTabs.REDSTONE);
+    public static final Block MANGROVE_SIGN = new BlockMangroveStandingSign();
+    public static final Block MANGROVE_WALL_SIGN = new BlockMangroveWallSign();
     public static final Block MANGROVE_LEAVES = new BlockMangroveLeaves();
     public static final Block MANGROVE_ROOTS = new BlockMangroveRoots();
     public static final Block MUDDY_MANGROVE_ROOTS = new BlockWildPillar("muddy_mangrove_roots", Material.WOOD, SoundType.WOOD, 0.7f, 0.7f, CreativeTabs.DECORATIONS);
@@ -86,6 +88,8 @@ public final class ModBlocks {
         MANGROVE_TRAPDOOR,
         MANGROVE_PRESSURE_PLATE,
         MANGROVE_BUTTON,
+        MANGROVE_SIGN,
+        MANGROVE_WALL_SIGN,
         MANGROVE_LEAVES,
         MANGROVE_ROOTS,
         MUDDY_MANGROVE_ROOTS,
@@ -121,6 +125,7 @@ public final class ModBlocks {
         RetroSignRegistry.registerTileEntity(TileEntitySculkSensor.class, key("sculk_sensor"));
         RetroSignRegistry.registerTileEntity(TileEntitySculkShrieker.class, key("sculk_shrieker"));
         RetroSignRegistry.registerTileEntity(TileEntitySculkCatalyst.class, key("sculk_catalyst"));
+        RetroSignRegistry.registerTileEntity(TileEntityMangroveSign.class, key("mangrove_sign"));
     }
 
     private static ResourceLocation key(String name) {

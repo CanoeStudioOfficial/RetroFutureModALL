@@ -6,15 +6,23 @@ import com.canoestudio.retrofuturethewildupdate.block.ModBlocks;
 import com.canoestudio.retrofuturethewildupdate.client.models.ModelFrog;
 import com.canoestudio.retrofuturethewildupdate.client.models.ModelTadpole;
 import com.canoestudio.retrofuturethewildupdate.client.particle.ParticleSonicBoom;
+import com.canoestudio.retrofuturethewildupdate.client.renderer.RenderAllay;
 import com.canoestudio.retrofuturethewildupdate.client.renderer.RenderMangroveBoat;
+import com.canoestudio.retrofuturethewildupdate.client.renderer.RenderMangroveChestBoat;
+import com.canoestudio.retrofuturethewildupdate.client.renderer.RenderMangroveSign;
 import com.canoestudio.retrofuturethewildupdate.client.renderer.RenderWarden;
+import com.canoestudio.retrofuturethewildupdate.entity.EntityAllay;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityFrog;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityMangroveBoat;
+import com.canoestudio.retrofuturethewildupdate.entity.EntityMangroveChestBoat;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityTadpole;
 import com.canoestudio.retrofuturethewildupdate.entity.Warden;
 import com.canoestudio.retrofuturethewildupdate.item.ModItems;
+import com.canoestudio.retrofuturethewildupdate.block.TileEntityMangroveSign;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockFenceGate;
+import net.minecraft.block.BlockStandingSign;
+import net.minecraft.block.BlockWallSign;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.renderer.GlStateManager;
@@ -38,7 +46,10 @@ public class ClientProxy extends CommonProxy {
         super.preInit();
         registerBlockStateMappers();
         RetroModelRegistry.registerEntityRenderer(Warden.class, RenderWarden::new);
+        RetroModelRegistry.registerEntityRenderer(EntityAllay.class, RenderAllay::new);
         RetroModelRegistry.registerEntityRenderer(EntityMangroveBoat.class, RenderMangroveBoat::new);
+        RetroModelRegistry.registerEntityRenderer(EntityMangroveChestBoat.class, RenderMangroveChestBoat::new);
+        RetroModelRegistry.registerTileEntityRenderer(TileEntityMangroveSign.class, new RenderMangroveSign());
         RetroModelRegistry.registerLivingRenderer(
             EntityFrog.class,
             ModelFrog::new,
@@ -68,6 +79,14 @@ public class ClientProxy extends CommonProxy {
             ModBlocks.MANGROVE_FENCE_GATE,
             new StateMap.Builder().ignore(BlockFenceGate.POWERED).build()
         );
+        ModelLoader.setCustomStateMapper(
+            ModBlocks.MANGROVE_SIGN,
+            new StateMap.Builder().ignore(BlockStandingSign.ROTATION).build()
+        );
+        ModelLoader.setCustomStateMapper(
+            ModBlocks.MANGROVE_WALL_SIGN,
+            new StateMap.Builder().ignore(BlockWallSign.FACING).build()
+        );
     }
 
     @Override
@@ -86,6 +105,9 @@ public class ClientProxy extends CommonProxy {
             ModItems.RECOVERY_COMPASS,
             ModItems.TADPOLE_BUCKET,
             ModItems.MANGROVE_BOAT,
+            ModItems.MANGROVE_CHEST_BOAT,
+            ModItems.MANGROVE_SIGN,
+            ModItems.ALLAY_SPAWN_EGG,
             ModItems.FROG_SPAWN_EGG,
             ModItems.TADPOLE_SPAWN_EGG,
             ModBlocks.MANGROVE_DOOR_ITEM
@@ -114,6 +136,8 @@ public class ClientProxy extends CommonProxy {
             ModBlocks.MANGROVE_TRAPDOOR,
             ModBlocks.MANGROVE_PRESSURE_PLATE,
             ModBlocks.MANGROVE_BUTTON,
+            ModBlocks.MANGROVE_SIGN,
+            ModBlocks.MANGROVE_WALL_SIGN,
             ModBlocks.MANGROVE_LEAVES,
             ModBlocks.MANGROVE_ROOTS,
             ModBlocks.MUDDY_MANGROVE_ROOTS,

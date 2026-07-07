@@ -20,6 +20,9 @@ public class ModItems {
     public static final Item RECOVERY_COMPASS = simpleItem("recovery_compass", CreativeTabs.TOOLS);
     public static final Item TADPOLE_BUCKET = new ItemTadpoleBucket();
     public static final Item MANGROVE_BOAT = new ItemMangroveBoat();
+    public static final Item MANGROVE_CHEST_BOAT = new ItemMangroveChestBoat();
+    public static final Item MANGROVE_SIGN = new ItemMangroveSign();
+    public static final Item ALLAY_SPAWN_EGG = new ItemWildSpawnEgg("allay_spawn_egg", com.canoestudio.retrofuturethewildupdate.entity.ModEntities.ALLAY_NAME);
     public static final Item FROG_SPAWN_EGG = new ItemWildSpawnEgg("frog_spawn_egg", com.canoestudio.retrofuturethewildupdate.entity.ModEntities.FROG_NAME);
     public static final Item TADPOLE_SPAWN_EGG = new ItemWildSpawnEgg("tadpole_spawn_egg", com.canoestudio.retrofuturethewildupdate.entity.ModEntities.TADPOLE_NAME);
 
@@ -32,6 +35,8 @@ public class ModItems {
             MUSIC_DISC_5,
             RECOVERY_COMPASS,
             TADPOLE_BUCKET,
+            MANGROVE_SIGN,
+            ALLAY_SPAWN_EGG,
             FROG_SPAWN_EGG,
             TADPOLE_SPAWN_EGG
         );

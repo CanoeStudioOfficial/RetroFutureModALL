@@ -1,0 +1,7 @@
+﻿{
+  "variants": {
+    "axis=x": { "model": "retrofutureupdateaquatic:stripped_acacia_log", "x": 90, "y": 90 },
+    "axis=y": { "model": "retrofutureupdateaquatic:stripped_acacia_log" },
+    "axis=z": { "model": "retrofutureupdateaquatic:stripped_acacia_log", "x": 90 }
+  }
+}

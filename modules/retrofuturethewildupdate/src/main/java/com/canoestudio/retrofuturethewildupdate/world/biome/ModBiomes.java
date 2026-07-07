@@ -4,6 +4,7 @@ import com.canoestudio.retrofuturemccore.api.entity.RetroEntitySpawn;
 import com.canoestudio.retrofuturemccore.api.world.RetroBiomeSpawnRegistry;
 import com.canoestudio.retrofuturemccore.api.world.RetroWorldgenRegistry;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
+import com.canoestudio.retrofuturethewildupdate.entity.EntityAllay;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityFrog;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityTadpole;
 import net.minecraft.entity.EnumCreatureType;
@@ -39,6 +40,8 @@ public final class ModBiomes {
             ModBiomes::isFrogSpawnBiome);
         RetroBiomeSpawnRegistry.addSpawn(EntityTadpole.class, EnumCreatureType.WATER_CREATURE, 8, 2, 5,
             ModBiomes::isTadpoleSpawnBiome);
+        RetroBiomeSpawnRegistry.addSpawn(EntityAllay.class, EnumCreatureType.CREATURE, 1, 1, 2,
+            ModBiomes::isAllaySpawnBiome);
     }
 
     public static RetroEntitySpawn<EntityFrog> mangroveFrogSpawn() {
@@ -59,5 +62,11 @@ public final class ModBiomes {
 
     private static boolean isTadpoleSpawnBiome(Biome biome) {
         return biome == MANGROVE_SWAMP || biome == Biomes.SWAMPLAND || biome == Biomes.MUTATED_SWAMPLAND;
+    }
+
+    private static boolean isAllaySpawnBiome(Biome biome) {
+        return biome == Biomes.ROOFED_FOREST
+            || biome == Biomes.MUTATED_ROOFED_FOREST
+            || RetroWorldgenRegistry.hasAnyType(biome, BiomeDictionary.Type.FOREST, BiomeDictionary.Type.PLAINS);
     }
 }

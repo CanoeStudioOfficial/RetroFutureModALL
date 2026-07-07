@@ -1,0 +1,17 @@
+﻿{
+  "pools": [
+    {
+      "name": "buried_treasure_main",
+      "rolls": { "min": 5, "max": 8 },
+      "entries": [
+        { "type": "item", "name": "retrofutureupdateaquatic:heart_of_the_sea", "weight": 1 },
+        { "type": "item", "name": "minecraft:iron_ingot", "weight": 20, "functions": [{ "function": "set_count", "count": { "min": 1, "max": 4 } }] },
+        { "type": "item", "name": "minecraft:gold_ingot", "weight": 10, "functions": [{ "function": "set_count", "count": { "min": 1, "max": 4 } }] },
+        { "type": "item", "name": "minecraft:emerald", "weight": 5, "functions": [{ "function": "set_count", "count": { "min": 1, "max": 4 } }] },
+        { "type": "item", "name": "minecraft:diamond", "weight": 3, "functions": [{ "function": "set_count", "count": { "min": 1, "max": 2 } }] },
+        { "type": "item", "name": "minecraft:tnt", "weight": 5, "functions": [{ "function": "set_count", "count": { "min": 1, "max": 2 } }] },
+        { "type": "item", "name": "minecraft:prismarine_crystals", "weight": 5, "functions": [{ "function": "set_count", "count": { "min": 1, "max": 5 } }] }
+      ]
+    }
+  ]
+}

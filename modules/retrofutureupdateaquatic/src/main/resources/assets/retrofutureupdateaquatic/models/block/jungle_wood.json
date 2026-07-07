@@ -1,0 +1,7 @@
+﻿{
+  "parent": "block/cube_column",
+  "textures": {
+    "end": "retrofutureupdateaquatic:blocks/jungle_log",
+    "side": "retrofutureupdateaquatic:blocks/jungle_log"
+  }
+}

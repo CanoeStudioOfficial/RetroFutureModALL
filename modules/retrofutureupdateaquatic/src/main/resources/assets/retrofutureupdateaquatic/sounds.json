@@ -1,0 +1,55 @@
+﻿{
+  "entity.phantom.ambient": {
+    "sounds": [
+      { "name": "retrofutureupdateaquatic:mob/phantom/idle1", "volume": 0.8 },
+      { "name": "retrofutureupdateaquatic:mob/phantom/idle2", "volume": 0.8 },
+      { "name": "retrofutureupdateaquatic:mob/phantom/idle3", "volume": 0.8 },
+      { "name": "retrofutureupdateaquatic:mob/phantom/idle4", "volume": 0.8 },
+      { "name": "retrofutureupdateaquatic:mob/phantom/idle5", "volume": 0.8 }
+    ],
+    "subtitle": "subtitles.retrofutureupdateaquatic.entity.phantom.ambient"
+  },
+  "entity.phantom.bite": {
+    "sounds": [
+      "retrofutureupdateaquatic:mob/phantom/bite1",
+      "retrofutureupdateaquatic:mob/phantom/bite2"
+    ],
+    "subtitle": "subtitles.retrofutureupdateaquatic.entity.phantom.bite"
+  },
+  "entity.phantom.death": {
+    "sounds": [
+      "retrofutureupdateaquatic:mob/phantom/death1",
+      "retrofutureupdateaquatic:mob/phantom/death2",
+      "retrofutureupdateaquatic:mob/phantom/death3"
+    ],
+    "subtitle": "subtitles.retrofutureupdateaquatic.entity.phantom.death"
+  },
+  "entity.phantom.flap": {
+    "sounds": [
+      { "name": "retrofutureupdateaquatic:mob/phantom/flap1", "volume": 0.9 },
+      { "name": "retrofutureupdateaquatic:mob/phantom/flap2", "volume": 0.9 },
+      { "name": "retrofutureupdateaquatic:mob/phantom/flap3", "volume": 0.9 },
+      { "name": "retrofutureupdateaquatic:mob/phantom/flap4", "volume": 0.9 },
+      { "name": "retrofutureupdateaquatic:mob/phantom/flap5", "volume": 0.9 },
+      { "name": "retrofutureupdateaquatic:mob/phantom/flap6", "volume": 0.9 }
+    ],
+    "subtitle": "subtitles.retrofutureupdateaquatic.entity.phantom.flap"
+  },
+  "entity.phantom.hurt": {
+    "sounds": [
+      { "name": "retrofutureupdateaquatic:mob/phantom/hurt1", "volume": 0.75 },
+      { "name": "retrofutureupdateaquatic:mob/phantom/hurt2", "volume": 0.75 },
+      { "name": "retrofutureupdateaquatic:mob/phantom/hurt3", "volume": 0.75 }
+    ],
+    "subtitle": "subtitles.retrofutureupdateaquatic.entity.phantom.hurt"
+  },
+  "entity.phantom.swoop": {
+    "sounds": [
+      { "name": "retrofutureupdateaquatic:mob/phantom/swoop1", "volume": 0.7 },
+      { "name": "retrofutureupdateaquatic:mob/phantom/swoop2", "volume": 0.7 },
+      { "name": "retrofutureupdateaquatic:mob/phantom/swoop3", "volume": 0.7 },
+      { "name": "retrofutureupdateaquatic:mob/phantom/swoop4", "volume": 0.7 }
+    ],
+    "subtitle": "subtitles.retrofutureupdateaquatic.entity.phantom.swoop"
+  }
+}

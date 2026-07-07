@@ -23,10 +23,14 @@ import net.minecraft.world.World;
 public class ItemMangroveBoat extends Item {
 
     public ItemMangroveBoat() {
+        this(RTWU.ID, "mangrove_boat", CreativeTabs.TRANSPORTATION);
+    }
+
+    protected ItemMangroveBoat(String modid, String name, CreativeTabs tab) {
         this.maxStackSize = 1;
-        this.setRegistryName(RTWU.ID, "mangrove_boat");
-        this.setTranslationKey(RTWU.ID + ".mangrove_boat");
-        this.setCreativeTab(CreativeTabs.TRANSPORTATION);
+        this.setRegistryName(modid, name);
+        this.setTranslationKey(modid + "." + name);
+        this.setCreativeTab(tab);
     }
 
     @Override
@@ -67,8 +71,8 @@ public class ItemMangroveBoat extends Item {
 
         Block block = world.getBlockState(hit.getBlockPos()).getBlock();
         boolean water = block == Blocks.WATER || block == Blocks.FLOWING_WATER;
-        EntityMangroveBoat boat = new EntityMangroveBoat(world, hit.hitVec.x,
-            water ? hit.hitVec.y - 0.12D : hit.hitVec.y, hit.hitVec.z);
+        EntityMangroveBoat boat = this.createBoat(world, hit.hitVec.x, water ? hit.hitVec.y - 0.12D : hit.hitVec.y,
+            hit.hitVec.z);
         boat.rotationYaw = player.rotationYaw;
         AxisAlignedBB box = boat.getEntityBoundingBox().grow(-0.1D);
 
@@ -84,5 +88,9 @@ public class ItemMangroveBoat extends Item {
         }
         player.addStat(StatList.getObjectUseStats(this));
         return new ActionResult<ItemStack>(EnumActionResult.SUCCESS, stack);
+    }
+
+    protected EntityMangroveBoat createBoat(World world, double x, double y, double z) {
+        return new EntityMangroveBoat(world, x, y, z);
     }
 }

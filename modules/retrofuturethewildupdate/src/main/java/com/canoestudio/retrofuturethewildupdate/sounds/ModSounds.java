@@ -25,6 +25,13 @@ public final class ModSounds {
     public static final SoundEvent WARDEN_DIG;
     public static final SoundEvent WARDEN_TENDRIL;
     public static final SoundEvent MUSIC_DISC_5;
+    public static final SoundEvent ALLAY_AMBIENT_WITH_ITEM;
+    public static final SoundEvent ALLAY_AMBIENT_WITHOUT_ITEM;
+    public static final SoundEvent ALLAY_HURT;
+    public static final SoundEvent ALLAY_DEATH;
+    public static final SoundEvent ALLAY_ITEM_GIVEN;
+    public static final SoundEvent ALLAY_ITEM_TAKEN;
+    public static final SoundEvent ALLAY_THROW;
 
     private static SoundEvent createEvent(String sound) {
         ResourceLocation name = RTWU.prefix(sound);
@@ -48,7 +55,14 @@ public final class ModSounds {
             WARDEN_EMERGE,
             WARDEN_DIG,
             WARDEN_TENDRIL,
-            MUSIC_DISC_5
+            MUSIC_DISC_5,
+            ALLAY_AMBIENT_WITH_ITEM,
+            ALLAY_AMBIENT_WITHOUT_ITEM,
+            ALLAY_HURT,
+            ALLAY_DEATH,
+            ALLAY_ITEM_GIVEN,
+            ALLAY_ITEM_TAKEN,
+            ALLAY_THROW
         );
     }
 
@@ -70,5 +84,12 @@ public final class ModSounds {
         WARDEN_DIG = createEvent("mob.warden.dig");
         WARDEN_TENDRIL = createEvent("mob.warden.tendril");
         MUSIC_DISC_5 = createEvent("music_disc.5");
+        ALLAY_AMBIENT_WITH_ITEM = createEvent("entity.allay.ambient_with_item");
+        ALLAY_AMBIENT_WITHOUT_ITEM = createEvent("entity.allay.ambient_without_item");
+        ALLAY_HURT = createEvent("entity.allay.hurt");
+        ALLAY_DEATH = createEvent("entity.allay.death");
+        ALLAY_ITEM_GIVEN = createEvent("entity.allay.item_given");
+        ALLAY_ITEM_TAKEN = createEvent("entity.allay.item_taken");
+        ALLAY_THROW = createEvent("entity.allay.item_thrown");
     }
 }

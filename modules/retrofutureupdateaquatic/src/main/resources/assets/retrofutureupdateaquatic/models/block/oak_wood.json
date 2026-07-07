@@ -1,0 +1,7 @@
+﻿{
+  "parent": "block/cube_column",
+  "textures": {
+    "end": "retrofutureupdateaquatic:blocks/oak_log",
+    "side": "retrofutureupdateaquatic:blocks/oak_log"
+  }
+}

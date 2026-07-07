@@ -6,6 +6,7 @@ import net.minecraft.block.BlockBush;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.BlockFaceShape;
@@ -26,7 +27,16 @@ import java.util.Random;
 public class BlockMangrovePropagule extends BlockBush implements IGrowable {
 
     public static final PropertyBool HANGING = PropertyBool.create("hanging");
-    private static final AxisAlignedBB AABB = new AxisAlignedBB(0.28125D, 0.0D, 0.28125D, 0.71875D, 0.9375D, 0.71875D);
+    public static final PropertyInteger AGE = PropertyInteger.create("age", 0, 4);
+    private static final AxisAlignedBB[] HANGING_AABB = new AxisAlignedBB[]{
+        new AxisAlignedBB(0.4375D, 0.8125D, 0.4375D, 0.5625D, 1.0D, 0.5625D),
+        new AxisAlignedBB(0.375D, 0.625D, 0.375D, 0.625D, 1.0D, 0.625D),
+        new AxisAlignedBB(0.34375D, 0.4375D, 0.34375D, 0.65625D, 1.0D, 0.65625D),
+        new AxisAlignedBB(0.3125D, 0.1875D, 0.3125D, 0.6875D, 1.0D, 0.6875D),
+        new AxisAlignedBB(0.28125D, 0.0D, 0.28125D, 0.71875D, 0.9375D, 0.71875D)
+    };
+    private static final AxisAlignedBB STANDING_AABB =
+        new AxisAlignedBB(0.28125D, 0.0D, 0.28125D, 0.71875D, 0.9375D, 0.71875D);
 
     public BlockMangrovePropagule() {
         super(Material.PLANTS);
@@ -35,7 +45,8 @@ public class BlockMangrovePropagule extends BlockBush implements IGrowable {
         this.setCreativeTab(CreativeTabs.DECORATIONS);
         this.setHardness(0.0f);
         this.setSoundType(SoundType.PLANT);
-        this.setDefaultState(this.blockState.getBaseState().withProperty(HANGING, false));
+        this.setTickRandomly(true);
+        this.setDefaultState(this.blockState.getBaseState().withProperty(HANGING, false).withProperty(AGE, 4));
     }
 
     @Override
@@ -57,7 +68,7 @@ public class BlockMangrovePropagule extends BlockBush implements IGrowable {
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-        return AABB;
+        return state.getValue(HANGING) ? HANGING_AABB[state.getValue(AGE)] : STANDING_AABB;
     }
 
     @Override
@@ -83,16 +94,23 @@ public class BlockMangrovePropagule extends BlockBush implements IGrowable {
 
     @Override
     public boolean canGrow(World worldIn, BlockPos pos, IBlockState state, boolean isClient) {
-        return !state.getValue(HANGING) && this.canStandOn(worldIn, pos);
+        return state.getValue(HANGING) ? state.getValue(AGE) < 4 : this.canStandOn(worldIn, pos);
     }
 
     @Override
     public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, IBlockState state) {
-        return !state.getValue(HANGING) && rand.nextFloat() < 0.45f;
+        return state.getValue(HANGING) ? state.getValue(AGE) < 4 : rand.nextFloat() < 0.45f;
     }
 
     @Override
     public void grow(World worldIn, Random rand, BlockPos pos, IBlockState state) {
+        if (state.getValue(HANGING)) {
+            if (!worldIn.isRemote && state.getValue(AGE) < 4) {
+                worldIn.setBlockState(pos, state.withProperty(AGE, state.getValue(AGE) + 1), 2);
+            }
+            return;
+        }
+
         if (worldIn.isRemote || !hasRoom(worldIn, pos)) {
             return;
         }
@@ -123,6 +141,18 @@ public class BlockMangrovePropagule extends BlockBush implements IGrowable {
         }
     }
 
+    @Override
+    public void randomTick(World worldIn, BlockPos pos, IBlockState state, Random random) {
+        if (worldIn.isRemote) {
+            return;
+        }
+        if (state.getValue(HANGING) && state.getValue(AGE) < 4) {
+            worldIn.setBlockState(pos, state.withProperty(AGE, state.getValue(AGE) + 1), 2);
+        } else if (!state.getValue(HANGING) && random.nextInt(7) == 0) {
+            this.grow(worldIn, random, pos, state);
+        }
+    }
+
     private boolean hasRoom(World world, BlockPos pos) {
         for (int y = 1; y <= 6; y++) {
             BlockPos check = pos.up(y);
@@ -135,17 +165,19 @@ public class BlockMangrovePropagule extends BlockBush implements IGrowable {
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return this.getDefaultState().withProperty(HANGING, (meta & 1) != 0);
+        return this.getDefaultState()
+            .withProperty(HANGING, (meta & 8) != 0)
+            .withProperty(AGE, meta & 7);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
-        return state.getValue(HANGING) ? 1 : 0;
+        return (state.getValue(HANGING) ? 8 : 0) | state.getValue(AGE);
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, HANGING);
+        return new BlockStateContainer(this, HANGING, AGE);
     }
 
     private boolean canStandOn(World world, BlockPos pos) {

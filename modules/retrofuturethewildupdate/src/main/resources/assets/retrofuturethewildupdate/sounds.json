@@ -58,5 +58,26 @@
   ]},
   "mob.warden.dig": { "sounds": [
     "retrofuturethewildupdate:mob/warden/warden_dig"
+  ]},
+  "entity.allay.ambient_with_item": { "sounds": [
+    "minecraft:entity/parrot/ambient"
+  ]},
+  "entity.allay.ambient_without_item": { "sounds": [
+    "minecraft:entity/parrot/ambient"
+  ]},
+  "entity.allay.hurt": { "sounds": [
+    "minecraft:entity/parrot/hurt"
+  ]},
+  "entity.allay.death": { "sounds": [
+    "minecraft:entity/parrot/death"
+  ]},
+  "entity.allay.item_given": { "sounds": [
+    "minecraft:entity/item/pickup"
+  ]},
+  "entity.allay.item_taken": { "sounds": [
+    "minecraft:entity/item/pickup"
+  ]},
+  "entity.allay.item_thrown": { "sounds": [
+    "minecraft:block/note/pling"
   ]}
 }

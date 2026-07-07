@@ -2,9 +2,11 @@ package com.canoestudio.retrofuturethewildupdate.block;
 
 import com.canoestudio.retrofuturemccore.api.block.RetroBlockFamily;
 import com.canoestudio.retrofuturemccore.api.block.RetroBoatSet;
+import com.canoestudio.retrofuturemccore.api.block.RetroSignSet;
 import com.canoestudio.retrofuturemccore.api.block.RetroWoodSet;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityMangroveBoat;
+import com.canoestudio.retrofuturethewildupdate.entity.EntityMangroveChestBoat;
 import com.canoestudio.retrofuturethewildupdate.item.ModItems;
 import net.minecraft.util.ResourceLocation;
 
@@ -21,10 +23,18 @@ public final class ModWoodSets {
         .trapdoor(ModBlocks.MANGROVE_TRAPDOOR)
         .pressurePlate(ModBlocks.MANGROVE_PRESSURE_PLATE)
         .button(ModBlocks.MANGROVE_BUTTON)
+        .sign(ModBlocks.MANGROVE_SIGN, ModBlocks.MANGROVE_WALL_SIGN)
+        .build();
+
+    public static final RetroSignSet MANGROVE_SIGNS = RetroSignSet.builder(key("mangrove"))
+        .sign(ModBlocks.MANGROVE_SIGN, ModBlocks.MANGROVE_WALL_SIGN, ModItems.MANGROVE_SIGN)
+        .signTile(TileEntityMangroveSign.class)
+        .texture(key("textures/blocks/mangrove_sign.png"))
         .build();
 
     public static final RetroBoatSet MANGROVE_BOATS = RetroBoatSet.builder(key("mangrove"))
         .boat(ModItems.MANGROVE_BOAT, EntityMangroveBoat.class)
+        .chestBoat(ModItems.MANGROVE_CHEST_BOAT, EntityMangroveChestBoat.class)
         .texture(key("textures/entity/boat/mangrove.png"))
         .build();
 
@@ -38,6 +48,7 @@ public final class ModWoodSets {
         .block("roots", ModBlocks.MANGROVE_ROOTS)
         .block("muddy_roots", ModBlocks.MUDDY_MANGROVE_ROOTS)
         .family(MANGROVE_FAMILY)
+        .signs(MANGROVE_SIGNS)
         .boats(MANGROVE_BOATS)
         .register();
 

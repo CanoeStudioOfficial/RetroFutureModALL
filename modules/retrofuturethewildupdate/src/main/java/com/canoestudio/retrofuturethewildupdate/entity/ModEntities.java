@@ -16,9 +16,11 @@ public class ModEntities {
     private static int entityId = 0;
 
     public static final ResourceLocation WARDEN_NAME = new ResourceLocation(RTWU.ID, "warden");
+    public static final ResourceLocation ALLAY_NAME = new ResourceLocation(RTWU.ID, "allay");
     public static final ResourceLocation FROG_NAME = new ResourceLocation(RTWU.ID, "frog");
     public static final ResourceLocation TADPOLE_NAME = new ResourceLocation(RTWU.ID, "tadpole");
     public static final ResourceLocation MANGROVE_BOAT_NAME = new ResourceLocation(RTWU.ID, "mangrove_boat");
+    public static final ResourceLocation MANGROVE_CHEST_BOAT_NAME = new ResourceLocation(RTWU.ID, "mangrove_chest_boat");
 
     @SubscribeEvent
     public static void registerEntities(RegistryEvent.Register<EntityEntry> event) {
@@ -27,6 +29,12 @@ public class ModEntities {
             .factory(Warden::new)
             .name(RTWU.ID + ".warden")
             .tracker(80, 3, true)
+            .register(registry);
+        RetroEntityRegistry.builder(EntityAllay.class, ALLAY_NAME, entityId++)
+            .factory(EntityAllay::new)
+            .name(RTWU.ID + ".allay")
+            .tracker(80, 3, true)
+            .egg(0x00daff, 0xf2f9ff)
             .register(registry);
         RetroEntityRegistry.builder(EntityFrog.class, FROG_NAME, entityId++)
             .factory(EntityFrog::new)
@@ -42,5 +50,7 @@ public class ModEntities {
             .register(registry);
         RetroBoatRegistry.registerBoatEntity(registry, EntityMangroveBoat.class, MANGROVE_BOAT_NAME, entityId++,
             RTWU.ID + ".mangrove_boat", EntityMangroveBoat::new);
+        RetroBoatRegistry.registerBoatEntity(registry, EntityMangroveChestBoat.class, MANGROVE_CHEST_BOAT_NAME, entityId++,
+            RTWU.ID + ".mangrove_chest_boat", EntityMangroveChestBoat::new);
     }
 }

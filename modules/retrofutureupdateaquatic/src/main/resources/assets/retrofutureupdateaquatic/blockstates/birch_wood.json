@@ -1,0 +1,7 @@
+﻿{
+  "variants": {
+    "axis=x": { "model": "retrofutureupdateaquatic:birch_wood", "x": 90, "y": 90 },
+    "axis=y": { "model": "retrofutureupdateaquatic:birch_wood" },
+    "axis=z": { "model": "retrofutureupdateaquatic:birch_wood", "x": 90 }
+  }
+}

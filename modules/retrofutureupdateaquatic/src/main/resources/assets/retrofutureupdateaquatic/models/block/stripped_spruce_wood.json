@@ -1,0 +1,7 @@
+﻿{
+  "parent": "block/cube_column",
+  "textures": {
+    "end": "retrofutureupdateaquatic:blocks/stripped_spruce_log",
+    "side": "retrofutureupdateaquatic:blocks/stripped_spruce_log"
+  }
+}
