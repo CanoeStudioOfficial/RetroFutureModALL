@@ -1,6 +1,6 @@
 package com.canoestudio.retrofuturethewildupdate.entity;
 
-import com.canoestudio.retrofuturelushcavecore.api.entity.RetroEntityAttributes;
+import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
 import com.canoestudio.retrofuturethewildupdate.sounds.ModSounds;
 import java.util.List;
 import java.util.UUID;

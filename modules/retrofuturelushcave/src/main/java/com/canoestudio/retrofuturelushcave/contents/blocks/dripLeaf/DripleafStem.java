@@ -3,9 +3,9 @@ package com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf;
 
 import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import com.canoestudio.retrofuturelushcavecore.api.fluid.RetroFluidState;
-import com.canoestudio.retrofuturelushcavecore.api.fluid.RetroFluidloggableBlock;
-import com.canoestudio.retrofuturelushcavecore.api.fluid.RetroWaterlogging;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidState;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidloggableBlock;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockHorizontal;

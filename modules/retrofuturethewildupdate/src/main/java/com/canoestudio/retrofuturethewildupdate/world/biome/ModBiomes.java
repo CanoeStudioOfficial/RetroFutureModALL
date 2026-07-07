@@ -1,8 +1,8 @@
 package com.canoestudio.retrofuturethewildupdate.world.biome;
 
-import com.canoestudio.retrofuturelushcavecore.api.entity.RetroEntitySpawn;
-import com.canoestudio.retrofuturelushcavecore.api.world.RetroBiomeSpawnRegistry;
-import com.canoestudio.retrofuturelushcavecore.api.world.RetroWorldgenRegistry;
+import com.canoestudio.retrofuturemccore.api.entity.RetroEntitySpawn;
+import com.canoestudio.retrofuturemccore.api.world.RetroBiomeSpawnRegistry;
+import com.canoestudio.retrofuturemccore.api.world.RetroWorldgenRegistry;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityAllay;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityFrog;

@@ -2,10 +2,10 @@ package com.canoestudio.retrofuturelushcave.utils;
 
 import com.canoestudio.retrofuturelushcave.contents.items.ItemGoatHorn;
 import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
-import com.canoestudio.retrofuturelushcavecore.api.item.RetroUseItem;
-import com.canoestudio.retrofuturelushcavecore.api.item.RetroUseItemRegistry;
-import com.canoestudio.retrofuturelushcavecore.api.tag.RetroTagRegistry;
-import com.canoestudio.retrofuturelushcavecore.api.tag.RetroTags;
+import com.canoestudio.retrofuturemccore.api.item.RetroUseItem;
+import com.canoestudio.retrofuturemccore.api.item.RetroUseItemRegistry;
+import com.canoestudio.retrofuturemccore.api.tag.RetroTagRegistry;
+import com.canoestudio.retrofuturemccore.api.tag.RetroTags;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.monster.EntityGuardian;
 import net.minecraft.entity.player.EntityPlayer;

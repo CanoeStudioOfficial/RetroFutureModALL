@@ -1,6 +1,6 @@
 package com.canoestudio.retrofuturethewildupdate.entity;
 
-import com.canoestudio.retrofuturelushcavecore.api.entity.RetroEntityAttributes;
+import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
 import com.canoestudio.retrofuturethewildupdate.block.ModBlocks;
 import com.canoestudio.retrofuturethewildupdate.item.ModItems;
 import net.minecraft.block.material.Material;

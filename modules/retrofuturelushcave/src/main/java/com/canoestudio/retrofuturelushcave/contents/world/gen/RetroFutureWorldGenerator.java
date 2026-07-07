@@ -11,7 +11,7 @@ import com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf.DripleafStem
 import com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf.SmallDripleaf;
 import com.canoestudio.retrofuturelushcave.contents.mobs.axolotl.EntityAxolotl;
 import com.canoestudio.retrofuturelushcave.contents.mobs.glowsquid.EntityGlowSquid;
-import com.canoestudio.retrofuturelushcavecore.api.fluid.RetroWaterlogging;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStone;
 import net.minecraft.block.BlockTallGrass;

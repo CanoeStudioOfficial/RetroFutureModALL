@@ -1,6 +1,6 @@
 package com.canoestudio.retrofuturethewildupdate.block;
 
-import com.canoestudio.retrofuturelushcavecore.api.block.RetroSignRegistry;
+import com.canoestudio.retrofuturemccore.api.block.RetroSignRegistry;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockPressurePlate;

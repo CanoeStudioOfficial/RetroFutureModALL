@@ -1,8 +1,8 @@
 package com.canoestudio.retrofuturethewildupdate.world.gen;
 
-import com.canoestudio.retrofuturelushcavecore.api.world.RetroAncientCityPlacement;
-import com.canoestudio.retrofuturelushcavecore.api.world.RetroStructurePlacement;
-import com.canoestudio.retrofuturelushcavecore.api.world.RetroWorldgenRegistry;
+import com.canoestudio.retrofuturemccore.api.world.RetroAncientCityPlacement;
+import com.canoestudio.retrofuturemccore.api.world.RetroStructurePlacement;
+import com.canoestudio.retrofuturemccore.api.world.RetroWorldgenRegistry;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.block.BlockSculkVein;
 import com.canoestudio.retrofuturethewildupdate.block.ModBlocks;

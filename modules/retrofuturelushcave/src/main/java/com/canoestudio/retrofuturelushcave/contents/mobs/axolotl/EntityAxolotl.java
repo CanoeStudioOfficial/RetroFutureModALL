@@ -1,8 +1,8 @@
 package com.canoestudio.retrofuturelushcave.contents.mobs.axolotl;
 
 import net.minecraft.block.material.Material;
-import com.canoestudio.retrofuturelushcavecore.api.tag.RetroTagRegistry;
-import com.canoestudio.retrofuturelushcavecore.api.tag.RetroTags;
+import com.canoestudio.retrofuturemccore.api.tag.RetroTagRegistry;
+import com.canoestudio.retrofuturemccore.api.tag.RetroTags;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;

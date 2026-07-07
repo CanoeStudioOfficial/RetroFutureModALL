@@ -2,9 +2,9 @@ package com.canoestudio.retrofuturelushcave.contents.items;
 
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
 import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
-import com.canoestudio.retrofuturelushcavecore.api.gameevent.RetroGameEvent;
-import com.canoestudio.retrofuturelushcavecore.api.gameevent.RetroGameEvents;
-import com.canoestudio.retrofuturelushcavecore.api.item.RetroCooldowns;
+import com.canoestudio.retrofuturemccore.api.gameevent.RetroGameEvent;
+import com.canoestudio.retrofuturemccore.api.gameevent.RetroGameEvents;
+import com.canoestudio.retrofuturemccore.api.item.RetroCooldowns;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;

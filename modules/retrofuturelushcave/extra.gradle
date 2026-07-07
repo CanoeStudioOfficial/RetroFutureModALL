@@ -3,6 +3,6 @@ repositories {
 }
 
 dependencies {
-    implementation project(':retrofuturelushcavecore')
+    implementation project(':retrofuturemccore')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 }

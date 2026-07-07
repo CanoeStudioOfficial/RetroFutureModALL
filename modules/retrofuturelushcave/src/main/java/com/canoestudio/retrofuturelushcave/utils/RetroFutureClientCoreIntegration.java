@@ -2,9 +2,9 @@ package com.canoestudio.retrofuturelushcave.utils;
 
 import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.contents.items.spyglass.SpyglassHandler;
-import com.canoestudio.retrofuturelushcavecore.api.item.zoom.RetroZoomHandler;
-import com.canoestudio.retrofuturelushcavecore.api.item.zoom.RetroZoomOverlay;
-import com.canoestudio.retrofuturelushcavecore.api.item.zoom.RetroZoomRegistry;
+import com.canoestudio.retrofuturemccore.api.item.zoom.RetroZoomHandler;
+import com.canoestudio.retrofuturemccore.api.item.zoom.RetroZoomOverlay;
+import com.canoestudio.retrofuturemccore.api.item.zoom.RetroZoomRegistry;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.relauncher.Side;

@@ -1,6 +1,6 @@
 package com.canoestudio.retrofuturetrailsandtales.proxy;
 
-import com.canoestudio.retrofuturelushcavecore.api.client.model.RetroModelRegistry;
+import com.canoestudio.retrofuturemccore.api.client.model.RetroModelRegistry;
 import com.canoestudio.retrofuturetrailsandtales.RTAT;
 import com.canoestudio.retrofuturetrailsandtales.block.BlockMangroveHangingSign;
 import com.canoestudio.retrofuturetrailsandtales.block.BlockMangroveWallHangingSign;
