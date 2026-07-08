@@ -1,0 +1,4 @@
+{
+  "parent": "block/trapdoor_top",
+  "textures": { "texture": "retrofutureupdateaquatic:blocks/acacia_trapdoor" }
+}

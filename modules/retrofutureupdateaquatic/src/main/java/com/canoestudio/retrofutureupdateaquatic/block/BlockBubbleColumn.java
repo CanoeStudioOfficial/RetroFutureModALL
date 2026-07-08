@@ -1,5 +1,6 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
 import java.util.Random;
 import javax.annotation.Nullable;
@@ -32,7 +33,8 @@ public class BlockBubbleColumn extends Block {
         this.setSoundType(SoundType.PLANT);
         this.setTickRandomly(true);
         this.setLightOpacity(1);
-        this.setDefaultState(this.blockState.getBaseState().withProperty(DRAG, false));
+        this.setDefaultState(RetroWaterlogging.withStillWaterLevel(this.blockState.getBaseState()
+            .withProperty(DRAG, false)));
     }
 
     public static boolean isColumnBase(IBlockState state) {
@@ -128,7 +130,7 @@ public class BlockBubbleColumn extends Block {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, DRAG);
+        return RetroWaterlogging.createWaterMaterialStateContainer(this, DRAG);
     }
 
     @SideOnly(Side.CLIENT)

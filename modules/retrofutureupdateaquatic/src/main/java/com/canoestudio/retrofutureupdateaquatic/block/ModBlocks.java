@@ -1,5 +1,10 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
+import com.canoestudio.retrofuturemccore.api.block.RetroSlabBlock;
+import com.canoestudio.retrofuturemccore.api.block.RetroStairsBlock;
+import com.canoestudio.retrofuturemccore.api.block.RetroButtonBlock;
+import com.canoestudio.retrofuturemccore.api.block.RetroPressurePlateBlock;
+import com.canoestudio.retrofuturemccore.api.block.RetroTrapDoorBlock;
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
 import com.canoestudio.retrofutureupdateaquatic.item.ItemSeaPickleBlock;
 import java.util.ArrayList;
@@ -10,6 +15,9 @@ import net.minecraft.block.BlockLog;
 import net.minecraft.block.BlockNewLog;
 import net.minecraft.block.BlockOldLog;
 import net.minecraft.block.BlockPlanks;
+import net.minecraft.block.BlockPressurePlate;
+import net.minecraft.block.BlockPrismarine;
+import net.minecraft.block.BlockSlab;
 import net.minecraft.block.BlockRotatedPillar;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
@@ -19,6 +27,7 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemSlab;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -36,6 +45,33 @@ public final class ModBlocks {
     public static final BlockTurtleEgg TURTLE_EGG = new BlockTurtleEgg();
     public static final Block DRIED_KELP_BLOCK = new BlockAquaticSimple("dried_kelp_block", Material.GRASS,
         MapColor.BROWN, SoundType.PLANT, 0.5F, 2.5F, CreativeTabs.BUILDING_BLOCKS);
+    public static final Block PRISMARINE_STAIRS = new RetroStairsBlock(RetroFutureUpdateAquatic.ID,
+        "prismarine_stairs", prismarineState(BlockPrismarine.EnumType.ROUGH), SoundType.STONE, 1.5F, 6.0F,
+        CreativeTabs.BUILDING_BLOCKS);
+    public static final Block PRISMARINE_BRICK_STAIRS = new RetroStairsBlock(RetroFutureUpdateAquatic.ID,
+        "prismarine_brick_stairs", prismarineState(BlockPrismarine.EnumType.BRICKS), SoundType.STONE, 1.5F, 6.0F,
+        CreativeTabs.BUILDING_BLOCKS);
+    public static final Block DARK_PRISMARINE_STAIRS = new RetroStairsBlock(RetroFutureUpdateAquatic.ID,
+        "dark_prismarine_stairs", prismarineState(BlockPrismarine.EnumType.DARK), SoundType.STONE, 1.5F, 6.0F,
+        CreativeTabs.BUILDING_BLOCKS);
+    public static final RetroSlabBlock PRISMARINE_SLAB = new RetroSlabBlock.Single(RetroFutureUpdateAquatic.ID,
+        "prismarine_slab", Material.ROCK, MapColor.CYAN, SoundType.STONE, 1.5F, 6.0F,
+        CreativeTabs.BUILDING_BLOCKS);
+    public static final RetroSlabBlock DOUBLE_PRISMARINE_SLAB = new RetroSlabBlock.Double(RetroFutureUpdateAquatic.ID,
+        "double_prismarine_slab", Material.ROCK, MapColor.CYAN, SoundType.STONE, 1.5F, 6.0F,
+        CreativeTabs.BUILDING_BLOCKS);
+    public static final RetroSlabBlock PRISMARINE_BRICK_SLAB = new RetroSlabBlock.Single(RetroFutureUpdateAquatic.ID,
+        "prismarine_brick_slab", Material.ROCK, MapColor.DIAMOND, SoundType.STONE, 1.5F, 6.0F,
+        CreativeTabs.BUILDING_BLOCKS);
+    public static final RetroSlabBlock DOUBLE_PRISMARINE_BRICK_SLAB = new RetroSlabBlock.Double(
+        RetroFutureUpdateAquatic.ID, "double_prismarine_brick_slab", Material.ROCK, MapColor.DIAMOND,
+        SoundType.STONE, 1.5F, 6.0F, CreativeTabs.BUILDING_BLOCKS);
+    public static final RetroSlabBlock DARK_PRISMARINE_SLAB = new RetroSlabBlock.Single(RetroFutureUpdateAquatic.ID,
+        "dark_prismarine_slab", Material.ROCK, MapColor.DIAMOND, SoundType.STONE, 1.5F, 6.0F,
+        CreativeTabs.BUILDING_BLOCKS);
+    public static final RetroSlabBlock DOUBLE_DARK_PRISMARINE_SLAB = new RetroSlabBlock.Double(
+        RetroFutureUpdateAquatic.ID, "double_dark_prismarine_slab", Material.ROCK, MapColor.DIAMOND,
+        SoundType.STONE, 1.5F, 6.0F, CreativeTabs.BUILDING_BLOCKS);
 
     public static final CoralSet TUBE_CORAL = new CoralSet("tube", MapColor.BLUE);
     public static final CoralSet BRAIN_CORAL = new CoralSet("brain", MapColor.PINK);
@@ -59,7 +95,9 @@ public final class ModBlocks {
         Collections.addAll(WOODS, OAK_WOOD_SET, SPRUCE_WOOD_SET, BIRCH_WOOD_SET, JUNGLE_WOOD_SET,
             ACACIA_WOOD_SET, DARK_OAK_WOOD_SET);
         Collections.addAll(BLOCKS, SEAGRASS, KELP, SEA_PICKLE, BLUE_ICE, BUBBLE_COLUMN, CONDUIT, TURTLE_EGG,
-            DRIED_KELP_BLOCK);
+            DRIED_KELP_BLOCK, PRISMARINE_STAIRS, PRISMARINE_BRICK_STAIRS, DARK_PRISMARINE_STAIRS,
+            PRISMARINE_SLAB, DOUBLE_PRISMARINE_SLAB, PRISMARINE_BRICK_SLAB, DOUBLE_PRISMARINE_BRICK_SLAB,
+            DARK_PRISMARINE_SLAB, DOUBLE_DARK_PRISMARINE_SLAB);
         for (CoralSet coral : CORALS) {
             coral.addTo(BLOCKS);
         }
@@ -76,9 +114,13 @@ public final class ModBlocks {
     @SubscribeEvent
     public static void registerItemBlocks(RegistryEvent.Register<Item> event) {
         for (Block block : BLOCKS) {
+            if (block == DOUBLE_PRISMARINE_SLAB || block == DOUBLE_PRISMARINE_BRICK_SLAB
+                    || block == DOUBLE_DARK_PRISMARINE_SLAB) {
+                continue;
+            }
             event.getRegistry().register(block == SEA_PICKLE
                 ? new ItemSeaPickleBlock(block)
-                : new ItemBlock(block).setRegistryName(block.getRegistryName()));
+                : createItemBlock(block));
         }
     }
 
@@ -164,6 +206,25 @@ public final class ModBlocks {
         return null;
     }
 
+    private static IBlockState prismarineState(BlockPrismarine.EnumType type) {
+        return Blocks.PRISMARINE.getDefaultState().withProperty(BlockPrismarine.VARIANT, type);
+    }
+
+    private static Item createItemBlock(Block block) {
+        if (block == PRISMARINE_SLAB) {
+            return new ItemSlab(block, PRISMARINE_SLAB, DOUBLE_PRISMARINE_SLAB).setRegistryName(block.getRegistryName());
+        }
+        if (block == PRISMARINE_BRICK_SLAB) {
+            return new ItemSlab(block, PRISMARINE_BRICK_SLAB, DOUBLE_PRISMARINE_BRICK_SLAB)
+                .setRegistryName(block.getRegistryName());
+        }
+        if (block == DARK_PRISMARINE_SLAB) {
+            return new ItemSlab(block, DARK_PRISMARINE_SLAB, DOUBLE_DARK_PRISMARINE_SLAB)
+                .setRegistryName(block.getRegistryName());
+        }
+        return new ItemBlock(block).setRegistryName(block.getRegistryName());
+    }
+
     private ModBlocks() {
     }
 
@@ -197,6 +258,9 @@ public final class ModBlocks {
         public final BlockAquaticPillar wood;
         public final BlockAquaticPillar strippedLog;
         public final BlockAquaticPillar strippedWood;
+        public final Block trapdoor;
+        public final Block pressurePlate;
+        public final Block button;
 
         private WoodSet(String name) {
             this.name = name;
@@ -206,10 +270,21 @@ public final class ModBlocks {
                 2.0F, 2.0F, CreativeTabs.BUILDING_BLOCKS);
             this.strippedWood = new BlockAquaticPillar("stripped_" + name + "_wood", Material.WOOD, SoundType.WOOD,
                 2.0F, 2.0F, CreativeTabs.BUILDING_BLOCKS);
+            boolean vanillaOakEquivalent = "oak".equals(name);
+            this.trapdoor = vanillaOakEquivalent ? null : new RetroTrapDoorBlock(RetroFutureUpdateAquatic.ID,
+                name + "_trapdoor", Material.WOOD, SoundType.WOOD, 3.0F, 3.0F, CreativeTabs.REDSTONE);
+            this.pressurePlate = vanillaOakEquivalent ? null : new RetroPressurePlateBlock(RetroFutureUpdateAquatic.ID,
+                name + "_pressure_plate", Material.WOOD, BlockPressurePlate.Sensitivity.EVERYTHING, SoundType.WOOD,
+                0.5F, 0.5F, CreativeTabs.REDSTONE);
+            this.button = vanillaOakEquivalent ? null : new RetroButtonBlock(RetroFutureUpdateAquatic.ID,
+                name + "_button", true, SoundType.WOOD, 0.5F, 0.5F, CreativeTabs.REDSTONE);
         }
 
         private void addTo(List<Block> blocks) {
             Collections.addAll(blocks, this.wood, this.strippedLog, this.strippedWood);
+            if (this.trapdoor != null) {
+                Collections.addAll(blocks, this.trapdoor, this.pressurePlate, this.button);
+            }
         }
     }
 }

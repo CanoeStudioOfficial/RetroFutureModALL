@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "powered=false": { "model": "retrofutureupdateaquatic:jungle_pressure_plate" },
+    "powered=true": { "model": "retrofutureupdateaquatic:jungle_pressure_plate_down" }
+  }
+}

@@ -29,6 +29,7 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void preInit() {
         super.preInit();
+        registerBlockStateMappers();
         RetroModelRegistry.registerEntityRenderer(EntityAquaticFish.Cod.class,
             manager -> new RenderAquaticFish<EntityAquaticFish.Cod>(manager, AquaticFishType.COD));
         RetroModelRegistry.registerEntityRenderer(EntityAquaticFish.Salmon.class,
@@ -46,8 +47,17 @@ public class ClientProxy extends CommonProxy {
                 Minecraft.getMinecraft().getRenderItem()));
     }
 
+    private static void registerBlockStateMappers() {
+        RetroModelRegistry.ignoreLiquidLevel(ModBlocks.SEAGRASS, ModBlocks.KELP, ModBlocks.BUBBLE_COLUMN,
+            ModBlocks.SEA_PICKLE, ModBlocks.CONDUIT);
+        for (ModBlocks.CoralSet coral : ModBlocks.corals()) {
+            RetroModelRegistry.ignoreLiquidLevel(coral.deadPlant, coral.livePlant, coral.deadFan, coral.liveFan);
+        }
+    }
+
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
+        registerBlockStateMappers();
         RetroModelRegistry.registerItems(
             ModItems.DRIED_KELP,
             ModItems.NAUTILUS_SHELL,

@@ -1,0 +1,4 @@
+{
+  "parent": "block/trapdoor_open",
+  "textures": { "texture": "retrofutureupdateaquatic:blocks/spruce_trapdoor" }
+}

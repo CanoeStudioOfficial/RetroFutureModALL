@@ -1,0 +1,4 @@
+{
+  "parent": "block/button_inventory",
+  "textures": { "texture": "minecraft:blocks/planks_jungle" }
+}

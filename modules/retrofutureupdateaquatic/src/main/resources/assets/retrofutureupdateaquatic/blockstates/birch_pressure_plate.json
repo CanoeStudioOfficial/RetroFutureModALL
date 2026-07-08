@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "powered=false": { "model": "retrofutureupdateaquatic:birch_pressure_plate" },
+    "powered=true": { "model": "retrofutureupdateaquatic:birch_pressure_plate_down" }
+  }
+}

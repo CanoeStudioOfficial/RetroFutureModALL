@@ -93,6 +93,36 @@ RetroZoomRegistry.register(ModItems.SPYGLASS, new AbstractRetroZoomHandler() {
 
 Register zoom handlers only on the client side if they reference client-only classes.
 
+## Fluid And Water-Compatible Blocks
+
+Use `RetroWaterlogging` for waterlogged blocks and for custom blocks that deliberately report `Material.WATER`.
+Forge 1.12.2's vanilla water movement code reads `BlockLiquid.LEVEL` from every `Material.WATER` state, so water-like plant blocks must include that property even when their own metadata does not store it:
+
+```java
+public MyWaterPlantBlock() {
+    super(Material.WATER);
+    this.setDefaultState(RetroWaterlogging.withStillWaterLevel(this.blockState.getBaseState()
+        .withProperty(TYPE, 0)));
+}
+
+@Override
+protected BlockStateContainer createBlockState() {
+    return RetroWaterlogging.createWaterMaterialStateContainer(this, TYPE);
+}
+```
+
+On the client, hide the synthetic liquid level from blockstate model lookup:
+
+```java
+@Override
+public void preInit() {
+    super.preInit();
+    RetroModelRegistry.ignoreLiquidLevel(ModBlocks.SEAGRASS, ModBlocks.KELP);
+}
+```
+
+Waterlogged blocks should keep their normal block material and use `RetroWaterloggedBlock` plus `RetroWaterlogging` helpers for placement, restore, and Fluidlogged API bridging. Do not return `Material.WATER` from `getMaterial` unless the state includes the still-water level property.
+
 ## Interactions
 
 Low-level event bridge:

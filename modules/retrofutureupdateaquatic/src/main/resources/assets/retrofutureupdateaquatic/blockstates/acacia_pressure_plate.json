@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "powered=false": { "model": "retrofutureupdateaquatic:acacia_pressure_plate" },
+    "powered=true": { "model": "retrofutureupdateaquatic:acacia_pressure_plate_down" }
+  }
+}

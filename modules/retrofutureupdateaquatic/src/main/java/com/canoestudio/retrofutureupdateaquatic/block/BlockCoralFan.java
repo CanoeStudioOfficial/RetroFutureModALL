@@ -1,6 +1,7 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
 import java.util.Random;
 import javax.annotation.Nullable;
@@ -47,9 +48,9 @@ public class BlockCoralFan extends Block implements RetroWaterloggedBlock {
         this.setHardness(0.0F);
         this.setTickRandomly(true);
         this.setCreativeTab(CreativeTabs.DECORATIONS);
-        this.setDefaultState(this.blockState.getBaseState()
+        this.setDefaultState(RetroWaterlogging.withStillWaterLevel(this.blockState.getBaseState()
             .withProperty(FACING, EnumFacing.UP)
-            .withProperty(WATERLOGGED, false));
+            .withProperty(WATERLOGGED, false)));
     }
 
     public BlockCoralFan deadVersion(Block block) {
@@ -213,7 +214,7 @@ public class BlockCoralFan extends Block implements RetroWaterloggedBlock {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, FACING, WATERLOGGED);
+        return RetroWaterlogging.createWaterMaterialStateContainer(this, FACING, WATERLOGGED);
     }
 
     @Override

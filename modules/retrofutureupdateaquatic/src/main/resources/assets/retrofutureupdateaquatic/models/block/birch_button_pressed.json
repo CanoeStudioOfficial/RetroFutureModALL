@@ -1,0 +1,4 @@
+{
+  "parent": "block/button_pressed",
+  "textures": { "texture": "minecraft:blocks/planks_birch" }
+}

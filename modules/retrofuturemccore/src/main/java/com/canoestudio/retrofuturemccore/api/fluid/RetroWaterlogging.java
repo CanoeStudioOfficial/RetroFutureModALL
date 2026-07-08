@@ -1,8 +1,13 @@
 package com.canoestudio.retrofuturemccore.api.fluid;
 
+import java.util.Arrays;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
+import net.minecraft.block.properties.PropertyInteger;
+import net.minecraft.block.properties.IProperty;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
@@ -39,8 +44,41 @@ public final class RetroWaterlogging {
         return RetroFluidCompat.isWaterBlock(state);
     }
 
+    public static PropertyInteger stillWaterLevelProperty() {
+        return BlockLiquid.LEVEL;
+    }
+
+    public static IBlockState withStillWaterLevel(IBlockState state) {
+        return state.withProperty(BlockLiquid.LEVEL, 0);
+    }
+
+    public static boolean hasStillWaterLevel(IBlockState state) {
+        return state.getProperties().containsKey(BlockLiquid.LEVEL);
+    }
+
+    public static BlockStateContainer createWaterMaterialStateContainer(Block block, IProperty<?>... properties) {
+        return new BlockStateContainer(block, appendStillWaterLevel(properties));
+    }
+
     public static Material materialForWaterlogged(IBlockState state, Material fallback, PropertyBool property) {
-        return state.getValue(property) && !RetroFluidCompat.isFluidloggedAvailable() ? Material.WATER : fallback;
+        // 1.12 reads BlockLiquid.LEVEL from every state that reports Material.WATER.
+        // Only expose a water material when the compatibility state can satisfy that vanilla assumption.
+        return state.getValue(property) && !RetroFluidCompat.isFluidloggedAvailable() && hasStillWaterLevel(state)
+            ? Material.WATER : fallback;
+    }
+
+    private static IProperty<?>[] appendStillWaterLevel(IProperty<?>... properties) {
+        if (properties == null || properties.length == 0) {
+            return new IProperty<?>[] {BlockLiquid.LEVEL};
+        }
+        for (IProperty<?> property : properties) {
+            if (property == BlockLiquid.LEVEL) {
+                return properties.clone();
+            }
+        }
+        IProperty<?>[] appended = Arrays.copyOf(properties, properties.length + 1);
+        appended[properties.length] = BlockLiquid.LEVEL;
+        return appended;
     }
 
     public static boolean canReplaceWater(World world, BlockPos pos) {

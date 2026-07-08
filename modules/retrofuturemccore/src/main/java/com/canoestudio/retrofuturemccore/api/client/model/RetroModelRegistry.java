@@ -1,12 +1,16 @@
 package com.canoestudio.retrofuturemccore.api.client.model;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockLiquid;
+import net.minecraft.block.properties.IProperty;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.block.statemap.StateMap;
 import net.minecraft.client.renderer.entity.RenderLiving;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -80,7 +84,7 @@ public final class RetroModelRegistry {
             return;
         }
         Item item = Item.getItemFromBlock(block);
-        if (item == null) {
+        if (item == null || item == Items.AIR) {
             return;
         }
         ModelLoader.setCustomModelResourceLocation(item, metadata, new ModelResourceLocation(model, variant));
@@ -92,6 +96,31 @@ public final class RetroModelRegistry {
         }
         for (Block block : blocks) {
             registerBlockItem(block);
+        }
+    }
+
+    public static void ignoreStateProperties(Block block, IProperty<?>... properties) {
+        if (block == null || properties == null || properties.length == 0) {
+            return;
+        }
+        ModelLoader.setCustomStateMapper(block, new StateMap.Builder().ignore(properties).build());
+    }
+
+    public static void ignoreStateProperties(IProperty<?>[] properties, Block... blocks) {
+        if (blocks == null) {
+            return;
+        }
+        for (Block block : blocks) {
+            ignoreStateProperties(block, properties);
+        }
+    }
+
+    public static void ignoreLiquidLevel(Block... blocks) {
+        if (blocks == null) {
+            return;
+        }
+        for (Block block : blocks) {
+            ignoreStateProperties(block, BlockLiquid.LEVEL);
         }
     }
 

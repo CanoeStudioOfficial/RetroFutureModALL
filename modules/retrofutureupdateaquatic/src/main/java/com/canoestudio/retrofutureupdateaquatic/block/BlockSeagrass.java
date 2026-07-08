@@ -1,5 +1,6 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
 import java.util.Random;
 import javax.annotation.Nullable;
@@ -41,7 +42,8 @@ public class BlockSeagrass extends BlockBush implements IGrowable {
         this.setTranslationKey(RetroFutureUpdateAquatic.ID + ".seagrass");
         this.setSoundType(SoundType.PLANT);
         this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.DECORATIONS);
-        this.setDefaultState(this.blockState.getBaseState().withProperty(TYPE, 0));
+        this.setDefaultState(RetroWaterlogging.withStillWaterLevel(this.blockState.getBaseState()
+            .withProperty(TYPE, 0)));
     }
 
     @Override
@@ -154,7 +156,7 @@ public class BlockSeagrass extends BlockBush implements IGrowable {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, TYPE);
+        return RetroWaterlogging.createWaterMaterialStateContainer(this, TYPE);
     }
 
     @Override

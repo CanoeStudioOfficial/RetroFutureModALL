@@ -1,6 +1,7 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
 import javax.annotation.Nullable;
 import net.minecraft.block.Block;
@@ -40,7 +41,8 @@ public class BlockConduit extends Block implements ITileEntityProvider, RetroWat
         this.setHardness(3.0F);
         this.setResistance(3.0F);
         this.setLightLevel(1.0F);
-        this.setDefaultState(this.blockState.getBaseState().withProperty(WATERLOGGED, false));
+        this.setDefaultState(RetroWaterlogging.withStillWaterLevel(this.blockState.getBaseState()
+            .withProperty(WATERLOGGED, false)));
     }
 
     @Override
@@ -138,7 +140,7 @@ public class BlockConduit extends Block implements ITileEntityProvider, RetroWat
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, WATERLOGGED);
+        return RetroWaterlogging.createWaterMaterialStateContainer(this, WATERLOGGED);
     }
 
     @Override

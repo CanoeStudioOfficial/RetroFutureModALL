@@ -1,5 +1,6 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
 import java.util.Random;
@@ -42,7 +43,9 @@ public class BlockSeaPickle extends BlockBush implements IGrowable, RetroWaterlo
         this.setHardness(0.1F);
         this.setResistance(10.0F);
         this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.DECORATIONS);
-        this.setDefaultState(this.blockState.getBaseState().withProperty(PICKLES, 1).withProperty(WATERLOGGED, true));
+        this.setDefaultState(RetroWaterlogging.withStillWaterLevel(this.blockState.getBaseState()
+            .withProperty(PICKLES, 1)
+            .withProperty(WATERLOGGED, true)));
     }
 
     @Override
@@ -185,7 +188,7 @@ public class BlockSeaPickle extends BlockBush implements IGrowable, RetroWaterlo
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, PICKLES, WATERLOGGED);
+        return RetroWaterlogging.createWaterMaterialStateContainer(this, PICKLES, WATERLOGGED);
     }
 
     @Override

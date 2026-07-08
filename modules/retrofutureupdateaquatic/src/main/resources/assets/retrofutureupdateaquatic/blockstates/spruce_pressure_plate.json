@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "powered=false": { "model": "retrofutureupdateaquatic:spruce_pressure_plate" },
+    "powered=true": { "model": "retrofutureupdateaquatic:spruce_pressure_plate_down" }
+  }
+}

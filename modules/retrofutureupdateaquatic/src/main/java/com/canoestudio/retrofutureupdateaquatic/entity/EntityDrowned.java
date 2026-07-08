@@ -2,11 +2,14 @@ package com.canoestudio.retrofutureupdateaquatic.entity;
 
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
@@ -18,6 +21,7 @@ import net.minecraft.world.World;
 public class EntityDrowned extends EntityZombie {
 
     private int swimTargetCooldown;
+    private int tridentAttackCooldown;
 
     public EntityDrowned(World worldIn) {
         super(worldIn);
@@ -40,6 +44,7 @@ public class EntityDrowned extends EntityZombie {
     @Override
     public void onLivingUpdate() {
         super.onLivingUpdate();
+        updateTridentAttack();
         if (this.isInWater() && this.getAttackTarget() != null && this.getAttackTarget().isInWater()) {
             moveToward(this.getAttackTarget().posX, this.getAttackTarget().posY, this.getAttackTarget().posZ, 0.045D);
         } else if (this.isInWater() && this.swimTargetCooldown-- <= 0) {
@@ -50,6 +55,33 @@ public class EntityDrowned extends EntityZombie {
             }
             this.swimTargetCooldown = 20 + this.rand.nextInt(30);
         }
+    }
+
+    private void updateTridentAttack() {
+        if (this.tridentAttackCooldown > 0) {
+            this.tridentAttackCooldown--;
+        }
+        EntityLivingBase target = this.getAttackTarget();
+        ItemStack held = this.getHeldItemMainhand();
+        if (this.world.isRemote || target == null || held.getItem() != ModItems.TRIDENT
+                || this.tridentAttackCooldown > 0 || !this.getEntitySenses().canSee(target)) {
+            return;
+        }
+        double distanceSq = this.getDistanceSq(target);
+        if (distanceSq < 16.0D || distanceSq > 256.0D) {
+            return;
+        }
+
+        EntityThrownTrident trident = new EntityThrownTrident(this.world, this, held.copy());
+        double dx = target.posX - this.posX;
+        double dy = target.getEntityBoundingBox().minY + target.height * 0.33333334D - trident.posY;
+        double dz = target.posZ - this.posZ;
+        double horizontal = MathHelper.sqrt(dx * dx + dz * dz);
+        trident.shoot(dx, dy + horizontal * 0.2D, dz, 1.6F, 6.0F + this.world.getDifficulty().getId() * 2.0F);
+        this.world.spawnEntity(trident);
+        this.world.playSound(null, this.posX, this.posY, this.posZ, SoundEvents.ENTITY_ARROW_SHOOT,
+            SoundCategory.HOSTILE, 1.0F, 0.8F + this.rand.nextFloat() * 0.4F);
+        this.tridentAttackCooldown = 60 + this.rand.nextInt(30);
     }
 
     private void moveToward(double x, double y, double z, double speed) {

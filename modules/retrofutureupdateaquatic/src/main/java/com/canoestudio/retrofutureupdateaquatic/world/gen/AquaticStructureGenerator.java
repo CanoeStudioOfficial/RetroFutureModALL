@@ -3,6 +3,7 @@ package com.canoestudio.retrofutureupdateaquatic.world.gen;
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
 import com.canoestudio.retrofutureupdateaquatic.entity.EntityDrowned;
 import com.canoestudio.retrofutureupdateaquatic.world.AquaticLootTables;
+import com.canoestudio.retrofutureupdateaquatic.world.AquaticStructureData;
 import java.util.Map;
 import java.util.Random;
 import net.minecraft.block.Block;
@@ -102,6 +103,7 @@ public class AquaticStructureGenerator implements IWorldGenerator {
         for (Map.Entry<BlockPos, String> entry : template.getDataBlocks(origin, settings).entrySet()) {
             handleShipwreckDataBlock(world, random, entry.getKey(), entry.getValue());
         }
+        AquaticStructureData.recordDolphinLocated(world, origin);
     }
 
     private void handleShipwreckDataBlock(World world, Random random, BlockPos pos, String marker) {
@@ -149,6 +151,7 @@ public class AquaticStructureGenerator implements IWorldGenerator {
             }
         }
         spawnDrownedGroup(world, random, center.up(), small ? 1 : 1 + random.nextInt(3));
+        AquaticStructureData.recordDolphinLocated(world, center);
     }
 
     private IBlockState randomRuinBlock(Random random) {

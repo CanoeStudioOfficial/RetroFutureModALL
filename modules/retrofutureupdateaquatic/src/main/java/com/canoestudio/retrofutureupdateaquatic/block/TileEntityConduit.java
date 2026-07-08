@@ -1,6 +1,7 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
 import java.util.List;
+import com.canoestudio.retrofutureupdateaquatic.potion.ModPotions;
 import net.minecraft.block.Block;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.monster.IMob;
@@ -39,6 +40,7 @@ public class TileEntityConduit extends TileEntity implements ITickable {
         List<EntityPlayer> players = this.world.getEntitiesWithinAABB(EntityPlayer.class, box);
         for (EntityPlayer player : players) {
             if (player.getDistanceSq(this.pos) <= radius * radius && player.isInWater()) {
+                player.addPotionEffect(ModPotions.conduitPower(260));
                 player.addPotionEffect(new PotionEffect(MobEffects.WATER_BREATHING, 260, 0, true, true));
                 player.addPotionEffect(new PotionEffect(MobEffects.NIGHT_VISION, 260, 0, true, true));
                 player.addPotionEffect(new PotionEffect(MobEffects.HASTE, 260, 0, true, true));
