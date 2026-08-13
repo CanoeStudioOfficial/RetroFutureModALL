@@ -4,8 +4,15 @@ Multi-module RetroFuturaGradle workspace for Minecraft 1.12.2 Forge mods.
 
 ## Included Mods
 
-- `retrofuturelushcave` from `RetroFutureLushCaves`
-- `retrofuturethewildupdate` from `RetroFuture-The Wild Update`
+- `retrofuturebuzzybees`
+- `retrofuturelushcave`
+- `retrofuturemccore`
+- `retrofuturenetherupdate`
+- `retrofuturethewildupdate`
+- `retrofuturetrailsandtales`
+- `retrofuturetrickytrials`
+- `retrofutureupdateaquatic`
+- `retrofuturevillageandpillage`
 
 ## Build
 
