@@ -1,15 +1,14 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
 import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
@@ -23,11 +22,11 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.fluids.Fluid;
 
-public class BlockSeaPickle extends BlockBush implements IGrowable, RetroWaterloggedBlock {
+public class BlockSeaPickle extends BlockBush implements IGrowable, IFluidloggable {
 
     public static final PropertyInteger PICKLES = PropertyInteger.create("pickles", 1, 4);
-    public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
     private static final AxisAlignedBB[] AABBS = {
         new AxisAlignedBB(0.375D, 0.0D, 0.375D, 0.625D, 0.375D, 0.625D),
         new AxisAlignedBB(0.1875D, 0.0D, 0.1875D, 0.8125D, 0.4375D, 0.8125D),
@@ -43,25 +42,23 @@ public class BlockSeaPickle extends BlockBush implements IGrowable, RetroWaterlo
         this.setHardness(0.1F);
         this.setResistance(10.0F);
         this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.DECORATIONS);
-        this.setDefaultState(RetroWaterlogging.withStillWaterLevel(this.blockState.getBaseState()
-            .withProperty(PICKLES, 1)
-            .withProperty(WATERLOGGED, true)));
+        this.setDefaultState(this.blockState.getBaseState().withProperty(PICKLES, 1));
     }
 
     @Override
     public int getLightValue(IBlockState state) {
-        return state.getValue(WATERLOGGED) ? state.getValue(PICKLES) * 3 + 3 : 0;
+        return 0;
     }
 
     @Override
     public int getLightValue(IBlockState state, IBlockAccess world, BlockPos pos) {
-        return AquaticWaterHelper.isWaterlogged(state, world, pos, WATERLOGGED)
+        return AquaticWaterHelper.isWater(world, pos)
             ? state.getValue(PICKLES) * 3 + 3 : 0;
     }
 
     @Override
     public Material getMaterial(IBlockState state) {
-        return this.getWaterloggedMaterial(state, super.getMaterial(state));
+        return super.getMaterial(state);
     }
 
     @Override
@@ -71,33 +68,18 @@ public class BlockSeaPickle extends BlockBush implements IGrowable, RetroWaterlo
 
     @Override
     public boolean canBlockStay(World worldIn, BlockPos pos, IBlockState state) {
-        return (!AquaticWaterHelper.isWaterlogged(state, worldIn, pos, WATERLOGGED)
-            || AquaticWaterHelper.isWater(worldIn, pos)
-            || worldIn.getBlockState(pos).getBlock() == this)
-            && AquaticWaterHelper.isSolidTop(worldIn, pos.down());
+        return AquaticWaterHelper.isSolidTop(worldIn, pos.down());
     }
 
     @Override
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX,
             float hitY, float hitZ, int meta, EntityLivingBase placer) {
-        return this.getDefaultState().withProperty(WATERLOGGED, AquaticWaterHelper.isWater(worldIn, pos));
-    }
-
-    @Override
-    public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
-        return AquaticWaterHelper.withActualWaterlogged(state, worldIn, pos, WATERLOGGED);
-    }
-
-    @Override
-    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
-        AquaticWaterHelper.ensureWaterlogged(worldIn, pos, state, WATERLOGGED);
-        this.syncWaterloggedAfterNeighborChanged(worldIn, pos, state);
+        return this.getDefaultState();
     }
 
     @Override
     public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, net.minecraft.block.Block blockIn,
             BlockPos fromPos) {
-        this.syncWaterloggedAfterNeighborChanged(worldIn, pos, state);
         super.neighborChanged(state, worldIn, pos, blockIn, fromPos);
     }
 
@@ -105,19 +87,13 @@ public class BlockSeaPickle extends BlockBush implements IGrowable, RetroWaterlo
     protected void checkAndDropBlock(World worldIn, BlockPos pos, IBlockState state) {
         if (!this.canBlockStay(worldIn, pos, state)) {
             this.dropBlockAsItem(worldIn, pos, state, 0);
-            if (AquaticWaterHelper.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
-                AquaticWaterHelper.restoreWater(worldIn, pos, state);
-            } else {
-                worldIn.setBlockToAir(pos);
-            }
+            AquaticWaterHelper.restoreWater(worldIn, pos, state);
         }
     }
 
     @Override
     public void onPlayerDestroy(World worldIn, BlockPos pos, IBlockState state) {
-        if (AquaticWaterHelper.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
-            AquaticWaterHelper.restoreWater(worldIn, pos, state);
-        }
+        AquaticWaterHelper.restoreWater(worldIn, pos, state);
     }
 
     @Override
@@ -163,8 +139,7 @@ public class BlockSeaPickle extends BlockBush implements IGrowable, RetroWaterlo
                     && worldIn.getBlockState(target.down()).getBlock() instanceof BlockCoralBlock
                     && this.canPlaceBlockAt(worldIn, target)) {
                 worldIn.setBlockState(target, this.getDefaultState()
-                    .withProperty(PICKLES, rand.nextInt(4) + 1)
-                    .withProperty(WATERLOGGED, true), 3);
+                    .withProperty(PICKLES, rand.nextInt(4) + 1), 3);
                 return;
             }
         }
@@ -172,28 +147,22 @@ public class BlockSeaPickle extends BlockBush implements IGrowable, RetroWaterlo
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return this.getDefaultState()
-            .withProperty(PICKLES, (meta & 3) + 1)
-            .withProperty(WATERLOGGED, (meta & 4) != 0);
+        return this.getDefaultState().withProperty(PICKLES, (meta & 3) + 1);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
-        int meta = state.getValue(PICKLES) - 1;
-        if (state.getValue(WATERLOGGED)) {
-            meta |= 4;
-        }
-        return meta;
+        return state.getValue(PICKLES) - 1;
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return RetroWaterlogging.createWaterMaterialStateContainer(this, PICKLES, WATERLOGGED);
+        return new BlockStateContainer(this, PICKLES);
     }
 
     @Override
-    public PropertyBool getWaterloggedProperty() {
-        return WATERLOGGED;
+    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, Fluid fluid) {
+        return FluidloggedSupport.isWater(fluid);
     }
 
     @Override

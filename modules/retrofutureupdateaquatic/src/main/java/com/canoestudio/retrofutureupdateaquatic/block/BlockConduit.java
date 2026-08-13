@@ -1,15 +1,14 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
 import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.creativetab.CreativeTabs;
@@ -27,9 +26,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockConduit extends Block implements ITileEntityProvider, RetroWaterloggedBlock {
-
-    public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
+public class BlockConduit extends Block implements ITileEntityProvider, IFluidloggable {
     private static final AxisAlignedBB AABB =
         new AxisAlignedBB(0.1875D, 0.1875D, 0.1875D, 0.8125D, 0.8125D, 0.8125D);
     public BlockConduit() {
@@ -41,8 +38,7 @@ public class BlockConduit extends Block implements ITileEntityProvider, RetroWat
         this.setHardness(3.0F);
         this.setResistance(3.0F);
         this.setLightLevel(1.0F);
-        this.setDefaultState(RetroWaterlogging.withStillWaterLevel(this.blockState.getBaseState()
-            .withProperty(WATERLOGGED, false)));
+        this.setDefaultState(this.blockState.getBaseState());
     }
 
     @Override
@@ -73,7 +69,7 @@ public class BlockConduit extends Block implements ITileEntityProvider, RetroWat
 
     @Override
     public Material getMaterial(IBlockState state) {
-        return this.getWaterloggedMaterial(state, super.getMaterial(state));
+        return super.getMaterial(state);
     }
 
     @Override
@@ -84,22 +80,20 @@ public class BlockConduit extends Block implements ITileEntityProvider, RetroWat
     @Override
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX,
             float hitY, float hitZ, int meta, EntityLivingBase placer) {
-        return this.getDefaultState().withProperty(WATERLOGGED, AquaticWaterHelper.isWater(worldIn, pos));
+        return this.getDefaultState();
     }
 
     @Override
     public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
-        return AquaticWaterHelper.withActualWaterlogged(state, worldIn, pos, WATERLOGGED);
+        return state;
     }
 
     @Override
     public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
-        AquaticWaterHelper.ensureWaterlogged(worldIn, pos, state, WATERLOGGED);
     }
 
     @Override
     public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
-        this.syncWaterloggedAfterNeighborChanged(worldIn, pos, state);
         TileEntity tileEntity = worldIn.getTileEntity(pos);
         if (tileEntity instanceof TileEntityConduit) {
             ((TileEntityConduit) tileEntity).update();
@@ -110,9 +104,8 @@ public class BlockConduit extends Block implements ITileEntityProvider, RetroWat
     @Override
     public boolean removedByPlayer(IBlockState state, World world, BlockPos pos, EntityPlayer player,
             boolean willHarvest) {
-        boolean wasWaterlogged = AquaticWaterHelper.isWaterlogged(state, world, pos, WATERLOGGED);
         boolean removed = super.removedByPlayer(state, world, pos, player, willHarvest);
-        if (removed && !world.isRemote && wasWaterlogged) {
+        if (removed && !world.isRemote && FluidloggedSupport.isWater(world, pos)) {
             AquaticWaterHelper.restoreWater(world, pos, state);
         }
         return removed;
@@ -130,22 +123,22 @@ public class BlockConduit extends Block implements ITileEntityProvider, RetroWat
 
     @Override
     public int getMetaFromState(IBlockState state) {
-        return state.getValue(WATERLOGGED) ? 1 : 0;
+        return 0;
     }
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return this.getDefaultState().withProperty(WATERLOGGED, (meta & 1) == 1);
+        return this.getDefaultState();
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return RetroWaterlogging.createWaterMaterialStateContainer(this, WATERLOGGED);
+        return new BlockStateContainer(this);
     }
 
     @Override
-    public PropertyBool getWaterloggedProperty() {
-        return WATERLOGGED;
+    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, net.minecraftforge.fluids.Fluid fluid) {
+        return FluidloggedSupport.isWater(fluid);
     }
 
     @SideOnly(Side.CLIENT)

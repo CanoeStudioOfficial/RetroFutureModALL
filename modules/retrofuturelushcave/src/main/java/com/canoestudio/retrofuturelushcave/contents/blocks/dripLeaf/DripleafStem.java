@@ -3,9 +3,9 @@ package com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf;
 
 import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidState;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidloggableBlock;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
+import git.jbredwards.fluidlogged_api.api.util.FluidState;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockHorizontal;
@@ -27,13 +27,18 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.Fluid;
 
 import java.util.Random;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
-public class DripleafStem extends BlockBush implements IGrowable, RetroFluidloggableBlock
+public class DripleafStem extends BlockBush implements IGrowable, IFluidloggable
 {
+    @Override
+    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, Fluid fluid) {
+        return FluidloggedSupport.isWater(fluid);
+    }
     public static final String name = "Big_Dripleaf_Stem";
     public static final PropertyEnum<EnumFacing> FACING = BlockHorizontal.FACING;
 
@@ -180,37 +185,37 @@ public class DripleafStem extends BlockBush implements IGrowable, RetroFluidlogg
 
     private boolean canGrowInto(World world, BlockPos pos)
     {
-        return RetroWaterlogging.canPlaceIntoAirOrWater(world, pos);
+        return FluidloggedSupport.canPlaceIntoAirOrWater(world, pos);
     }
 
     private void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState, int flags)
     {
-        RetroWaterlogging.setFluidloggableBlock(world, pos, newState, flags);
+        FluidloggedSupport.setFluidloggableBlock(world, pos, newState, flags);
     }
 
     private boolean hasWaterFluid(World world, BlockPos pos)
     {
-        return RetroWaterlogging.hasWaterFluid(world, pos);
+        return FluidloggedSupport.isWater(world, pos);
     }
 
-    private RetroFluidState getWaterFluidState(World world, BlockPos pos)
+    private FluidState getWaterFluidState(World world, BlockPos pos)
     {
-        return RetroWaterlogging.getWaterFluidState(world, pos);
+        return FluidloggedSupport.getFluidState(world, pos);
     }
 
     private void restoreContainedFluidOrAir(World world, BlockPos pos, IBlockState state, int flags)
     {
-        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, flags);
+        FluidloggedSupport.restoreContainedFluidOrAir(world, pos, state, flags);
     }
 
     private void scheduleContainedFluidTick(World world, BlockPos pos, IBlockState state)
     {
-        RetroWaterlogging.scheduleContainedFluidTick(world, pos, state);
+        FluidloggedSupport.scheduleFluidTick(world, pos, state);
     }
 
-    private void scheduleFluidTick(World world, BlockPos pos, RetroFluidState fluidState)
+    private void scheduleFluidTick(World world, BlockPos pos, FluidState fluidState)
     {
-        RetroWaterlogging.scheduleFluidTick(world, pos, fluidState);
+        FluidloggedSupport.scheduleFluidTick(world, pos, fluidState);
     }
 
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer)

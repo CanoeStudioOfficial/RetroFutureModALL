@@ -1,6 +1,7 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
 import java.util.Random;
 import javax.annotation.Nullable;
@@ -27,8 +28,9 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.fluids.Fluid;
 
-public class BlockSeagrass extends BlockBush implements IGrowable {
+public class BlockSeagrass extends BlockBush implements IGrowable, IFluidloggable {
 
     public static final PropertyInteger TYPE = PropertyInteger.create("type", 0, 2);
     private static final AxisAlignedBB SEAGRASS_AABB =
@@ -37,13 +39,12 @@ public class BlockSeagrass extends BlockBush implements IGrowable {
         new AxisAlignedBB(0.125D, 0.0D, 0.125D, 0.875D, 1.0D, 0.875D);
 
     public BlockSeagrass() {
-        super(Material.WATER);
+        super(Material.PLANTS);
         this.setRegistryName(RetroFutureUpdateAquatic.ID, "seagrass");
         this.setTranslationKey(RetroFutureUpdateAquatic.ID + ".seagrass");
         this.setSoundType(SoundType.PLANT);
         this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.DECORATIONS);
-        this.setDefaultState(RetroWaterlogging.withStillWaterLevel(this.blockState.getBaseState()
-            .withProperty(TYPE, 0)));
+        this.setDefaultState(this.blockState.getBaseState().withProperty(TYPE, 0));
     }
 
     @Override
@@ -156,7 +157,7 @@ public class BlockSeagrass extends BlockBush implements IGrowable {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return RetroWaterlogging.createWaterMaterialStateContainer(this, TYPE);
+        return new BlockStateContainer(this, TYPE);
     }
 
     @Override
@@ -168,6 +169,18 @@ public class BlockSeagrass extends BlockBush implements IGrowable {
     @Override
     public boolean isReplaceable(IBlockAccess worldIn, BlockPos pos) {
         return false;
+    }
+
+    @Override
+    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, Fluid fluid) {
+        return FluidloggedSupport.isWater(fluid);
+    }
+
+    @Override
+    public net.minecraft.util.EnumActionResult onFluidDrain(World world, BlockPos pos, IBlockState state, int flags) {
+        dropBlockAsItem(world, pos, state, 0);
+        world.setBlockToAir(pos);
+        return net.minecraft.util.EnumActionResult.SUCCESS;
     }
 
     @SideOnly(Side.CLIENT)

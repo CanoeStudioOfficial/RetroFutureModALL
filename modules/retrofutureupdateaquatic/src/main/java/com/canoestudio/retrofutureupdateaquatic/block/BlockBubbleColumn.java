@@ -1,7 +1,8 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
+import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
 import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.block.Block;
@@ -22,19 +23,18 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockBubbleColumn extends Block {
+public class BlockBubbleColumn extends Block implements IFluidloggable {
 
     public static final PropertyBool DRAG = PropertyBool.create("drag");
 
     public BlockBubbleColumn() {
-        super(Material.WATER);
+        super(Material.PLANTS);
         this.setRegistryName(RetroFutureUpdateAquatic.ID, "bubble_column");
         this.setTranslationKey(RetroFutureUpdateAquatic.ID + ".bubble_column");
         this.setSoundType(SoundType.PLANT);
         this.setTickRandomly(true);
         this.setLightOpacity(1);
-        this.setDefaultState(RetroWaterlogging.withStillWaterLevel(this.blockState.getBaseState()
-            .withProperty(DRAG, false)));
+        this.setDefaultState(this.blockState.getBaseState().withProperty(DRAG, false));
     }
 
     public static boolean isColumnBase(IBlockState state) {
@@ -55,7 +55,8 @@ public class BlockBubbleColumn extends Block {
         BlockPos cursor = start;
         boolean placed = false;
         while (cursor.getY() < world.getHeight() - 1 && AquaticWaterHelper.isWaterOrBubble(world, cursor)) {
-            world.setBlockState(cursor, ModBlocks.BUBBLE_COLUMN.getDefaultState().withProperty(DRAG, drag), 3);
+            FluidloggedSupport.setFluidloggableBlock(world, cursor,
+                ModBlocks.BUBBLE_COLUMN.getDefaultState().withProperty(DRAG, drag), 3);
             placed = true;
             cursor = cursor.up();
         }
@@ -130,7 +131,12 @@ public class BlockBubbleColumn extends Block {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return RetroWaterlogging.createWaterMaterialStateContainer(this, DRAG);
+        return new BlockStateContainer(this, DRAG);
+    }
+
+    @Override
+    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, net.minecraftforge.fluids.Fluid fluid) {
+        return FluidloggedSupport.isWater(fluid);
     }
 
     @SideOnly(Side.CLIENT)

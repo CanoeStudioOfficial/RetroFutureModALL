@@ -1,7 +1,6 @@
 package com.canoestudio.retrofuturemccore.api.client.model;
 
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -112,15 +111,6 @@ public final class RetroModelRegistry {
         }
         for (Block block : blocks) {
             ignoreStateProperties(block, properties);
-        }
-    }
-
-    public static void ignoreLiquidLevel(Block... blocks) {
-        if (blocks == null) {
-            return;
-        }
-        for (Block block : blocks) {
-            ignoreStateProperties(block, BlockLiquid.LEVEL);
         }
     }
 

@@ -1,7 +1,7 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -58,12 +58,12 @@ public class BuddingAmethystBlock extends net.minecraft.block.Block {
 
         if (nextStage != null) {
             IBlockState newState = nextStage.getDefaultState().withProperty(AmethystClusterBlock.FACING, growDirection);
-            RetroWaterlogging.setFluidloggableBlock(worldIn, growPos, newState, 3);
+            FluidloggedSupport.setFluidloggableBlock(worldIn, growPos, newState, 3);
         }
     }
 
     private static boolean canClusterGrowAtState(World world, BlockPos pos, IBlockState state) {
-        return state.getBlock() == Blocks.AIR || state.getMaterial() == Material.WATER || RetroWaterlogging.isWater(world, pos);
+        return state.getBlock() == Blocks.AIR || state.getMaterial() == Material.WATER || FluidloggedSupport.isWater(world, pos);
     }
 
     @Override

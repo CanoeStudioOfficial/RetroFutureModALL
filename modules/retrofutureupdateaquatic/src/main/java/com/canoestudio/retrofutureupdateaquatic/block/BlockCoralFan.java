@@ -1,15 +1,14 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
 import java.util.Random;
 import javax.annotation.Nullable;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
@@ -27,11 +26,11 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.fluids.Fluid;
 
-public class BlockCoralFan extends Block implements RetroWaterloggedBlock {
+public class BlockCoralFan extends Block implements IFluidloggable {
 
     public static final PropertyDirection FACING = PropertyDirection.create("facing");
-    public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
     private static final AxisAlignedBB AABB_DOWN = new AxisAlignedBB(0.125D, 0.75D, 0.125D, 0.875D, 1.0D, 0.875D);
     private static final AxisAlignedBB AABB_UP = new AxisAlignedBB(0.125D, 0.0D, 0.125D, 0.875D, 0.25D, 0.875D);
     private static final AxisAlignedBB AABB_NORTH = new AxisAlignedBB(0.0625D, 0.3125D, 0.5D, 0.9375D, 0.6875D, 1.0D);
@@ -48,9 +47,7 @@ public class BlockCoralFan extends Block implements RetroWaterloggedBlock {
         this.setHardness(0.0F);
         this.setTickRandomly(true);
         this.setCreativeTab(CreativeTabs.DECORATIONS);
-        this.setDefaultState(RetroWaterlogging.withStillWaterLevel(this.blockState.getBaseState()
-            .withProperty(FACING, EnumFacing.UP)
-            .withProperty(WATERLOGGED, false)));
+        this.setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.UP));
     }
 
     public BlockCoralFan deadVersion(Block block) {
@@ -82,14 +79,7 @@ public class BlockCoralFan extends Block implements RetroWaterloggedBlock {
     @Override
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX,
             float hitY, float hitZ, int meta, EntityLivingBase placer) {
-        return this.getDefaultState()
-            .withProperty(FACING, canAttach(worldIn, pos, facing) ? facing : EnumFacing.UP)
-            .withProperty(WATERLOGGED, AquaticWaterHelper.isWater(worldIn, pos));
-    }
-
-    @Override
-    public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
-        return AquaticWaterHelper.withActualWaterlogged(state, worldIn, pos, WATERLOGGED);
+        return this.getDefaultState().withProperty(FACING, canAttach(worldIn, pos, facing) ? facing : EnumFacing.UP);
     }
 
     public boolean canBlockStay(World worldIn, BlockPos pos, IBlockState state) {
@@ -133,13 +123,11 @@ public class BlockCoralFan extends Block implements RetroWaterloggedBlock {
 
     @Override
     public Material getMaterial(IBlockState state) {
-        return this.getWaterloggedMaterial(state, super.getMaterial(state));
+        return super.getMaterial(state);
     }
 
     @Override
     public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
-        AquaticWaterHelper.ensureWaterlogged(worldIn, pos, state, WATERLOGGED);
-        this.syncWaterloggedAfterNeighborChanged(worldIn, pos, state);
         if (!hasWater(state, worldIn, pos)) {
             worldIn.scheduleUpdate(pos, this, this.tickRate(worldIn));
         }
@@ -152,7 +140,6 @@ public class BlockCoralFan extends Block implements RetroWaterloggedBlock {
             return;
         }
 
-        this.syncWaterloggedAfterNeighborChanged(worldIn, pos, state);
         IBlockState updatedState = worldIn.getBlockState(pos);
         if (!hasWater(updatedState, worldIn, pos)) {
             worldIn.scheduleUpdate(pos, this, this.tickRate(worldIn));
@@ -170,20 +157,17 @@ public class BlockCoralFan extends Block implements RetroWaterloggedBlock {
     public void updateTick(World worldIn, BlockPos pos, IBlockState state, Random rand) {
         if (this.deadVersion != null && !hasWater(state, worldIn, pos)) {
             worldIn.setBlockState(pos, this.deadVersion.getDefaultState()
-                .withProperty(FACING, state.getValue(FACING))
-                .withProperty(WATERLOGGED, state.getValue(WATERLOGGED)), 3);
+                .withProperty(FACING, state.getValue(FACING)), 3);
         }
     }
 
     @Override
     public void onPlayerDestroy(World worldIn, BlockPos pos, IBlockState state) {
-        if (AquaticWaterHelper.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
-            AquaticWaterHelper.restoreWater(worldIn, pos, state);
-        }
+        AquaticWaterHelper.restoreWater(worldIn, pos, state);
     }
 
     private boolean hasWater(IBlockState state, World worldIn, BlockPos pos) {
-        if (AquaticWaterHelper.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
+        if (AquaticWaterHelper.isWater(worldIn, pos)) {
             return true;
         }
         for (EnumFacing facing : EnumFacing.values()) {
@@ -200,26 +184,23 @@ public class BlockCoralFan extends Block implements RetroWaterloggedBlock {
         if (facing == null) {
             facing = EnumFacing.UP;
         }
-        return this.getDefaultState().withProperty(FACING, facing).withProperty(WATERLOGGED, (meta & 8) != 0);
+        return this.getDefaultState().withProperty(FACING, facing);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
         int meta = state.getValue(FACING).getIndex();
-        if (state.getValue(WATERLOGGED)) {
-            meta |= 8;
-        }
         return meta;
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return RetroWaterlogging.createWaterMaterialStateContainer(this, FACING, WATERLOGGED);
+        return new BlockStateContainer(this, FACING);
     }
 
     @Override
-    public PropertyBool getWaterloggedProperty() {
-        return WATERLOGGED;
+    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, Fluid fluid) {
+        return FluidloggedSupport.isWater(fluid);
     }
 
     @Override

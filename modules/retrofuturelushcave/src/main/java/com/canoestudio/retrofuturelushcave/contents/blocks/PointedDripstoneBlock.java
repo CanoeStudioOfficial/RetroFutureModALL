@@ -1,9 +1,9 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidState;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidloggableBlock;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
+import git.jbredwards.fluidlogged_api.api.util.FluidState;
 import com.google.common.base.Predicate;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -31,13 +31,19 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.fluids.Fluid;
 
 import java.lang.reflect.Field;
 import java.util.Random;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
-public class PointedDripstoneBlock extends Block implements RetroFluidloggableBlock {
+public class PointedDripstoneBlock extends Block implements IFluidloggable {
+
+    @Override
+    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, Fluid fluid) {
+        return FluidloggedSupport.isWater(fluid);
+    }
     public static final PropertyDirection VERTICAL_DIRECTION = PropertyDirection.create("vertical_direction", new Predicate<EnumFacing>() {
         @Override
         public boolean apply(EnumFacing input) {
@@ -377,27 +383,27 @@ public class PointedDripstoneBlock extends Block implements RetroFluidloggableBl
     }
 
     private boolean isAirOrWater(World world, BlockPos pos) {
-        return RetroWaterlogging.canPlaceIntoAirOrWater(world, pos);
+        return FluidloggedSupport.canPlaceIntoAirOrWater(world, pos);
     }
 
     private void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState, int flags) {
-        RetroWaterlogging.setFluidloggableBlock(world, pos, newState, flags);
+        FluidloggedSupport.setFluidloggableBlock(world, pos, newState, flags);
     }
 
     private void setBlockStateKeepingFluid(World world, BlockPos pos, int flags) {
-        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, world.getBlockState(pos), flags);
+        FluidloggedSupport.restoreContainedFluidOrAir(world, pos, world.getBlockState(pos), flags);
     }
 
     private boolean hasWaterFluid(World world, BlockPos pos) {
-        return RetroWaterlogging.hasWaterFluid(world, pos);
+        return FluidloggedSupport.isWater(world, pos);
     }
 
-    private RetroFluidState getWaterFluidState(World world, BlockPos pos) {
-        return RetroWaterlogging.getWaterFluidState(world, pos);
+    private FluidState getWaterFluidState(World world, BlockPos pos) {
+        return FluidloggedSupport.getFluidState(world, pos);
     }
 
-    private void scheduleFluidTick(World world, BlockPos pos, RetroFluidState fluidState) {
-        RetroWaterlogging.scheduleFluidTick(world, pos, fluidState);
+    private void scheduleFluidTick(World world, BlockPos pos, FluidState fluidState) {
+        FluidloggedSupport.scheduleFluidTick(world, pos, fluidState);
     }
 
     @Override

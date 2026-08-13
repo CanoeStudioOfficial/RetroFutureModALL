@@ -4,9 +4,9 @@ import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
 import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidState;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidloggableBlock;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
+import git.jbredwards.fluidlogged_api.api.util.FluidState;
 import net.minecraft.block.*;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
@@ -26,6 +26,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -34,7 +35,11 @@ import java.util.Random;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
-public class BigDripleaf extends BlockBush implements IGrowable, RetroFluidloggableBlock {
+public class BigDripleaf extends BlockBush implements IGrowable, IFluidloggable {
+    @Override
+    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, Fluid fluid) {
+        return FluidloggedSupport.isWater(fluid);
+    }
     public static final String name = "Big_Dripleaf";
     public static final SoundType DRIPLEAF = new SoundType(1.0F, 1.0F, ModSoundHandler.BLOCK_BIG_DRIPLEAF_BREAK, ModSoundHandler.BLOCK_BIG_DRIPLEAF_STEP, ModSoundHandler.BLOCK_BIG_DRIPLEAF_PLACE, ModSoundHandler.BLOCK_BIG_DRIPLEAF_HIT, ModSoundHandler.BLOCK_BIG_DRIPLEAF_FALL);
     public static final int MAX_GROWTH_HEIGHT = 5;
@@ -391,32 +396,32 @@ public class BigDripleaf extends BlockBush implements IGrowable, RetroFluidlogga
 
     public static boolean canGrowInto(World world, BlockPos pos)
     {
-        return RetroWaterlogging.canPlaceIntoAirOrWater(world, pos);
+        return FluidloggedSupport.canPlaceIntoAirOrWater(world, pos);
     }
 
     private void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState, int flags)
     {
-        RetroWaterlogging.setFluidloggableBlock(world, pos, newState, flags);
+        FluidloggedSupport.setFluidloggableBlock(world, pos, newState, flags);
     }
 
     private boolean hasWaterFluid(World world, BlockPos pos)
     {
-        return RetroWaterlogging.hasWaterFluid(world, pos);
+        return FluidloggedSupport.isWater(world, pos);
     }
 
-    private RetroFluidState getWaterFluidState(World world, BlockPos pos)
+    private FluidState getWaterFluidState(World world, BlockPos pos)
     {
-        return RetroWaterlogging.getWaterFluidState(world, pos);
+        return FluidloggedSupport.getFluidState(world, pos);
     }
 
     private void scheduleContainedFluidTick(World world, BlockPos pos, IBlockState state)
     {
-        RetroWaterlogging.scheduleContainedFluidTick(world, pos, state);
+        FluidloggedSupport.scheduleFluidTick(world, pos, state);
     }
 
     private void restoreContainedFluidOrAir(World world, BlockPos pos, IBlockState state, int flags)
     {
-        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, flags);
+        FluidloggedSupport.restoreContainedFluidOrAir(world, pos, state, flags);
     }
 
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer)

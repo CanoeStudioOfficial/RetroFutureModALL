@@ -1,6 +1,6 @@
 package com.canoestudio.retrofutureupdateaquatic.item;
 
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import com.canoestudio.retrofutureupdateaquatic.block.BlockSeaPickle;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
@@ -92,6 +92,6 @@ public class ItemSeaPickleBlock extends ItemBlock {
 
     private boolean canReplaceForPlacement(World world, BlockPos pos) {
         IBlockState state = world.getBlockState(pos);
-        return state.getBlock().isReplaceable(world, pos) || RetroWaterlogging.isWater(world, pos);
+        return state.getBlock().isReplaceable(world, pos) || FluidloggedSupport.isWater(world, pos);
     }
 }

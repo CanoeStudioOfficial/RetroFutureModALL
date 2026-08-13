@@ -11,7 +11,7 @@ import com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf.DripleafStem
 import com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf.SmallDripleaf;
 import com.canoestudio.retrofuturelushcave.contents.mobs.axolotl.EntityAxolotl;
 import com.canoestudio.retrofuturelushcave.contents.mobs.glowsquid.EntityGlowSquid;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockStone;
 import net.minecraft.block.BlockTallGrass;
@@ -258,7 +258,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
 
             if (canGeodeClusterGrowAtState(world, placePos, target) && canReplaceGeodeBlock(world, placePos, target)) {
                 IBlockState crystalState = crystal.getDefaultState().withProperty(AmethystClusterBlock.FACING, facing);
-                RetroWaterlogging.setFluidloggableBlock(world, placePos, crystalState, 3);
+                FluidloggedSupport.setFluidloggableBlock(world, placePos, crystalState, 3);
                 return;
             }
         }
@@ -318,7 +318,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
     private boolean canGeodeClusterGrowAtState(World world, BlockPos pos, IBlockState state) {
         return state.getBlock() == Blocks.AIR
                 || state.getMaterial() == Material.WATER
-                || RetroWaterlogging.isWater(world, pos);
+                || FluidloggedSupport.isWater(world, pos);
     }
 
     private void notifyAdjacentFluids(World world, BlockPos pos) {

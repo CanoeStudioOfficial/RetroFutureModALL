@@ -5,7 +5,6 @@ import com.canoestudio.retrofuturemccore.internal.component.RetroEntityComponent
 import com.canoestudio.retrofuturemccore.internal.event.RetroEventBridge;
 import com.canoestudio.retrofuturemccore.internal.gameevent.GameEventWorldCleanupHandler;
 import com.canoestudio.retrofuturemccore.internal.item.RetroItemUseEventHandler;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidCompat;
 import com.canoestudio.retrofuturemccore.RetroFutureMCCore;
 import com.canoestudio.retrofuturemccore.network.RetroFutureCoreNetwork;
 import com.canoestudio.retrofuturemccore.network.message.MessageSyncEntityComponent;
@@ -17,16 +16,12 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 public class CommonProxy {
 
     public void preInit(FMLPreInitializationEvent event) {
-        RetroFluidCompat.init();
         RetroEntityComponentsCapability.register();
         RetroFutureCoreNetwork.registerMessages();
         MinecraftForge.EVENT_BUS.register(new RetroComponentEventHandler());
         MinecraftForge.EVENT_BUS.register(new RetroEventBridge());
         MinecraftForge.EVENT_BUS.register(new GameEventWorldCleanupHandler());
         MinecraftForge.EVENT_BUS.register(new RetroItemUseEventHandler());
-        if (RetroFluidCompat.isFluidloggedAvailable()) {
-            registerFluidloggedOptionalHandler();
-        }
     }
 
     public void handleEntityComponentSync(MessageSyncEntityComponent message) {
@@ -36,14 +31,4 @@ public class CommonProxy {
         RetroTagJsonLoader.loadAllActiveModTags();
     }
 
-    private void registerFluidloggedOptionalHandler() {
-        try {
-            Class<?> handlerClass = Class.forName(
-                "com.canoestudio.retrofuturemccore.internal.fluid.RetroFluidloggedOptionalHandler");
-            MinecraftForge.EVENT_BUS.register(handlerClass.newInstance());
-        } catch (ReflectiveOperationException | LinkageError e) {
-            RetroFutureMCCore.LOGGER.warn("Fluidlogged API is present, but the optional RetroFuture bridge "
-                + "event handler could not be registered.", e);
-        }
-    }
 }

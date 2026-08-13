@@ -90,13 +90,11 @@ public class AquaticWorldGenerator implements IWorldGenerator {
                 if (world.getBlockState(pos).getBlock() == Blocks.WATER && world.getBlockState(pos.down()).isFullBlock()) {
                     world.setBlockState(pos.down(), coral.liveBlock.getDefaultState(), 2);
                     if (random.nextBoolean() && world.getBlockState(pos).getBlock() == Blocks.WATER) {
-                        world.setBlockState(pos, coral.livePlant.getDefaultState()
-                            .withProperty(BlockCoralPlant.WATERLOGGED, true), 2);
+                        world.setBlockState(pos, coral.livePlant.getDefaultState(), 2);
                     }
                     if (random.nextInt(5) == 0 && world.getBlockState(pos).getBlock() == Blocks.WATER) {
                         world.setBlockState(pos, ModBlocks.SEA_PICKLE.getDefaultState()
-                            .withProperty(BlockSeaPickle.PICKLES, random.nextInt(4) + 1)
-                            .withProperty(BlockSeaPickle.WATERLOGGED, true), 2);
+                            .withProperty(BlockSeaPickle.PICKLES, random.nextInt(4) + 1), 2);
                     }
                 }
                 tryPlaceFan(world, random, pos, coral);
@@ -113,8 +111,7 @@ public class AquaticWorldGenerator implements IWorldGenerator {
             if (world.getBlockState(target).getBlock() == Blocks.WATER
                     && coral.liveFan.canPlaceBlockOnSide(world, target, facing)) {
                 world.setBlockState(target, coral.liveFan.getDefaultState()
-                    .withProperty(BlockCoralFan.FACING, facing)
-                    .withProperty(BlockCoralFan.WATERLOGGED, true), 2);
+                    .withProperty(BlockCoralFan.FACING, facing), 2);
                 return;
             }
         }

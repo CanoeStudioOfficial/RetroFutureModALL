@@ -2,7 +2,7 @@ package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -88,7 +88,7 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock {
     }
 
     private void restoreFluidOrAir(World world, BlockPos pos, IBlockState state, int flags) {
-        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, flags);
+        FluidloggedSupport.restoreContainedFluidOrAir(world, pos, state, flags);
     }
 
     @Override
