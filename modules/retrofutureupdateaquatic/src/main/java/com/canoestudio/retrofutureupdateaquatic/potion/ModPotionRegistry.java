@@ -12,27 +12,36 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @Mod.EventBusSubscriber(modid = RetroFutureUpdateAquatic.ID)
 public final class ModPotionRegistry {
 
+    /*
+     * ObjectHolder fields are populated only after all registry events have
+     * been fired.  Keep the instances used while creating PotionTypes here so
+     * that their PotionEffects never capture a null Potion.
+     */
+    private static final Potion DOLPHINS_GRACE = new RetroAquaticPotion(
+        false, 8954814, "effect.retrofutureupdateaquatic.dolphins_grace", true);
+    private static final Potion CONDUIT_POWER = new RetroAquaticPotion(
+        false, 1950417, "effect.retrofutureupdateaquatic.conduit_power", true);
+    private static final Potion SLOW_FALLING = new RetroAquaticPotion(
+        false, 16773073, "effect.retrofutureupdateaquatic.slow_falling", true);
+
     private ModPotionRegistry() {
     }
 
     @SubscribeEvent
     public static void onRegisterPotions(RegistryEvent.Register<Potion> event) {
         event.getRegistry().registerAll(
-            new RetroAquaticPotion(false, 8954814, "effect.retrofutureupdateaquatic.dolphins_grace", true)
-                .setRegistryName(RetroFutureUpdateAquatic.ID, "dolphins_grace"),
-            new RetroAquaticPotion(false, 1950417, "effect.retrofutureupdateaquatic.conduit_power", true)
-                .setRegistryName(RetroFutureUpdateAquatic.ID, "conduit_power"),
-            new RetroAquaticPotion(false, 16773073, "effect.retrofutureupdateaquatic.slow_falling", true)
-                .setRegistryName(RetroFutureUpdateAquatic.ID, "slow_falling")
+            DOLPHINS_GRACE.setRegistryName(RetroFutureUpdateAquatic.ID, "dolphins_grace"),
+            CONDUIT_POWER.setRegistryName(RetroFutureUpdateAquatic.ID, "conduit_power"),
+            SLOW_FALLING.setRegistryName(RetroFutureUpdateAquatic.ID, "slow_falling")
         );
     }
 
     @SubscribeEvent
     public static void onRegisterPotionTypes(RegistryEvent.Register<PotionType> event) {
         event.getRegistry().registerAll(
-            new PotionType("slow_falling", new PotionEffect(ModPotions.SLOW_FALLING, 1800))
+            new PotionType("slow_falling", new PotionEffect(SLOW_FALLING, 1800))
                 .setRegistryName(RetroFutureUpdateAquatic.ID, "slow_falling"),
-            new PotionType("slow_falling", new PotionEffect(ModPotions.SLOW_FALLING, 4800))
+            new PotionType("slow_falling", new PotionEffect(SLOW_FALLING, 4800))
                 .setRegistryName(RetroFutureUpdateAquatic.ID, "long_slow_falling"),
             new PotionType("turtle_master",
                 new PotionEffect(MobEffects.SLOWNESS, 400, 3),
