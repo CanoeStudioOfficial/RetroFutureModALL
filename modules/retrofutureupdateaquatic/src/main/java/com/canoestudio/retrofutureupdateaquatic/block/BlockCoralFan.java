@@ -166,6 +166,15 @@ public class BlockCoralFan extends Block implements IFluidloggable {
         AquaticWaterHelper.restoreWater(worldIn, pos, state);
     }
 
+    @Override
+    public net.minecraft.util.EnumActionResult onFluidDrain(World worldIn, BlockPos pos, IBlockState state,
+            int flags) {
+        if (this.deadVersion != null) {
+            worldIn.scheduleUpdate(pos, this, this.tickRate(worldIn));
+        }
+        return net.minecraft.util.EnumActionResult.PASS;
+    }
+
     private boolean hasWater(IBlockState state, World worldIn, BlockPos pos) {
         if (AquaticWaterHelper.isWater(worldIn, pos)) {
             return true;

@@ -182,7 +182,7 @@ public class BlockKelp extends BlockBush implements IGrowable, IFluidloggable {
     @Override
     public net.minecraft.util.EnumActionResult onFluidDrain(World world, BlockPos pos, IBlockState state, int flags) {
         dropBlockAsItem(world, pos, state, 0);
-        world.setBlockToAir(pos);
+        world.setBlockState(pos, Blocks.AIR.getDefaultState(), flags);
         return net.minecraft.util.EnumActionResult.SUCCESS;
     }
 

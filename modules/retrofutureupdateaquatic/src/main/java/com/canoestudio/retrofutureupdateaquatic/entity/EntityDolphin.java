@@ -1,11 +1,11 @@
 package com.canoestudio.retrofutureupdateaquatic.entity;
 
 import com.canoestudio.retrofutureupdateaquatic.compat.AquaticCompat;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
 import com.canoestudio.retrofutureupdateaquatic.potion.ModPotions;
 import com.canoestudio.retrofutureupdateaquatic.world.AquaticStructureData;
 import javax.annotation.Nullable;
-import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.MoverType;
@@ -312,10 +312,9 @@ public class EntityDolphin extends EntityWaterMob {
 
     private void grantNearbyPlayersGrace() {
         for (EntityPlayer player : this.world.getEntitiesWithinAABB(EntityPlayer.class,
-                this.getEntityBoundingBox().grow(8.0D))) {
+                this.getEntityBoundingBox().grow(10.0D))) {
             if (player.isInWater() && (player.isSprinting() || AquaticCompat.isActuallySwimming(player))) {
-                player.addPotionEffect(ModPotions.dolphinsGrace(120));
-                player.addPotionEffect(new PotionEffect(MobEffects.SPEED, 120, 1, true, true));
+                player.addPotionEffect(ModPotions.dolphinsGrace(100));
             }
         }
     }
@@ -339,7 +338,10 @@ public class EntityDolphin extends EntityWaterMob {
     }
 
     private boolean isWater(BlockPos pos) {
-        return this.world.isBlockLoaded(pos) && this.world.getBlockState(pos).getMaterial() == Material.WATER;
+        return this.world.isBlockLoaded(pos)
+            && (FluidloggedSupport.isWater(this.world, pos)
+                || this.world.getBlockState(pos).getBlock()
+                    == com.canoestudio.retrofutureupdateaquatic.block.ModBlocks.BUBBLE_COLUMN);
     }
 
     private void moveToward(double x, double y, double z, double speed, double inertia) {
@@ -415,7 +417,7 @@ public class EntityDolphin extends EntityWaterMob {
     public boolean getCanSpawnHere() {
         BlockPos pos = new BlockPos(this);
         return pos.getY() < this.world.getSeaLevel()
-            && this.world.getBlockState(pos).getMaterial() == Material.WATER
+            && FluidloggedSupport.isWater(this.world, pos)
             && this.world.checkNoEntityCollision(this.getEntityBoundingBox(), this)
             && this.world.getCollisionBoxes(this, this.getEntityBoundingBox()).isEmpty();
     }

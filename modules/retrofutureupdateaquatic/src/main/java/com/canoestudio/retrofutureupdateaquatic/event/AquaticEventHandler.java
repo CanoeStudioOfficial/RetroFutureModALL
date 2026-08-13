@@ -6,6 +6,7 @@ import com.canoestudio.retrofutureupdateaquatic.entity.EntityDrowned;
 import com.canoestudio.retrofutureupdateaquatic.entity.EntityPhantom;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
 import com.canoestudio.retrofutureupdateaquatic.potion.ModPotions;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -28,6 +29,7 @@ import net.minecraftforge.event.AnvilUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -103,6 +105,12 @@ public final class AquaticEventHandler {
     @SubscribeEvent
     public static void onLivingUpdate(LivingEvent.LivingUpdateEvent event) {
         EntityLivingBase living = event.getEntityLiving();
+        if (living.isPotionActive(ModPotions.CONDUIT_POWER)
+                && FluidloggedSupport.isWater(living.world, new BlockPos(living))) {
+            // 1.13 treats Conduit Power as water breathing internally rather
+            // than attaching a second visible Water Breathing effect.
+            living.setAir(Math.max(living.getAir(), 301));
+        }
         if (living.isPotionActive(ModPotions.SLOW_FALLING)) {
             applySlowFallingMotion(living);
         }
@@ -119,6 +127,35 @@ public final class AquaticEventHandler {
         ItemStack head = player.getItemStackFromSlot(EntityEquipmentSlot.HEAD);
         if (head.getItem() == ModItems.TURTLE_HELMET) {
             player.addPotionEffect(new PotionEffect(MobEffects.WATER_BREATHING, 200, 0, true, true));
+        }
+    }
+
+    @SubscribeEvent
+    public static void onBreakSpeed(PlayerEvent.BreakSpeed event) {
+        EntityPlayer player = event.getEntityPlayer();
+        PotionEffect conduit = player.getActivePotionEffect(ModPotions.CONDUIT_POWER);
+        if (conduit == null) {
+            return;
+        }
+
+        float conduitFactor = 1.0F + (conduit.getAmplifier() + 1) * 0.2F;
+        PotionEffect haste = player.getActivePotionEffect(MobEffects.HASTE);
+        float hasteFactor = haste == null ? 1.0F : 1.0F + (haste.getAmplifier() + 1) * 0.2F;
+        event.setNewSpeed(event.getOriginalSpeed() / hasteFactor * Math.max(hasteFactor, conduitFactor));
+    }
+
+    @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END) {
+            return;
+        }
+        EntityPlayer player = event.player;
+        if (!player.capabilities.isFlying && player.isInWater()
+                && player.isPotionActive(ModPotions.DOLPHINS_GRACE)) {
+            // 1.13's Dolphin's Grace changes water drag from 0.8 to 0.96.
+            // Forge 1.12 has no water-drag hook, so compensate after travel.
+            player.motionX *= 1.2D;
+            player.motionZ *= 1.2D;
         }
     }
 
@@ -271,7 +308,7 @@ public final class AquaticEventHandler {
 
     private static boolean isEyeInWater(EntityLivingBase living) {
         BlockPos eyePos = new BlockPos(living.posX, living.posY + living.getEyeHeight(), living.posZ);
-        return living.world.getBlockState(eyePos).getMaterial() == net.minecraft.block.material.Material.WATER;
+        return FluidloggedSupport.isWater(living.world, eyePos);
     }
 
     @SubscribeEvent

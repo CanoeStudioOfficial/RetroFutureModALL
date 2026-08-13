@@ -3,8 +3,8 @@ package com.canoestudio.retrofutureupdateaquatic.entity;
 import com.canoestudio.retrofutureupdateaquatic.block.BlockTurtleEgg;
 import com.canoestudio.retrofutureupdateaquatic.block.ModBlocks;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import javax.annotation.Nullable;
-import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.MoverType;
@@ -86,12 +86,7 @@ public class EntityTurtle extends EntityAnimal {
 
     @Override
     public boolean processInteract(EntityPlayer player, EnumHand hand) {
-        boolean interacted = super.processInteract(player, hand);
-        if (!this.world.isRemote && interacted && !this.isChild() && !this.hasEgg() && this.rand.nextInt(2) == 0) {
-            this.setHasEgg(true);
-            this.layEggCooldown = 100;
-        }
-        return interacted;
+        return super.processInteract(player, hand);
     }
 
     @Override
@@ -104,6 +99,8 @@ public class EntityTurtle extends EntityAnimal {
         }
         if (!this.world.isRemote && this.hasEgg()) {
             updateEggLaying();
+        } else if (!this.world.isRemote && !this.isChild() && !this.hasEgg() && this.isInLove()) {
+            tryMateAndCarryEgg();
         }
         updateRotation();
     }
@@ -155,6 +152,28 @@ public class EntityTurtle extends EntityAnimal {
         }
     }
 
+    /**
+     * Turtles do not create a baby entity when bred.  The first adult in love
+     * that finds a compatible partner becomes the egg carrier and returns to
+     * its home beach, matching the 1.13 turtle breeding flow.
+     */
+    private void tryMateAndCarryEgg() {
+        for (EntityTurtle other : this.world.getEntitiesWithinAABB(EntityTurtle.class,
+                this.getEntityBoundingBox().grow(8.0D))) {
+            if (other == this || other.isChild() || other.hasEgg() || !other.isInLove()
+                    || !this.canMateWith(other)) {
+                continue;
+            }
+            this.resetInLove();
+            other.resetInLove();
+            this.setGrowingAge(6000);
+            other.setGrowingAge(6000);
+            this.setHasEgg(true);
+            this.layEggCooldown = 100;
+            return;
+        }
+    }
+
     @Nullable
     private BlockPos findWaterTarget() {
         BlockPos origin = new BlockPos(this);
@@ -169,7 +188,7 @@ public class EntityTurtle extends EntityAnimal {
     }
 
     private boolean isWater(BlockPos pos) {
-        return this.world.isBlockLoaded(pos) && this.world.getBlockState(pos).getMaterial() == Material.WATER;
+        return this.world.isBlockLoaded(pos) && FluidloggedSupport.isWater(this.world, pos);
     }
 
     private void moveToward(double x, double y, double z, double speed, double inertia) {

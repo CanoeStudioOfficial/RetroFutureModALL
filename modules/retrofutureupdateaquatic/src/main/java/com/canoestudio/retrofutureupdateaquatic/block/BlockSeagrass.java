@@ -15,6 +15,7 @@ import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemShears;
@@ -178,8 +179,14 @@ public class BlockSeagrass extends BlockBush implements IGrowable, IFluidloggabl
 
     @Override
     public net.minecraft.util.EnumActionResult onFluidDrain(World world, BlockPos pos, IBlockState state, int flags) {
+        int type = state.getValue(TYPE);
+        BlockPos other = type == 1 ? pos.up() : type == 2 ? pos.down() : null;
+        if (other != null && world.getBlockState(other).getBlock() == this) {
+            IBlockState otherState = world.getBlockState(other);
+            FluidloggedSupport.restoreContainedFluidOrAir(world, other, otherState, flags);
+        }
         dropBlockAsItem(world, pos, state, 0);
-        world.setBlockToAir(pos);
+        world.setBlockState(pos, Blocks.AIR.getDefaultState(), flags);
         return net.minecraft.util.EnumActionResult.SUCCESS;
     }
 

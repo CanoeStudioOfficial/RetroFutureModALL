@@ -2,6 +2,7 @@ package com.canoestudio.retrofutureupdateaquatic.world.gen;
 
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
 import com.canoestudio.retrofutureupdateaquatic.entity.EntityDrowned;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import com.canoestudio.retrofutureupdateaquatic.world.AquaticLootTables;
 import com.canoestudio.retrofutureupdateaquatic.world.AquaticStructureData;
 import java.util.Map;
@@ -132,12 +133,12 @@ public class AquaticStructureGenerator implements IWorldGenerator {
                     continue;
                 }
                 BlockPos pos = center.add(dx, 0, dz);
-                if (world.getBlockState(pos).getMaterial() == Material.WATER || world.isAirBlock(pos)) {
+                if (FluidloggedSupport.isWater(world, pos) || world.isAirBlock(pos)) {
                     world.setBlockState(pos, randomRuinBlock(random), 2);
                 }
                 if (random.nextInt(5) == 0) {
                     BlockPos wall = pos.up();
-                    if (world.getBlockState(wall).getMaterial() == Material.WATER || world.isAirBlock(wall)) {
+                    if (FluidloggedSupport.isWater(world, wall) || world.isAirBlock(wall)) {
                         world.setBlockState(wall, randomRuinBlock(random), 2);
                     }
                 }
@@ -146,7 +147,7 @@ public class AquaticStructureGenerator implements IWorldGenerator {
 
         if (random.nextInt(3) != 0) {
             BlockPos chest = center.up();
-            if (world.getBlockState(chest).getMaterial() == Material.WATER || world.isAirBlock(chest)) {
+            if (FluidloggedSupport.isWater(world, chest) || world.isAirBlock(chest)) {
                 placeLootChest(world, random, chest, AquaticLootTables.OCEAN_RUIN);
             }
         }
@@ -198,8 +199,8 @@ public class AquaticStructureGenerator implements IWorldGenerator {
     private void spawnDrownedGroup(World world, Random random, BlockPos origin, int count) {
         for (int i = 0; i < count; i++) {
             BlockPos pos = origin.add(random.nextInt(7) - 3, random.nextInt(5) - 2, random.nextInt(7) - 3);
-            if (world.getBlockState(pos).getMaterial() != Material.WATER
-                    || world.getBlockState(pos.up()).getMaterial() != Material.WATER) {
+            if (!FluidloggedSupport.isWater(world, pos)
+                    || !FluidloggedSupport.isWater(world, pos.up())) {
                 continue;
             }
             EntityDrowned drowned = new EntityDrowned(world);
@@ -215,7 +216,7 @@ public class AquaticStructureGenerator implements IWorldGenerator {
             IBlockState state = world.getBlockState(pos);
             Block block = state.getBlock();
             if (!block.isReplaceable(world, pos) && state.getMaterial() != Material.LEAVES
-                    && state.getMaterial() != Material.ICE && state.getMaterial() != Material.WATER) {
+                    && state.getMaterial() != Material.ICE && !FluidloggedSupport.isWater(world, pos)) {
                 return pos;
             }
             pos = pos.down();

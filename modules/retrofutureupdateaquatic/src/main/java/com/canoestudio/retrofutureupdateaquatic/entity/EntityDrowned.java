@@ -1,7 +1,7 @@
 package com.canoestudio.retrofutureupdateaquatic.entity;
 
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
-import net.minecraft.block.material.Material;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.monster.EntityZombie;
@@ -50,7 +50,7 @@ public class EntityDrowned extends EntityZombie {
         } else if (this.isInWater() && this.swimTargetCooldown-- <= 0) {
             BlockPos target = new BlockPos(this).add(this.rand.nextInt(11) - 5, this.rand.nextInt(5) - 2,
                 this.rand.nextInt(11) - 5);
-            if (this.world.getBlockState(target).getMaterial() == Material.WATER) {
+            if (FluidloggedSupport.isWater(this.world, target)) {
                 moveToward(target.getX() + 0.5D, target.getY() + 0.3D, target.getZ() + 0.5D, 0.025D);
             }
             this.swimTargetCooldown = 20 + this.rand.nextInt(30);
@@ -124,7 +124,7 @@ public class EntityDrowned extends EntityZombie {
         BlockPos pos = new BlockPos(this);
         return this.world.getDifficulty() != EnumDifficulty.PEACEFUL
             && pos.getY() < this.world.getSeaLevel()
-            && this.world.getBlockState(pos).getMaterial() == Material.WATER
+            && FluidloggedSupport.isWater(this.world, pos)
             && this.world.getLightFromNeighbors(pos) < 8
             && this.world.checkNoEntityCollision(this.getEntityBoundingBox(), this)
             && this.world.getCollisionBoxes(this, this.getEntityBoundingBox()).isEmpty();

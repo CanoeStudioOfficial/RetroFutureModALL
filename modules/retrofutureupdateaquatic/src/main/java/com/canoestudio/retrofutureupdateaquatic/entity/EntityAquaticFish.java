@@ -2,8 +2,8 @@ package com.canoestudio.retrofutureupdateaquatic.entity;
 
 import com.canoestudio.retrofutureupdateaquatic.item.ItemFishBucket;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import javax.annotation.Nullable;
-import net.minecraft.block.material.Material;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
@@ -15,6 +15,9 @@ import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundEvent;
@@ -25,6 +28,8 @@ import net.minecraft.world.World;
 
 public class EntityAquaticFish extends EntityAnimal {
 
+    private static final DataParameter<Integer> TROPICAL_VARIANT =
+        EntityDataManager.createKey(EntityAquaticFish.class, DataSerializers.VARINT);
     private final AquaticFishType fishType;
     @Nullable
     private BlockPos swimTarget;
@@ -35,6 +40,12 @@ public class EntityAquaticFish extends EntityAnimal {
         super(worldIn);
         this.fishType = fishType;
         this.setSize(fishType.getWidth(), fishType.getHeight());
+    }
+
+    @Override
+    protected void entityInit() {
+        super.entityInit();
+        this.dataManager.register(TROPICAL_VARIANT, 0);
     }
 
     public AquaticFishType getFishType() {
@@ -50,8 +61,11 @@ public class EntityAquaticFish extends EntityAnimal {
 
     @Override
     public IEntityLivingData onInitialSpawn(DifficultyInstance difficulty, @Nullable IEntityLivingData livingdata) {
-        this.enablePersistence();
-        return super.onInitialSpawn(difficulty, livingdata);
+        livingdata = super.onInitialSpawn(difficulty, livingdata);
+        if (this.fishType == AquaticFishType.TROPICAL_FISH) {
+            this.setTropicalFishVariant(this.randomTropicalFishVariant());
+        }
+        return livingdata;
     }
 
     @Override
@@ -59,7 +73,7 @@ public class EntityAquaticFish extends EntityAnimal {
         ItemStack held = player.getHeldItem(hand);
         if (held.getItem() == Items.WATER_BUCKET && this.isEntityAlive()) {
             if (!this.world.isRemote) {
-                ItemStack bucket = ItemFishBucket.create(this.fishType);
+                ItemStack bucket = ItemFishBucket.create(this);
                 if (!player.capabilities.isCreativeMode) {
                     held.shrink(1);
                     if (held.isEmpty()) {
@@ -88,6 +102,14 @@ public class EntityAquaticFish extends EntityAnimal {
             this.setAir(300);
             updateWaterMovement();
         } else {
+            if (!this.world.isRemote) {
+                int air = this.getAir() - 1;
+                this.setAir(air);
+                if (air == -20) {
+                    this.setAir(0);
+                    this.attackEntityFrom(DamageSource.DROWN, 1.0F);
+                }
+            }
             updateLandFlop();
         }
         updateRotationFromMotion();
@@ -138,7 +160,7 @@ public class EntityAquaticFish extends EntityAnimal {
     }
 
     private boolean isWater(BlockPos pos) {
-        return this.world.isBlockLoaded(pos) && this.world.getBlockState(pos).getMaterial() == Material.WATER;
+        return this.world.isBlockLoaded(pos) && FluidloggedSupport.isWater(this.world, pos);
     }
 
     private void moveToward(double x, double y, double z, double speed, double inertia) {
@@ -195,14 +217,18 @@ public class EntityAquaticFish extends EntityAnimal {
     public boolean getCanSpawnHere() {
         BlockPos pos = new BlockPos(this);
         return pos.getY() < this.world.getSeaLevel()
-            && this.world.getBlockState(pos).getMaterial() == Material.WATER
+            && FluidloggedSupport.isWater(this.world, pos)
             && this.world.checkNoEntityCollision(this.getEntityBoundingBox(), this)
             && this.world.getCollisionBoxes(this, this.getEntityBoundingBox()).isEmpty();
     }
 
     @Override
     public EntityAgeable createChild(EntityAgeable ageable) {
-        return this.fishType.create(this.world);
+        EntityAquaticFish child = this.fishType.create(this.world);
+        if (this.fishType == AquaticFishType.TROPICAL_FISH) {
+            child.setTropicalFishVariant(this.randomTropicalFishVariant());
+        }
+        return child;
     }
 
     @Override
@@ -238,6 +264,36 @@ public class EntityAquaticFish extends EntityAnimal {
     @Override
     public void writeEntityToNBT(NBTTagCompound compound) {
         super.writeEntityToNBT(compound);
+        if (this.fishType == AquaticFishType.TROPICAL_FISH) {
+            compound.setInteger("Variant", this.getTropicalFishVariant());
+        }
+    }
+
+    @Override
+    public void readEntityFromNBT(NBTTagCompound compound) {
+        super.readEntityFromNBT(compound);
+        if (this.fishType == AquaticFishType.TROPICAL_FISH && compound.hasKey("Variant")) {
+            this.setTropicalFishVariant(compound.getInteger("Variant"));
+        }
+    }
+
+    public boolean isFlopping() {
+        return !this.isInWater();
+    }
+
+    public int getTropicalFishVariant() {
+        return this.dataManager.get(TROPICAL_VARIANT);
+    }
+
+    public void setTropicalFishVariant(int variant) {
+        this.dataManager.set(TROPICAL_VARIANT, variant);
+    }
+
+    private int randomTropicalFishVariant() {
+        return this.rand.nextInt(2)
+            | (this.rand.nextInt(6) << 8)
+            | (this.rand.nextInt(16) << 16)
+            | (this.rand.nextInt(16) << 24);
     }
 
     public static class Cod extends EntityAquaticFish {
@@ -253,32 +309,86 @@ public class EntityAquaticFish extends EntityAnimal {
     }
 
     public static class Pufferfish extends EntityAquaticFish {
-        private int puffTicks;
+        private static final DataParameter<Integer> PUFF_STATE =
+            EntityDataManager.createKey(Pufferfish.class, DataSerializers.VARINT);
+        private int puffCooldown;
+        private int calmTicks;
 
         public Pufferfish(World worldIn) {
             super(worldIn, AquaticFishType.PUFFERFISH);
         }
 
         @Override
+        protected void entityInit() {
+            super.entityInit();
+            this.dataManager.register(PUFF_STATE, 0);
+        }
+
+        @Override
         public void onLivingUpdate() {
             super.onLivingUpdate();
-            if (this.puffTicks > 0) {
-                this.puffTicks--;
+            if (this.puffCooldown > 0) {
+                this.puffCooldown--;
             }
-            if (!this.world.isRemote && this.ticksExisted % 20 == 0) {
+            if (!this.world.isRemote) {
+                if (this.calmTicks++ >= 80) {
+                    this.setPuffState(this.getPuffState() - 1);
+                    this.calmTicks = 0;
+                }
                 for (EntityLivingBase target : this.world.getEntitiesWithinAABB(EntityLivingBase.class,
                         this.getEntityBoundingBox().grow(1.25D))) {
-                    if (target != this && !(target instanceof EntityPlayer && ((EntityPlayer)target).capabilities.isCreativeMode)) {
-                        target.attackEntityFrom(DamageSource.causeMobDamage(this), 1.0F);
-                        target.addPotionEffect(new net.minecraft.potion.PotionEffect(net.minecraft.init.MobEffects.POISON, 60, 0));
-                        this.puffTicks = 60;
+                    if (target != this && target.isEntityAlive()
+                            && !(target instanceof EntityPlayer && ((EntityPlayer)target).capabilities.isCreativeMode)) {
+                        this.calmTicks = 0;
+                        if (this.puffCooldown <= 0) {
+                            this.setPuffState(this.getPuffState() + 1);
+                            this.puffCooldown = 20;
+                        }
+                        if (this.getPuffState() == 2 && this.ticksExisted % 20 == 0) {
+                            target.attackEntityFrom(DamageSource.causeMobDamage(this), 1.0F);
+                            target.addPotionEffect(new net.minecraft.potion.PotionEffect(
+                                net.minecraft.init.MobEffects.POISON, 60, 0));
+                        }
                     }
                 }
             }
         }
 
         public boolean isPuffed() {
-            return this.puffTicks > 0;
+            return this.getPuffState() > 0;
+        }
+
+        public int getPuffState() {
+            return this.dataManager.get(PUFF_STATE);
+        }
+
+        private void setPuffState(int state) {
+            this.dataManager.set(PUFF_STATE, Math.max(0, Math.min(2, state)));
+        }
+
+        @Override
+        public boolean attackEntityFrom(DamageSource source, float amount) {
+            if (!this.world.isRemote) {
+                this.setPuffState(2);
+                this.calmTicks = 0;
+            }
+            return super.attackEntityFrom(source, amount);
+        }
+
+        @Override
+        public void writeEntityToNBT(NBTTagCompound compound) {
+            super.writeEntityToNBT(compound);
+            compound.setInteger("PuffState", this.getPuffState());
+            compound.setInteger("PuffCooldown", this.puffCooldown);
+            compound.setInteger("CalmTicks", this.calmTicks);
+        }
+
+        @Override
+        public void readEntityFromNBT(NBTTagCompound compound) {
+            super.readEntityFromNBT(compound);
+            this.setPuffState(compound.getInteger("PuffState"));
+            this.puffCooldown = compound.getInteger("PuffCooldown");
+            this.calmTicks = compound.getInteger("CalmTicks");
         }
     }
 
