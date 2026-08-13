@@ -22,6 +22,25 @@ Build every mod:
 .\gradlew.bat build
 ```
 
+Build one all-in-one distribution jar (Binnie-style aggregation):
+
+```powershell
+.\gradlew.bat all
+# Equivalent explicit task:
+.\gradlew.bat buildAllInOne
+```
+
+The all-in-one artifact is written to `build/libs/retrofuture-all-<version>.jar`.
+It contains all currently discovered modules in one installable file while
+preserving each module's original Forge Mod ID, entry point, metadata, mixins,
+and resource namespace. The normal module jars are still generated under each
+module's `build/libs` directory.
+
+The `all` project is only an aggregator. It has no mod source of its own; its
+`jar` task depends on the individual modules' `reobfJar` tasks and copies their
+compiled classes and resources into one final archive, just like the reference
+Binnie project.
+
 Build one mod:
 
 ```powershell

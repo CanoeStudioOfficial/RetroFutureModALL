@@ -9,24 +9,41 @@ plugins {
 }
 
 subprojects {
-    apply from: rootProject.file('gradle/scripts/mod-build.gradle')
+    if (path != ':all') {
+        apply from: rootProject.file('gradle/scripts/mod-build.gradle')
+    }
 }
 
+def modProjects = { subprojects.findAll { it.path != ':all' }.sort { it.name } }
+
 tasks.named('build') {
-    dependsOn subprojects.collect { it.tasks.named('build') }
+    dependsOn modProjects().collect { "${it.path}:build" }
+    dependsOn ':all:jar'
 }
 
 tasks.register('buildAllMods') {
     group = 'build'
     description = 'Builds every mod module under modules/.'
-    dependsOn subprojects.collect { it.tasks.named('build') }
+    dependsOn modProjects().collect { "${it.path}:build" }
+}
+
+tasks.register('buildAllInOne') {
+    group = 'build'
+    description = 'Builds the all-in-one distribution jar.'
+    dependsOn ':all:jar'
+}
+
+tasks.register('all') {
+    group = 'build'
+    description = 'Builds the RetroFuture all-in-one distribution jar.'
+    dependsOn 'buildAllInOne'
 }
 
 tasks.register('listMods') {
     group = 'help'
     description = 'Lists all discovered mod modules.'
     doLast {
-        subprojects.each { project ->
+        modProjects().each { project ->
             println "${project.path} -> ${project.projectDir}"
         }
     }

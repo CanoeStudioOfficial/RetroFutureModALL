@@ -1,0 +1,158 @@
+plugins {
+    id 'java'
+}
+
+def modProjects = {
+    rootProject.subprojects
+            .findAll { it.projectDir.parentFile == rootProject.file('modules') }
+            .sort { it.name }
+}
+
+// Match the Binnie all project: the aggregate project depends on every
+// individual project, while the jar task below combines their outputs.
+modProjects().each { module ->
+    rootProject.evaluationDependsOn(module.path)
+}
+
+dependencies {
+    modProjects().each { module ->
+        runtimeOnly rootProject.project(module.path)
+    }
+}
+
+def allVersion = rootProject.findProperty('all_version')?.toString()
+        ?: modProjects().collect { it.version.toString() }.unique().with {
+            it.size() == 1 ? it[0] : 'unspecified'
+        }
+
+version = allVersion
+group = 'com.canoestudio'
+
+base {
+    archivesName.set(rootProject.findProperty('all_archive_name')?.toString() ?: 'retrofuture-all')
+}
+
+def generatedDir = layout.buildDirectory.dir('generated/all')
+
+tasks.register('generateMcmodInfo') {
+    group = 'build'
+    description = 'Combines the metadata of all individual mod projects.'
+    dependsOn modProjects().collect { "${it.path}:processResources" }
+
+    def outputFile = generatedDir.map { it.file('mcmod.info') }
+    outputs.file(outputFile)
+
+    doLast {
+        def entries = []
+        def parser = new groovy.json.JsonSlurper()
+
+        modProjects().each { module ->
+            def source = module.layout.buildDirectory.file('resources/main/mcmod.info').get().asFile
+            if (!source.exists()) {
+                throw new GradleException("Missing processed mcmod.info for ${module.path}: ${source}")
+            }
+            def metadata = parser.parse(source)
+            entries.addAll(metadata instanceof List ? metadata : [metadata])
+        }
+
+        def output = outputFile.get().asFile
+        output.parentFile.mkdirs()
+        output.text = groovy.json.JsonOutput.prettyPrint(
+                groovy.json.JsonOutput.toJson(entries)
+        ) + System.lineSeparator()
+    }
+}
+
+tasks.register('generatePackMcmeta') {
+    group = 'build'
+    description = 'Creates pack metadata for the all-in-one jar.'
+
+    def outputFile = generatedDir.map { it.file('pack.mcmeta') }
+    outputs.file(outputFile)
+
+    doLast {
+        def output = outputFile.get().asFile
+        output.parentFile.mkdirs()
+        output.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson([
+                pack: [
+                        pack_format: 3,
+                        description: 'RetroFuture all-in-one resources'
+                ]
+        ])) + System.lineSeparator()
+    }
+}
+
+tasks.named('jar') {
+    group = 'build'
+    description = 'Packages all mod projects into one installable jar.'
+    destinationDirectory.set(rootProject.layout.buildDirectory.dir('libs'))
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    dependsOn modProjects().collect { "${it.path}:reobfJar" }
+    dependsOn 'generateMcmodInfo', 'generatePackMcmeta'
+
+    modProjects().each { module ->
+        from({
+            zipTree(module.tasks.named('reobfJar').get().archiveFile.get().asFile)
+        }) {
+            exclude 'META-INF/MANIFEST.MF'
+            exclude 'META-INF/*.SF', 'META-INF/*.RSA', 'META-INF/*.DSA'
+            exclude 'mcmod.info', 'pack.mcmeta'
+        }
+    }
+
+    from(tasks.named('generateMcmodInfo'))
+    from(tasks.named('generatePackMcmeta'))
+
+    doFirst {
+        def mixinConfigs = [] as Set
+        def coremodPlugins = [] as Set
+        def accessTransformers = [] as Set
+
+        modProjects().each { module ->
+            def moduleJar = module.tasks.named('reobfJar').get().archiveFile.get().asFile
+            new java.util.jar.JarFile(moduleJar).withCloseable { jar ->
+                def attributes = jar.manifest?.mainAttributes
+                if (attributes == null) {
+                    return
+                }
+
+                def configs = attributes.getValue('MixinConfigs')
+                if (configs != null) {
+                    configs.split(',').findAll { jar.getEntry(it) != null }.each { mixinConfigs << it }
+                }
+
+                def coremod = attributes.getValue('FMLCorePlugin')
+                if (coremod != null && !coremod.isEmpty()) {
+                    coremodPlugins << coremod
+                }
+
+                def at = attributes.getValue('FMLAT')
+                if (at != null && !at.isEmpty()) {
+                    accessTransformers.addAll(at.split(' ').findAll { !it.isEmpty() })
+                }
+            }
+        }
+
+        if (coremodPlugins.size() > 1) {
+            throw new GradleException(
+                    'The all-in-one jar cannot merge multiple FMLCorePlugin entries: ' + coremodPlugins
+            )
+        }
+
+        def attributes = [
+                'Implementation-Title': 'RetroFuture all-in-one',
+                'Implementation-Version': allVersion
+        ]
+        if (!mixinConfigs.isEmpty()) {
+            attributes['MixinConfigs'] = mixinConfigs.join(',')
+        }
+        if (!coremodPlugins.isEmpty()) {
+            attributes['FMLCorePlugin'] = coremodPlugins.first()
+        }
+        if (!accessTransformers.isEmpty()) {
+            attributes['FMLAT'] = accessTransformers.join(' ')
+        }
+        manifest.attributes(attributes)
+    }
+}

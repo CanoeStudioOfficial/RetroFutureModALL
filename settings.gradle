@@ -24,6 +24,11 @@ plugins {
 // rootProject.name = archives_base_name
 rootProject.name = rootProject.projectDir.getName()
 
+// The all project follows the Binnie-style aggregation pattern: it packages
+// the output of the individual mod projects into one installable jar.
+include ':all'
+project(':all').projectDir = file('all')
+
 file('modules').listFiles()
         ?.findAll { it.isDirectory() && new File(it, 'gradle.properties').exists() }
         ?.sort { it.name }
