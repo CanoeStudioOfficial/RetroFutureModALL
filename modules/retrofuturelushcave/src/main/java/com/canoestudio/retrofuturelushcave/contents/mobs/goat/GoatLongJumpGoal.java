@@ -1,5 +1,6 @@
 package com.canoestudio.retrofuturelushcave.contents.mobs.goat;
 
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.ai.EntityAIBase;
@@ -116,7 +117,8 @@ public class GoatLongJumpGoal extends EntityAIBase {
         Material feet = goat.world.getBlockState(pos).getMaterial();
         Material head = goat.world.getBlockState(pos.up()).getMaterial();
         Material ground = goat.world.getBlockState(pos.down()).getMaterial();
-        return !feet.blocksMovement() && !head.blocksMovement() && ground.blocksMovement() && ground != Material.WATER && ground != Material.LAVA;
+        return !feet.blocksMovement() && !head.blocksMovement() && ground.blocksMovement()
+                && !FluidloggedSupport.isWater(goat.world, pos.down()) && ground != Material.LAVA;
     }
 
     private boolean hasClearArc(BlockPos landing) {

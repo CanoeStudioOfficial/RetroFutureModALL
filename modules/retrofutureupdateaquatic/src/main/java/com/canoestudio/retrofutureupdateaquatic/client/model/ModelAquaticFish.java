@@ -1,6 +1,7 @@
 package com.canoestudio.retrofutureupdateaquatic.client.model;
 
 import com.canoestudio.retrofutureupdateaquatic.entity.EntityAquaticFish;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
@@ -55,7 +56,8 @@ public class ModelAquaticFish extends ModelBase {
     @Override
     public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw,
             float headPitch, float scaleFactor, Entity entityIn) {
-        float speed = entityIn instanceof EntityAquaticFish && !entityIn.isInWater() ? 1.7F : 1.0F;
+        float speed = entityIn instanceof EntityAquaticFish
+            && !FluidloggedSupport.isEntityInWater(entityIn) ? 1.7F : 1.0F;
         this.tail.rotateAngleY = MathHelper.sin(ageInTicks * 0.6F * speed) * 0.45F;
     }
 }

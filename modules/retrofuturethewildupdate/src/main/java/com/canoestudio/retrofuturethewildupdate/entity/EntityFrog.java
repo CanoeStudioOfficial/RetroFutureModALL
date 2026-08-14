@@ -1,6 +1,7 @@
 package com.canoestudio.retrofuturethewildupdate.entity;
 
 import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import com.canoestudio.retrofuturethewildupdate.block.ModBlocks;
 import com.canoestudio.retrofuturethewildupdate.item.ModItems;
 import net.minecraft.block.material.Material;
@@ -192,7 +193,7 @@ public class EntityFrog extends EntityAnimal {
         return pos.getY() > 55
             && (this.world.getBlockState(pos.down()).getMaterial() == Material.GRASS
                 || this.world.getBlockState(pos.down()).getMaterial() == Material.GROUND
-                || this.world.getBlockState(pos.down()).getMaterial() == Material.WATER)
+                || FluidloggedSupport.isWater(this.world, pos.down()))
             && super.getCanSpawnHere();
     }
 

@@ -1,6 +1,7 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
 import java.util.List;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import com.canoestudio.retrofutureupdateaquatic.potion.ModPotions;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -38,7 +39,8 @@ public class TileEntityConduit extends TileEntity implements ITickable {
         AxisAlignedBB box = new AxisAlignedBB(this.pos).grow(radius);
         List<EntityPlayer> players = this.world.getEntitiesWithinAABB(EntityPlayer.class, box);
         for (EntityPlayer player : players) {
-            if (player.getDistanceSqToCenter(this.pos) <= radius * radius && player.isWet()) {
+            if (player.getDistanceSqToCenter(this.pos) <= radius * radius
+                    && (FluidloggedSupport.isEntityInWater(player) || player.isWet())) {
                 player.addPotionEffect(ModPotions.conduitPower(260));
             }
         }
@@ -105,7 +107,9 @@ public class TileEntityConduit extends TileEntity implements ITickable {
         EntityLivingBase closest = null;
         double bestDistance = Double.MAX_VALUE;
         for (EntityLivingBase target : targets) {
-            if (!(target instanceof IMob) || !target.isWet() || !target.isEntityAlive()) {
+            if (!(target instanceof IMob)
+                    || !(FluidloggedSupport.isEntityInWater(target) || target.isWet())
+                    || !target.isEntityAlive()) {
                 continue;
             }
             double distance = target.getDistanceSq(this.pos);

@@ -1,5 +1,6 @@
 package com.canoestudio.retrofuturethewildupdate.block;
 
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -159,7 +160,7 @@ public class TileEntitySculkCatalyst extends TileEntity implements ITickable {
             }
 
             BlockPos substrate = cursor.pos.offset(facing);
-            if (isSculkReplaceable(this.world.getBlockState(substrate))) {
+            if (isSculkReplaceable(this.world, substrate, this.world.getBlockState(substrate))) {
                 this.world.setBlockState(substrate, ModBlocks.SCULK.getDefaultState(), 3);
                 this.world.playSound(null, substrate, ModBlocks.SCULK.getSoundType(ModBlocks.SCULK.getDefaultState(), this.world, substrate, null).getPlaceSound(),
                     SoundCategory.BLOCKS, 1.0f, 1.0f);
@@ -236,7 +237,8 @@ public class TileEntitySculkCatalyst extends TileEntity implements ITickable {
         for (EnumFacing facing : directions) {
             BlockPos substrate = pos.offset(facing);
             IBlockState substrateState = this.world.getBlockState(substrate);
-            if (substrateState.getBlock() == ModBlocks.SCULK || substrateState.getBlock() == ModBlocks.SCULK_CATALYST || isSculkReplaceable(substrateState)) {
+            if (substrateState.getBlock() == ModBlocks.SCULK || substrateState.getBlock() == ModBlocks.SCULK_CATALYST
+                || isSculkReplaceable(this.world, substrate, substrateState)) {
                 this.world.setBlockState(pos, ModBlocks.SCULK_VEIN.getDefaultState().withProperty(faceProperty(facing), true), 3);
                 return true;
             }
@@ -262,12 +264,12 @@ public class TileEntitySculkCatalyst extends TileEntity implements ITickable {
             .isSideSolid(this.world, from.offset(delta.getZ() < 0 ? EnumFacing.NORTH : EnumFacing.SOUTH), delta.getZ() < 0 ? EnumFacing.SOUTH : EnumFacing.NORTH);
     }
 
-    private static boolean isSculkReplaceable(IBlockState state) {
+    private static boolean isSculkReplaceable(net.minecraft.world.World world, BlockPos pos, IBlockState state) {
         Block block = state.getBlock();
         Material material = state.getMaterial();
         return state.isFullBlock()
             && material != Material.AIR
-            && material != Material.WATER
+            && !FluidloggedSupport.isWater(world, pos)
             && material != Material.LAVA
             && material != Material.PORTAL
             && block != Blocks.BEDROCK

@@ -3,6 +3,7 @@ package com.canoestudio.retrofuturelushcave.contents.items;
 import com.canoestudio.retrofuturelushcave.contents.mobs.axolotl.EntityAxolotl;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
 import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
@@ -68,13 +69,14 @@ public class ItemAxolotlBucket extends Item {
     private boolean tryPlaceAxolotl(EntityPlayer player, World world, BlockPos pos, ItemStack stack) {
         IBlockState state = world.getBlockState(pos);
         Material material = state.getMaterial();
+        boolean water = FluidloggedSupport.isWater(world, pos);
         boolean replaceable = state.getBlock().isReplaceable(world, pos);
-        if (!world.isAirBlock(pos) && material != Material.WATER && material.isSolid() && !replaceable) {
+        if (!world.isAirBlock(pos) && !water && material.isSolid() && !replaceable) {
             return false;
         }
 
         if (!world.isRemote) {
-            if (!world.provider.doesWaterVaporize() && material != Material.WATER) {
+            if (!world.provider.doesWaterVaporize() && !water) {
                 if (replaceable && !material.isLiquid()) {
                     world.destroyBlock(pos, true);
                 }

@@ -3,6 +3,7 @@ package com.canoestudio.retrofuturethewildupdate.event;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.potion.ModPotions;
 import com.canoestudio.retrofuturethewildupdate.sounds.ModSounds;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -100,7 +101,7 @@ public class DarknessFogHandler {
         if (player == null || !player.isPotionActive(ModPotions.DARKNESS)) {
             return;
         }
-        if (event.getState().getMaterial() == Material.WATER
+        if (FluidloggedSupport.isEntityInWater(player)
             || event.getState().getMaterial() == Material.LAVA) {
             return;
         }

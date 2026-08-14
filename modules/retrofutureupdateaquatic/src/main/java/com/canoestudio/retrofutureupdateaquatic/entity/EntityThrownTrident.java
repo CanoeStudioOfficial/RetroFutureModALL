@@ -3,6 +3,7 @@ package com.canoestudio.retrofutureupdateaquatic.entity;
 import com.canoestudio.retrofutureupdateaquatic.enchantment.ModEnchantments;
 import com.canoestudio.retrofutureupdateaquatic.item.ItemTrident;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import javax.annotation.Nullable;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.EntityLivingBase;
@@ -43,7 +44,7 @@ public class EntityThrownTrident extends EntityThrowable {
 
     @Override
     protected float getGravityVelocity() {
-        return this.isInWater() ? 0.01F : 0.03F;
+        return FluidloggedSupport.isEntityInWater(this) ? 0.01F : 0.03F;
     }
 
     @Override
@@ -54,7 +55,7 @@ public class EntityThrownTrident extends EntityThrowable {
         }
 
         super.onUpdate();
-        if (this.isInWater()) {
+        if (FluidloggedSupport.isEntityInWater(this)) {
             this.motionX *= 0.93D;
             this.motionY *= 0.93D;
             this.motionZ *= 0.93D;
@@ -90,6 +91,7 @@ public class EntityThrownTrident extends EntityThrowable {
             }
             this.dealtDamage = true;
         } else {
+            tryChanneling(result);
             this.playSound(SoundEvents.ENTITY_ARROW_HIT, 1.0F, 0.6F);
             this.dealtDamage = true;
         }
@@ -122,8 +124,10 @@ public class EntityThrownTrident extends EntityThrowable {
 
     private void updateReturning() {
         EntityLivingBase owner = getThrower();
-        if (!this.world.isRemote && (owner == null || !owner.isEntityAlive())) {
-            dropTrident();
+        if (owner == null || !owner.isEntityAlive()) {
+            if (!this.world.isRemote) {
+                dropTrident();
+            }
             return;
         }
 

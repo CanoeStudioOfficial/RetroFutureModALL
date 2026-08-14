@@ -63,7 +63,7 @@ public class BuddingAmethystBlock extends net.minecraft.block.Block {
     }
 
     private static boolean canClusterGrowAtState(World world, BlockPos pos, IBlockState state) {
-        return state.getBlock() == Blocks.AIR || state.getMaterial() == Material.WATER || FluidloggedSupport.isWater(world, pos);
+        return state.getBlock() == Blocks.AIR || FluidloggedSupport.isWater(world, pos);
     }
 
     @Override

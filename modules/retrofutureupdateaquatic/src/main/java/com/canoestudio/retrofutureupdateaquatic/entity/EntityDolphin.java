@@ -74,9 +74,22 @@ public class EntityDolphin extends EntityWaterMob {
     }
 
     @Override
+    protected Item getDropItem() {
+        return ModItems.COD;
+    }
+
+    @Override
+    protected void dropFewItems(boolean wasRecentlyHit, int lootingModifier) {
+        int count = this.rand.nextInt(2) + lootingModifier;
+        if (count > 0) {
+            this.dropItem(ModItems.COD, count);
+        }
+    }
+
+    @Override
     public void onLivingUpdate() {
         super.onLivingUpdate();
-        if (this.isInWater()) {
+        if (FluidloggedSupport.isEntityInWater(this)) {
             this.setAir(4800);
             updateWaterMovement();
             if (!this.world.isRemote && this.ticksExisted % 60 == 0) {
@@ -167,7 +180,8 @@ public class EntityDolphin extends EntityWaterMob {
         EntityItem best = null;
         double bestDistance = Double.MAX_VALUE;
         for (EntityItem item : items) {
-            if (!item.isEntityAlive() || item.getItem().isEmpty() || !item.isInWater()) {
+            if (!item.isEntityAlive() || item.getItem().isEmpty()
+                    || !FluidloggedSupport.isEntityInWater(item)) {
                 continue;
             }
             double distance = this.getDistanceSq(item);
@@ -313,7 +327,8 @@ public class EntityDolphin extends EntityWaterMob {
     private void grantNearbyPlayersGrace() {
         for (EntityPlayer player : this.world.getEntitiesWithinAABB(EntityPlayer.class,
                 this.getEntityBoundingBox().grow(10.0D))) {
-            if (player.isInWater() && (player.isSprinting() || AquaticCompat.isActuallySwimming(player))) {
+            if (FluidloggedSupport.isEntityInWater(player)
+                    && (player.isSprinting() || AquaticCompat.isActuallySwimming(player))) {
                 player.addPotionEffect(ModPotions.dolphinsGrace(100));
             }
         }
@@ -397,7 +412,7 @@ public class EntityDolphin extends EntityWaterMob {
             this.rotationYaw += MathHelper.wrapDegrees(yaw - this.rotationYaw) * 0.18F;
             this.renderYawOffset = this.rotationYaw;
         }
-        float pitch = this.isInWater()
+        float pitch = FluidloggedSupport.isEntityInWater(this)
             ? -((float)MathHelper.atan2(this.motionY, MathHelper.sqrt(horizontal))) * (180F / (float)Math.PI)
             : 0.0F;
         this.rotationPitch += (pitch - this.rotationPitch) * 0.15F;
@@ -406,7 +421,7 @@ public class EntityDolphin extends EntityWaterMob {
     @Override
     public void travel(float strafe, float vertical, float forward) {
         this.move(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
-        if (this.isInWater()) {
+        if (FluidloggedSupport.isEntityInWater(this)) {
             this.motionX *= 0.92D;
             this.motionY *= 0.92D;
             this.motionZ *= 0.92D;

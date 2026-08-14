@@ -4,8 +4,11 @@ import git.jbredwards.fluidlogged_api.api.util.FluidState;
 import git.jbredwards.fluidlogged_api.api.util.FluidloggedUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
@@ -31,7 +34,37 @@ public final class FluidloggedSupport {
     }
 
     public static boolean isWater(IBlockAccess world, BlockPos pos) {
-        return isWater(getFluidState(world, pos));
+        IBlockState state = world.getBlockState(pos);
+        return isWater(getFluidState(world, pos, state)) || isVanillaWater(state);
+    }
+
+    /**
+     * Fluidlogged-compatible equivalent of Entity#isInWater().  The vanilla
+     * method only sees the block material, while Fluidlogged API stores the
+     * fluid separately from the block occupying the position.
+     */
+    public static boolean isEntityInWater(Entity entity) {
+        if (entity == null || entity.world == null) {
+            return false;
+        }
+
+        AxisAlignedBB box = entity.getEntityBoundingBox();
+        int minX = MathHelper.floor(box.minX);
+        int maxX = MathHelper.floor(box.maxX + 0.999D);
+        int minY = MathHelper.floor(box.minY);
+        int maxY = MathHelper.floor(box.maxY + 0.999D);
+        int minZ = MathHelper.floor(box.minZ);
+        int maxZ = MathHelper.floor(box.maxZ + 0.999D);
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    if (isWater(entity.world, new BlockPos(x, y, z))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public static boolean isWater(FluidState fluidState) {

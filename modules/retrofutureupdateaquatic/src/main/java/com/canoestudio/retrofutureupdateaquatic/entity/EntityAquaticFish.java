@@ -2,6 +2,7 @@ package com.canoestudio.retrofutureupdateaquatic.entity;
 
 import com.canoestudio.retrofutureupdateaquatic.item.ItemFishBucket;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
+import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAIWanderUnderwater;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import javax.annotation.Nullable;
 import net.minecraft.entity.EntityAgeable;
@@ -9,6 +10,11 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.EntityAIAvoidEntity;
+import net.minecraft.entity.ai.EntityAIFollowParent;
+import net.minecraft.entity.ai.EntityAILookIdle;
+import net.minecraft.entity.ai.EntityAIMate;
+import net.minecraft.entity.ai.EntityMoveHelper;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -25,21 +31,38 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
+import net.minecraft.pathfinding.PathNavigate;
+import net.minecraft.pathfinding.PathNavigateSwimmer;
+import net.minecraft.pathfinding.PathNodeType;
 
 public class EntityAquaticFish extends EntityAnimal {
 
     private static final DataParameter<Integer> TROPICAL_VARIANT =
         EntityDataManager.createKey(EntityAquaticFish.class, DataSerializers.VARINT);
     private final AquaticFishType fishType;
-    @Nullable
-    private BlockPos swimTarget;
-    private int targetCooldown;
     private int flopCooldown;
 
     protected EntityAquaticFish(World worldIn, AquaticFishType fishType) {
         super(worldIn);
         this.fishType = fishType;
         this.setSize(fishType.getWidth(), fishType.getHeight());
+        this.moveHelper = new FishMoveHelper(this);
+        this.setPathPriority(PathNodeType.WATER, 0.0F);
+    }
+
+    /** Mature OE 1.12.2 AI layout, retained for all four vanilla fish types. */
+    @Override
+    protected void initEntityAI() {
+        this.tasks.addTask(1, new EntityAIAvoidEntity<EntityPlayer>(this, EntityPlayer.class, 8.0F, 1.6D, 1.4D));
+        this.tasks.addTask(2, new EntityAIWanderUnderwater(this, 1.0D, 20, true));
+        this.tasks.addTask(3, new EntityAILookIdle(this));
+        this.tasks.addTask(4, new EntityAIMate(this, 1.0D));
+        this.tasks.addTask(5, new EntityAIFollowParent(this, 1.25D));
+    }
+
+    @Override
+    protected PathNavigate createNavigator(World worldIn) {
+        return new PathNavigateSwimmer(this, worldIn);
     }
 
     @Override
@@ -98,9 +121,8 @@ public class EntityAquaticFish extends EntityAnimal {
             return;
         }
 
-        if (this.isInWater()) {
+        if (FluidloggedSupport.isEntityInWater(this)) {
             this.setAir(300);
-            updateWaterMovement();
         } else {
             if (!this.world.isRemote) {
                 int air = this.getAir() - 1;
@@ -115,27 +137,7 @@ public class EntityAquaticFish extends EntityAnimal {
         updateRotationFromMotion();
     }
 
-    private void updateWaterMovement() {
-        if (this.targetCooldown > 0) {
-            this.targetCooldown--;
-        }
-        if (this.swimTarget == null || this.targetCooldown <= 0 || !isWater(this.swimTarget)
-                || distanceSqToCenter(this.swimTarget) < 0.7D) {
-            this.swimTarget = findWaterTarget();
-            this.targetCooldown = 25 + this.rand.nextInt(45);
-        }
-        if (this.swimTarget != null) {
-            moveToward(this.swimTarget.getX() + 0.5D, this.swimTarget.getY() + 0.4D,
-                this.swimTarget.getZ() + 0.5D, this.fishType.getSwimSpeed(), 0.22D);
-        }
-        this.motionX *= 0.88D;
-        this.motionY *= 0.88D;
-        this.motionZ *= 0.88D;
-        limitMotion(0.16D, 0.12D);
-    }
-
     private void updateLandFlop() {
-        this.swimTarget = null;
         if (this.onGround && this.flopCooldown-- <= 0) {
             this.motionX += (this.rand.nextDouble() - 0.5D) * 0.16D;
             this.motionY = 0.22D + this.rand.nextDouble() * 0.08D;
@@ -146,48 +148,6 @@ public class EntityAquaticFish extends EntityAnimal {
         this.motionZ *= 0.72D;
     }
 
-    @Nullable
-    private BlockPos findWaterTarget() {
-        BlockPos origin = new BlockPos(this);
-        for (int i = 0; i < 18; i++) {
-            BlockPos candidate = origin.add(this.rand.nextInt(9) - 4, this.rand.nextInt(5) - 2,
-                this.rand.nextInt(9) - 4);
-            if (isWater(candidate)) {
-                return candidate;
-            }
-        }
-        return isWater(origin) ? origin : null;
-    }
-
-    private boolean isWater(BlockPos pos) {
-        return this.world.isBlockLoaded(pos) && FluidloggedSupport.isWater(this.world, pos);
-    }
-
-    private void moveToward(double x, double y, double z, double speed, double inertia) {
-        double dx = x - this.posX;
-        double dy = y - this.posY;
-        double dz = z - this.posZ;
-        double distance = MathHelper.sqrt(dx * dx + dy * dy + dz * dz);
-        if (distance > 0.0001D) {
-            this.motionX += (dx / distance * speed - this.motionX) * inertia;
-            this.motionY += (dy / distance * speed - this.motionY) * inertia;
-            this.motionZ += (dz / distance * speed - this.motionZ) * inertia;
-        }
-    }
-
-    private void limitMotion(double horizontal, double vertical) {
-        this.motionX = MathHelper.clamp(this.motionX, -horizontal, horizontal);
-        this.motionY = MathHelper.clamp(this.motionY, -vertical, vertical);
-        this.motionZ = MathHelper.clamp(this.motionZ, -horizontal, horizontal);
-    }
-
-    private double distanceSqToCenter(BlockPos pos) {
-        double dx = pos.getX() + 0.5D - this.posX;
-        double dy = pos.getY() + 0.5D - this.posY;
-        double dz = pos.getZ() + 0.5D - this.posZ;
-        return dx * dx + dy * dy + dz * dz;
-    }
-
     private void updateRotationFromMotion() {
         double horizontal = this.motionX * this.motionX + this.motionZ * this.motionZ;
         if (horizontal > 1.0E-5D) {
@@ -195,7 +155,7 @@ public class EntityAquaticFish extends EntityAnimal {
             this.rotationYaw += MathHelper.wrapDegrees(yaw - this.rotationYaw) * 0.2F;
             this.renderYawOffset = this.rotationYaw;
         }
-        if (this.isInWater()) {
+        if (FluidloggedSupport.isEntityInWater(this)) {
             float targetPitch = -((float)MathHelper.atan2(this.motionY, MathHelper.sqrt(horizontal))) * (180F / (float)Math.PI);
             this.rotationPitch += (targetPitch - this.rotationPitch) * 0.15F;
         } else {
@@ -205,11 +165,76 @@ public class EntityAquaticFish extends EntityAnimal {
 
     @Override
     public void travel(float strafe, float vertical, float forward) {
-        this.move(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
-        if (this.isInWater()) {
-            this.motionX *= 0.86D;
-            this.motionY *= 0.86D;
-            this.motionZ *= 0.86D;
+        if (this.isServerWorld() && FluidloggedSupport.isEntityInWater(this)) {
+            this.moveRelative(strafe, vertical, forward, 0.1F);
+            this.move(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
+            this.motionX *= 0.8D;
+            this.motionY *= 0.9D;
+            this.motionZ *= 0.8D;
+        } else {
+            super.travel(strafe, vertical, forward);
+        }
+    }
+
+    /**
+     * OE's mature fish MoveHelper, with Fluidlogged water detection.  This is
+     * what keeps PathNavigateSwimmer from producing a stiff, ground-like fish.
+     */
+    private static final class FishMoveHelper extends EntityMoveHelper {
+
+        private final EntityAquaticFish fish;
+
+        private FishMoveHelper(EntityAquaticFish fish) {
+            super(fish);
+            this.fish = fish;
+        }
+
+        @Override
+        public void onUpdateMoveHelper() {
+            if (this.action == Action.MOVE_TO && !this.fish.getNavigator().noPath()
+                    && FluidloggedSupport.isEntityInWater(this.fish)) {
+                if (FluidloggedSupport.isEntityInWater(this.fish)) {
+                    this.fish.motionY += 0.005D;
+                }
+
+                double dx = this.posX - this.fish.posX;
+                double dy = this.posY - this.fish.posY;
+                double dz = this.posZ - this.fish.posZ;
+                double distance = MathHelper.sqrt(dx * dx + dy * dy + dz * dz);
+                if (distance > 1.0E-4D) {
+                    dy /= distance;
+                    float yaw = (float)(MathHelper.atan2(dz, dx) * (180D / Math.PI)) - 90.0F;
+                    this.fish.rotationYaw = this.limitAngle(this.fish.rotationYaw, yaw, 90.0F);
+                    this.fish.renderYawOffset = this.fish.rotationYaw;
+
+                    float speed = (float)(this.speed
+                            * this.fish.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED)
+                                .getAttributeValue());
+                    this.fish.setAIMoveSpeed(this.fish.getAIMoveSpeed()
+                        + (speed - this.fish.getAIMoveSpeed()) * 0.125F);
+                    this.fish.motionY += this.fish.getAIMoveSpeed() * dy * 0.1D;
+
+                    net.minecraft.entity.ai.EntityLookHelper look = this.fish.getLookHelper();
+                    double lookX = this.fish.posX + dx / distance * 3.0D;
+                    double lookY = this.fish.posY + this.fish.getEyeHeight() + dy / distance * 5.0D;
+                    double lookZ = this.fish.posZ + dz / distance * 3.0D;
+                    double currentX = look.getLookPosX();
+                    double currentY = look.getLookPosY();
+                    double currentZ = look.getLookPosZ();
+                    if (!look.getIsLooking()) {
+                        currentX = lookX;
+                        currentY = lookY;
+                        currentZ = lookZ;
+                    }
+                    look.setLookPosition(currentX + (lookX - currentX) * 0.125D,
+                        currentY + (lookY - currentY) * 0.125D,
+                        currentZ + (lookZ - currentZ) * 0.125D, 5.0F, 30.0F);
+                }
+            } else if (!FluidloggedSupport.isEntityInWater(this.fish) && this.fish.isFlopping()) {
+                this.fish.setAIMoveSpeed(0.0F);
+            } else if (!FluidloggedSupport.isEntityInWater(this.fish)) {
+                super.onUpdateMoveHelper();
+            }
         }
     }
 
@@ -278,7 +303,7 @@ public class EntityAquaticFish extends EntityAnimal {
     }
 
     public boolean isFlopping() {
-        return !this.isInWater();
+        return !FluidloggedSupport.isEntityInWater(this);
     }
 
     public int getTropicalFishVariant() {

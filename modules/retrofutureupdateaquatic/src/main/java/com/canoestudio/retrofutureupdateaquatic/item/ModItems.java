@@ -23,7 +23,7 @@ public final class ModItems {
     public static final Item TRIDENT = new ItemTrident();
     public static final Item COD = foodItem("cod", 2, 0.1F);
     public static final Item SALMON = foodItem("salmon", 2, 0.1F);
-    public static final Item PUFFERFISH = foodItem("pufferfish", 1, 0.1F);
+    public static final Item PUFFERFISH = new ItemPufferfish();
     public static final Item TROPICAL_FISH = foodItem("tropical_fish", 1, 0.1F);
     public static final Item COOKED_COD = foodItem("cooked_cod", 5, 0.6F);
     public static final Item COOKED_SALMON = foodItem("cooked_salmon", 6, 0.8F);

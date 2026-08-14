@@ -29,6 +29,8 @@ import net.minecraftforge.event.AnvilUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.ItemFishedEvent;
+import net.minecraftforge.event.furnace.FurnaceFuelBurnTimeEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.ChunkEvent;
@@ -46,6 +48,24 @@ public final class AquaticEventHandler {
         new WeakHashMap<EntityZombie, Integer>();
 
     private AquaticEventHandler() {
+    }
+
+    @SubscribeEvent
+    public static void onFurnaceFuel(FurnaceFuelBurnTimeEvent event) {
+        if (event.getItemStack().getItem() == net.minecraft.item.Item.getItemFromBlock(ModBlocks.DRIED_KELP_BLOCK)) {
+            event.setBurnTime(4000);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onItemFished(ItemFishedEvent event) {
+        // 1.13's fishing table gives treasure a 5% roll and the treasure
+        // pool gives the nautilus shell one of six equal entries.  Forge's
+        // 1.12 ItemFishedEvent exposes the final stacks but not the selected
+        // loot-table branch, so preserve the same aggregate 1/120 chance.
+        if (event.getEntityPlayer().world.rand.nextInt(120) == 0) {
+            event.getDrops().add(new ItemStack(ModItems.NAUTILUS_SHELL));
+        }
     }
 
     @SubscribeEvent
@@ -106,7 +126,7 @@ public final class AquaticEventHandler {
     public static void onLivingUpdate(LivingEvent.LivingUpdateEvent event) {
         EntityLivingBase living = event.getEntityLiving();
         if (living.isPotionActive(ModPotions.CONDUIT_POWER)
-                && FluidloggedSupport.isWater(living.world, new BlockPos(living))) {
+                && FluidloggedSupport.isEntityInWater(living)) {
             // 1.13 treats Conduit Power as water breathing internally rather
             // than attaching a second visible Water Breathing effect.
             living.setAir(Math.max(living.getAir(), 301));
@@ -121,7 +141,7 @@ public final class AquaticEventHandler {
             return;
         }
         EntityPlayer player = (EntityPlayer)living;
-        if (player.ticksExisted % 40 != 0 || !player.isInWater()) {
+        if (player.ticksExisted % 40 != 0 || !FluidloggedSupport.isEntityInWater(player)) {
             return;
         }
         ItemStack head = player.getItemStackFromSlot(EntityEquipmentSlot.HEAD);
@@ -150,7 +170,7 @@ public final class AquaticEventHandler {
             return;
         }
         EntityPlayer player = event.player;
-        if (!player.capabilities.isFlying && player.isInWater()
+        if (!player.capabilities.isFlying && FluidloggedSupport.isEntityInWater(player)
                 && player.isPotionActive(ModPotions.DOLPHINS_GRACE)) {
             // 1.13's Dolphin's Grace changes water drag from 0.8 to 0.96.
             // Forge 1.12 has no water-drag hook, so compensate after travel.

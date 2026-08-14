@@ -22,6 +22,7 @@ import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraft.world.gen.NoiseGeneratorOctaves;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.fml.common.IWorldGenerator;
+import com.canoestudio.retrofutureupdateaquatic.world.biome.AquaticBiomes;
 
 /**
  * 1.13 aquatic terrain and seafloor features, adapted from Oceanic Expanse.
@@ -75,7 +76,10 @@ public class AquaticWorldGenerator implements IWorldGenerator {
 
         generatePlants(world, random, blockX, blockZ, ocean, river, swamp);
         if (ocean) {
-            generateWarmOceanFeatures(world, random, blockX, blockZ, chunkX, chunkZ);
+            if (AquaticBiomes.isWarm(biome) || AquaticBiomes.isLukewarm(biome)
+                    || isWarmOceanLike(biome)) {
+                generateWarmOceanFeatures(world, random, blockX, blockZ, chunkX, chunkZ);
+            }
             generateFrozenOceanFeatures(world, random, blockX, blockZ, chunkX, chunkZ, biome);
         }
     }
@@ -476,7 +480,7 @@ public class AquaticWorldGenerator implements IWorldGenerator {
 
     private boolean isFrozenOceanLike(Biome biome) {
         String name = biome.getBiomeName().toLowerCase(Locale.ROOT);
-        return name.contains("frozen") || name.contains("ice") || name.contains("glacier")
+        return AquaticBiomes.isFrozen(biome) || name.contains("frozen") || name.contains("ice") || name.contains("glacier")
             || (name.contains("ocean") && (BiomeDictionary.hasType(biome, BiomeDictionary.Type.COLD)
             || BiomeDictionary.hasType(biome, BiomeDictionary.Type.SNOWY)
             || biome.getDefaultTemperature() <= 0.15F));

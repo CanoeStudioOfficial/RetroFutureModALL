@@ -147,7 +147,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
                     randomRange(random, GEODE_MIN_OUTER_WALL_DISTANCE, GEODE_MAX_OUTER_WALL_DISTANCE),
                     randomRange(random, GEODE_MIN_OUTER_WALL_DISTANCE, GEODE_MAX_OUTER_WALL_DISTANCE));
 
-            if (isInvalidGeodeSample(world.getBlockState(point))) {
+            if (isInvalidGeodeSample(world, point)) {
                 invalidPoints++;
                 if (invalidPoints > GEODE_INVALID_BLOCKS_THRESHOLD) {
                     return false;
@@ -278,14 +278,15 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
         return ModBlocks.AMETHYST_CLUSTER;
     }
 
-    private boolean isInvalidGeodeSample(IBlockState state) {
+    private boolean isInvalidGeodeSample(World world, BlockPos pos) {
+        IBlockState state = world.getBlockState(pos);
         Block block = state.getBlock();
         Material material = state.getMaterial();
         return block == Blocks.AIR
                 || block == Blocks.BEDROCK
                 || block == Blocks.ICE
                 || block == Blocks.PACKED_ICE
-                || material == Material.WATER
+                || FluidloggedSupport.isWater(world, pos)
                 || material == Material.LAVA;
     }
 
@@ -316,9 +317,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
     }
 
     private boolean canGeodeClusterGrowAtState(World world, BlockPos pos, IBlockState state) {
-        return state.getBlock() == Blocks.AIR
-                || state.getMaterial() == Material.WATER
-                || FluidloggedSupport.isWater(world, pos);
+        return state.getBlock() == Blocks.AIR || FluidloggedSupport.isWater(world, pos);
     }
 
     private void notifyAdjacentFluids(World world, BlockPos pos) {
@@ -709,7 +708,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
         return pos.getY() > 3
                 && pos.getY() < world.getActualHeight() - 3
                 && !world.canBlockSeeSky(pos)
-                && (state.getBlock() == Blocks.AIR || state.getMaterial() == Material.WATER);
+                && (state.getBlock() == Blocks.AIR || FluidloggedSupport.isWater(world, pos));
     }
 
     private boolean hasNearbyNaturalStone(World world, BlockPos pos) {
@@ -729,7 +728,8 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
         BlockPos pos = new BlockPos(blockX + random.nextInt(16), 12 + random.nextInt(38), blockZ + random.nextInt(16));
         if (EntityGlowSquid.canSpawnAt(world, pos, random)) {
             spawnMob(world, new EntityGlowSquid(world), pos);
-        } else if (random.nextInt(3) == 0 && world.getBlockState(pos).getMaterial() == Material.WATER && world.getBlockState(pos.down()).getBlock() == Blocks.CLAY) {
+        } else if (random.nextInt(3) == 0 && FluidloggedSupport.isWater(world, pos)
+                && world.getBlockState(pos.down()).getBlock() == Blocks.CLAY) {
             EntityAxolotl axolotl = new EntityAxolotl(world);
             axolotl.setRandomVariant();
             spawnMob(world, axolotl, pos);
@@ -771,7 +771,7 @@ public class RetroFutureWorldGenerator implements IWorldGenerator {
 
     private boolean isReplaceableCavePlantTarget(World world, BlockPos pos) {
         IBlockState state = world.getBlockState(pos);
-        return state.getBlock() == Blocks.AIR || state.getMaterial() == Material.WATER;
+        return state.getBlock() == Blocks.AIR || FluidloggedSupport.isWater(world, pos);
     }
 
     private boolean isInsideChunk(BlockPos pos, int blockX, int blockZ) {

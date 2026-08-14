@@ -2,6 +2,7 @@ package com.canoestudio.retrofuturethewildupdate.world.gen;
 
 import com.canoestudio.retrofuturethewildupdate.block.ModBlocks;
 import com.canoestudio.retrofuturethewildupdate.block.BlockMangrovePropagule;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLeaves;
 import net.minecraft.block.BlockRotatedPillar;
@@ -152,7 +153,7 @@ public class WorldGenMangroveTree extends WorldGenAbstractTree {
         Block block = state.getBlock();
         return block == Blocks.AIR
             || block == Blocks.TALLGRASS
-            || state.getMaterial() == Material.WATER
+            || FluidloggedSupport.isWater(world, pos)
             || block.isLeaves(state, world, pos)
             || block.isReplaceable(world, pos);
     }

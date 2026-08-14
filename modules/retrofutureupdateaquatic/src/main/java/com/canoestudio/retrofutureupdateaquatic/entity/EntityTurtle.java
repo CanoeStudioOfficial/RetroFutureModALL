@@ -13,6 +13,7 @@ import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
@@ -92,7 +93,7 @@ public class EntityTurtle extends EntityAnimal {
     @Override
     public void onLivingUpdate() {
         super.onLivingUpdate();
-        if (this.isInWater()) {
+        if (FluidloggedSupport.isEntityInWater(this)) {
             updateWaterMovement();
         } else {
             updateLandMovement();
@@ -222,7 +223,7 @@ public class EntityTurtle extends EntityAnimal {
     @Override
     public void travel(float strafe, float vertical, float forward) {
         this.move(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
-        if (this.isInWater()) {
+        if (FluidloggedSupport.isEntityInWater(this)) {
             this.motionX *= 0.9D;
             this.motionY *= 0.9D;
             this.motionZ *= 0.9D;
@@ -242,6 +243,20 @@ public class EntityTurtle extends EntityAnimal {
     }
 
     @Override
+    protected Item getDropItem() {
+        return Item.getItemFromBlock(ModBlocks.SEAGRASS);
+    }
+
+    @Override
+    protected void dropFewItems(boolean wasRecentlyHit, int lootingModifier) {
+        // OE's mature 1.12.2 turtle loot table uses a 0-2 seagrass roll.
+        int count = this.rand.nextInt(3) + lootingModifier;
+        if (count > 0) {
+            this.dropItem(Item.getItemFromBlock(ModBlocks.SEAGRASS), count);
+        }
+    }
+
+    @Override
     public boolean getCanSpawnHere() {
         BlockPos pos = new BlockPos(this);
         return this.posY > 58.0D && this.posY < 72.0D
@@ -257,7 +272,7 @@ public class EntityTurtle extends EntityAnimal {
 
     @Override
     protected SoundEvent getAmbientSound() {
-        return this.isInWater() ? net.minecraft.init.SoundEvents.ENTITY_SQUID_AMBIENT
+        return FluidloggedSupport.isEntityInWater(this) ? net.minecraft.init.SoundEvents.ENTITY_SQUID_AMBIENT
             : net.minecraft.init.SoundEvents.ENTITY_CHICKEN_AMBIENT;
     }
 

@@ -54,7 +54,39 @@ public final class ModPotionRegistry {
             new PotionType("turtle_master",
                 new PotionEffect(MobEffects.SLOWNESS, 400, 5),
                 new PotionEffect(MobEffects.RESISTANCE, 400, 3))
-                .setRegistryName(RetroFutureUpdateAquatic.ID, "strong_turtle_master")
+                .setRegistryName(RetroFutureUpdateAquatic.ID, "strong_turtle_master"),
+            new PotionType("slow_falling", new PotionEffect(SLOW_FALLING, 1800))
+                .setRegistryName(RetroFutureUpdateAquatic.ID, "splash_slow_falling"),
+            new PotionType("slow_falling", new PotionEffect(SLOW_FALLING, 4800))
+                .setRegistryName(RetroFutureUpdateAquatic.ID, "long_splash_slow_falling"),
+            new PotionType("slow_falling", new PotionEffect(SLOW_FALLING, 1800))
+                .setRegistryName(RetroFutureUpdateAquatic.ID, "lingering_slow_falling"),
+            new PotionType("slow_falling", new PotionEffect(SLOW_FALLING, 4800))
+                .setRegistryName(RetroFutureUpdateAquatic.ID, "long_lingering_slow_falling"),
+            new PotionType("turtle_master",
+                new PotionEffect(MobEffects.SLOWNESS, 400, 3),
+                new PotionEffect(MobEffects.RESISTANCE, 400, 2))
+                .setRegistryName(RetroFutureUpdateAquatic.ID, "splash_turtle_master"),
+            new PotionType("turtle_master",
+                new PotionEffect(MobEffects.SLOWNESS, 800, 3),
+                new PotionEffect(MobEffects.RESISTANCE, 800, 2))
+                .setRegistryName(RetroFutureUpdateAquatic.ID, "long_splash_turtle_master"),
+            new PotionType("turtle_master",
+                new PotionEffect(MobEffects.SLOWNESS, 400, 5),
+                new PotionEffect(MobEffects.RESISTANCE, 400, 3))
+                .setRegistryName(RetroFutureUpdateAquatic.ID, "strong_splash_turtle_master"),
+            new PotionType("turtle_master",
+                new PotionEffect(MobEffects.SLOWNESS, 400, 3),
+                new PotionEffect(MobEffects.RESISTANCE, 400, 2))
+                .setRegistryName(RetroFutureUpdateAquatic.ID, "lingering_turtle_master"),
+            new PotionType("turtle_master",
+                new PotionEffect(MobEffects.SLOWNESS, 800, 3),
+                new PotionEffect(MobEffects.RESISTANCE, 800, 2))
+                .setRegistryName(RetroFutureUpdateAquatic.ID, "long_lingering_turtle_master"),
+            new PotionType("turtle_master",
+                new PotionEffect(MobEffects.SLOWNESS, 400, 5),
+                new PotionEffect(MobEffects.RESISTANCE, 400, 3))
+                .setRegistryName(RetroFutureUpdateAquatic.ID, "strong_lingering_turtle_master")
         );
     }
 }

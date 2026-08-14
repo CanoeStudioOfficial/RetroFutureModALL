@@ -6,6 +6,7 @@ import com.canoestudio.retrofutureupdateaquatic.entity.EntityAquaticFish;
 import com.canoestudio.retrofutureupdateaquatic.entity.EntityDolphin;
 import com.canoestudio.retrofutureupdateaquatic.entity.EntityDrowned;
 import com.canoestudio.retrofutureupdateaquatic.entity.EntityTurtle;
+import com.canoestudio.retrofutureupdateaquatic.world.biome.AquaticBiomes;
 import java.util.Locale;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.world.biome.Biome;
@@ -41,7 +42,7 @@ public final class ModAquaticSpawns {
     }
 
     private static boolean isCodSpawnBiome(Biome biome) {
-        return isOcean(biome) && !isWarmOceanLike(biome);
+        return isOcean(biome) && !AquaticBiomes.isWarm(biome);
     }
 
     private static boolean isSalmonSpawnBiome(Biome biome) {
@@ -49,15 +50,15 @@ public final class ModAquaticSpawns {
     }
 
     private static boolean isPufferfishSpawnBiome(Biome biome) {
-        return isOcean(biome) && !BiomeDictionary.hasType(biome, BiomeDictionary.Type.COLD);
+        return AquaticBiomes.isWarm(biome) || AquaticBiomes.isLukewarm(biome);
     }
 
     private static boolean isTropicalFishSpawnBiome(Biome biome) {
-        return isOcean(biome) && isWarmOceanLike(biome);
+        return AquaticBiomes.isWarm(biome) || AquaticBiomes.isLukewarm(biome);
     }
 
     private static boolean isDolphinSpawnBiome(Biome biome) {
-        return isOcean(biome) && !BiomeDictionary.hasType(biome, BiomeDictionary.Type.COLD);
+        return isOcean(biome) && !AquaticBiomes.isCold(biome);
     }
 
     private static boolean isTurtleSpawnBiome(Biome biome) {

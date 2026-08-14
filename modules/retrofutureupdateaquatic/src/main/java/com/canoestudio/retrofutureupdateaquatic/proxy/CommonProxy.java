@@ -7,6 +7,7 @@ import com.canoestudio.retrofutureupdateaquatic.block.ModBlocks;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
 import com.canoestudio.retrofutureupdateaquatic.potion.ModPotions;
 import com.canoestudio.retrofutureupdateaquatic.world.ModAquaticSpawns;
+import com.canoestudio.retrofutureupdateaquatic.world.biome.AquaticBiomes;
 import com.canoestudio.retrofutureupdateaquatic.world.gen.AquaticWorldGenerator;
 import com.canoestudio.retrofutureupdateaquatic.world.gen.AquaticStructureGenerator;
 import com.canoestudio.retrofutureupdateaquatic.world.AquaticLootTables;
@@ -34,6 +35,7 @@ public class CommonProxy {
     }
 
     public void init() {
+        AquaticBiomes.init();
         ModAquaticSpawns.init();
         registerRecipes();
         registerBrewingRecipes();
@@ -46,12 +48,21 @@ public class CommonProxy {
     private void registerRecipes() {
         GameRegistry.addSmelting(ModItems.COD, new ItemStack(ModItems.COOKED_COD), 0.35F);
         GameRegistry.addSmelting(ModItems.SALMON, new ItemStack(ModItems.COOKED_SALMON), 0.35F);
+        GameRegistry.addSmelting(net.minecraft.item.Item.getItemFromBlock(ModBlocks.KELP),
+            new ItemStack(ModItems.DRIED_KELP), 0.1F);
         ForgeRegistries.RECIPES.register(new ShapedOreRecipe(prefix("dried_kelp_block"),
             new ItemStack(ModBlocks.DRIED_KELP_BLOCK), "KKK", "KKK", "KKK", 'K', ModItems.DRIED_KELP)
             .setRegistryName(prefix("dried_kelp_block")));
+        ForgeRegistries.RECIPES.register(new ShapelessOreRecipe(prefix("dried_kelp_from_block"),
+            new ItemStack(ModItems.DRIED_KELP, 9), new ItemStack(ModBlocks.DRIED_KELP_BLOCK))
+            .setRegistryName(prefix("dried_kelp_from_block")));
         ForgeRegistries.RECIPES.register(new ShapedOreRecipe(prefix("blue_ice"),
             new ItemStack(ModBlocks.BLUE_ICE), "III", "III", "III", 'I', Blocks.PACKED_ICE)
             .setRegistryName(prefix("blue_ice")));
+        ForgeRegistries.RECIPES.register(new ShapedOreRecipe(prefix("conduit"),
+            new ItemStack(ModBlocks.CONDUIT), "NNN", "NEN", "NNN",
+                'N', ModItems.NAUTILUS_SHELL, 'E', ModItems.HEART_OF_THE_SEA)
+            .setRegistryName(prefix("conduit")));
         ForgeRegistries.RECIPES.register(new ShapedOreRecipe(prefix("turtle_helmet"),
             new ItemStack(ModItems.TURTLE_HELMET), "SSS", "S S", 'S', ModItems.SCUTE)
             .setRegistryName(prefix("turtle_helmet")));
@@ -118,6 +129,22 @@ public class CommonProxy {
             ModPotions.TURTLE_MASTER_TYPE);
         PotionHelper.addMix(ModPotions.TURTLE_MASTER_TYPE, Items.REDSTONE, ModPotions.LONG_TURTLE_MASTER_TYPE);
         PotionHelper.addMix(ModPotions.TURTLE_MASTER_TYPE, Items.GLOWSTONE_DUST, ModPotions.STRONG_TURTLE_MASTER_TYPE);
+        registerPotionFormConversions(ModPotions.SLOW_FALLING_TYPE, ModPotions.SPLASH_SLOW_FALLING_TYPE,
+            ModPotions.LINGERING_SLOW_FALLING_TYPE);
+        registerPotionFormConversions(ModPotions.LONG_SLOW_FALLING_TYPE, ModPotions.LONG_SPLASH_SLOW_FALLING_TYPE,
+            ModPotions.LONG_LINGERING_SLOW_FALLING_TYPE);
+        registerPotionFormConversions(ModPotions.TURTLE_MASTER_TYPE, ModPotions.SPLASH_TURTLE_MASTER_TYPE,
+            ModPotions.LINGERING_TURTLE_MASTER_TYPE);
+        registerPotionFormConversions(ModPotions.LONG_TURTLE_MASTER_TYPE,
+            ModPotions.LONG_SPLASH_TURTLE_MASTER_TYPE, ModPotions.LONG_LINGERING_TURTLE_MASTER_TYPE);
+        registerPotionFormConversions(ModPotions.STRONG_TURTLE_MASTER_TYPE,
+            ModPotions.STRONG_SPLASH_TURTLE_MASTER_TYPE, ModPotions.STRONG_LINGERING_TURTLE_MASTER_TYPE);
+    }
+
+    private void registerPotionFormConversions(net.minecraft.potion.PotionType normal,
+            net.minecraft.potion.PotionType splash, net.minecraft.potion.PotionType lingering) {
+        PotionHelper.addMix(normal, Items.GUNPOWDER, splash);
+        PotionHelper.addMix(splash, Items.DRAGON_BREATH, lingering);
     }
 
     private ItemStack vanillaLogStack(String woodName, int count) {

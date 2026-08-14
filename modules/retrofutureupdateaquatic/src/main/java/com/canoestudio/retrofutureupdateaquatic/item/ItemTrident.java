@@ -3,20 +3,27 @@ package com.canoestudio.retrofutureupdateaquatic.item;
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
 import com.canoestudio.retrofutureupdateaquatic.enchantment.ModEnchantments;
 import com.canoestudio.retrofutureupdateaquatic.entity.EntityThrownTrident;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.MoverType;
+import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.stats.StatList;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.SoundCategory;
@@ -45,7 +52,7 @@ public class ItemTrident extends Item {
     @Override
     public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand handIn) {
         ItemStack stack = playerIn.getHeldItem(handIn);
-        if (stack.getItemDamage() >= stack.getMaxDamage() - 1) {
+        if (stack.getItemDamage() >= stack.getMaxDamage()) {
             return new ActionResult<ItemStack>(EnumActionResult.FAIL, stack);
         }
         int riptide = EnchantmentHelper.getEnchantmentLevel(ModEnchantments.RIPTIDE, stack);
@@ -69,8 +76,10 @@ public class ItemTrident extends Item {
         }
 
         int riptide = EnchantmentHelper.getEnchantmentLevel(ModEnchantments.RIPTIDE, stack);
-        if (riptide > 0 && canRiptide(worldIn, player)) {
-            launchRiptide(worldIn, player, stack, riptide);
+        if (riptide > 0) {
+            if (canRiptide(worldIn, player)) {
+                launchRiptide(worldIn, player, stack, riptide);
+            }
         } else if (!worldIn.isRemote) {
             ItemStack thrownStack = stack.copy();
             thrownStack.setCount(1);
@@ -92,8 +101,34 @@ public class ItemTrident extends Item {
 
     @Override
     public boolean hitEntity(ItemStack stack, EntityLivingBase target, EntityLivingBase attacker) {
-        target.attackEntityFrom(DamageSource.causeMobDamage(attacker), getAttackDamage(stack, target));
         stack.damageItem(1, attacker);
+        return true;
+    }
+
+    /**
+     * Ported from the mature Future-MC 1.12.2 trident implementation.  The
+     * vanilla attack pipeline applies this attribute before calling
+     * {@link #hitEntity}; hitEntity must therefore only damage the item or the
+     * melee hit would be applied twice.
+     */
+    @Override
+    public Multimap<String, AttributeModifier> getItemAttributeModifiers(EntityEquipmentSlot equipmentSlot) {
+        Multimap<String, AttributeModifier> modifiers = HashMultimap.create();
+        if (equipmentSlot == EntityEquipmentSlot.MAINHAND) {
+            modifiers.put(SharedMonsterAttributes.ATTACK_DAMAGE.getName(), new AttributeModifier(
+                Item.ATTACK_DAMAGE_MODIFIER, "Weapon modifier", 8.0D, 0));
+            modifiers.put(SharedMonsterAttributes.ATTACK_SPEED.getName(), new AttributeModifier(
+                Item.ATTACK_SPEED_MODIFIER, "Weapon modifier", -2.9D, 0));
+        }
+        return modifiers;
+    }
+
+    @Override
+    public boolean onBlockDestroyed(ItemStack stack, World worldIn, net.minecraft.block.state.IBlockState state,
+            BlockPos pos, EntityLivingBase entityLiving) {
+        if (state.getBlockHardness(worldIn, pos) != 0.0F) {
+            stack.damageItem(2, entityLiving);
+        }
         return true;
     }
 
@@ -129,19 +164,21 @@ public class ItemTrident extends Item {
         if (impaling <= 0) {
             return 0.0F;
         }
-        return target.isInWater() || target.isWet() ? impaling * 2.5F : 0.0F;
+        return FluidloggedSupport.isEntityInWater(target) || target.isWet() ? impaling * 1.25F : 0.0F;
     }
 
     private static boolean canRiptide(World world, EntityPlayer player) {
-        return player.isInWater() || player.isWet() || world.isRainingAt(new BlockPos(player));
+        return FluidloggedSupport.isEntityInWater(player) || player.isWet()
+            || world.isRainingAt(new BlockPos(player));
     }
 
     private static void launchRiptide(World world, EntityPlayer player, ItemStack stack, int level) {
         Vec3d look = player.getLookVec();
-        float strength = 2.5F + level * 0.75F;
-        player.motionX = look.x * strength;
-        player.motionY = look.y * strength;
-        player.motionZ = look.z * strength;
+        float strength = 3.0F * (1.0F + level) / 4.0F;
+        player.addVelocity(look.x * strength, look.y * strength, look.z * strength);
+        if (player.onGround) {
+            player.move(MoverType.SELF, 0.0D, 1.1999999D, 0.0D);
+        }
         player.velocityChanged = true;
         player.fallDistance = 0.0F;
         if (!world.isRemote) {

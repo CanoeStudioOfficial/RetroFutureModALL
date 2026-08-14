@@ -12,6 +12,8 @@ import net.minecraft.block.BlockChest;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemMap;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityChest;
@@ -26,8 +28,11 @@ import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraft.world.gen.structure.template.PlacementSettings;
 import net.minecraft.world.gen.structure.template.Template;
 import net.minecraft.world.gen.structure.template.TemplateManager;
+import net.minecraft.world.storage.MapData;
+import net.minecraft.world.storage.MapDecoration;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.fml.common.IWorldGenerator;
+import javax.annotation.Nullable;
 
 public class AquaticStructureGenerator implements IWorldGenerator {
 
@@ -101,15 +106,23 @@ public class AquaticStructureGenerator implements IWorldGenerator {
 
         BlockPos origin = new BlockPos(x, floor.getY(), z).down(random.nextInt(5));
         template.addBlocksToWorld(world, origin, settings);
+        // Keep the target treasure in the already-generating chunk.  Looking
+        // up terrain in neighbouring chunks from IWorldGenerator causes
+        // cascading generation and can recursively re-enter this generator.
+        BlockPos treasure = generateNearbyBuriedTreasure(world, random, x, z);
         for (Map.Entry<BlockPos, String> entry : template.getDataBlocks(origin, settings).entrySet()) {
-            handleShipwreckDataBlock(world, random, entry.getKey(), entry.getValue());
+            handleShipwreckDataBlock(world, random, entry.getKey(), entry.getValue(), treasure);
         }
         AquaticStructureData.recordDolphinLocated(world, origin);
     }
 
-    private void handleShipwreckDataBlock(World world, Random random, BlockPos pos, String marker) {
+    private void handleShipwreckDataBlock(World world, Random random, BlockPos pos, String marker,
+            BlockPos treasure) {
         if ("map_chest".equals(marker)) {
-            placeLootChest(world, random, pos, AquaticLootTables.SHIPWRECK_MAP);
+            TileEntityChest chest = placeLootChest(world, random, pos, AquaticLootTables.SHIPWRECK_MAP);
+            if (treasure != null) {
+                addTreasureMap(world, chest, treasure);
+            }
         } else if ("supply_chest".equals(marker)) {
             placeLootChest(world, random, pos, AquaticLootTables.SHIPWRECK_SUPPLY);
         } else if ("tresure_chest".equals(marker) || "treasure_chest".equals(marker)) {
@@ -187,13 +200,64 @@ public class AquaticStructureGenerator implements IWorldGenerator {
         placeLootChest(world, random, chest, AquaticLootTables.BURIED_TREASURE);
     }
 
-    private void placeLootChest(World world, Random random, BlockPos pos, ResourceLocation lootTable) {
+    private TileEntityChest placeLootChest(World world, Random random, BlockPos pos, ResourceLocation lootTable) {
         world.setBlockState(pos, Blocks.CHEST.getDefaultState()
             .withProperty(BlockChest.FACING, EnumFacing.Plane.HORIZONTAL.random(random)), 3);
         TileEntity tileEntity = world.getTileEntity(pos);
         if (tileEntity instanceof TileEntityChest) {
-            ((TileEntityChest)tileEntity).setLootTable(lootTable, random.nextLong());
+            TileEntityChest chest = (TileEntityChest)tileEntity;
+            chest.setLootTable(lootTable, random.nextLong());
+            return chest;
         }
+        return null;
+    }
+
+    private void addTreasureMap(World world, TileEntityChest chest, BlockPos treasure) {
+        if (chest == null || !(world instanceof net.minecraft.world.WorldServer)) {
+            return;
+        }
+
+        chest.fillWithLoot(null);
+        ItemStack map = ItemMap.setupNewMap(world, treasure.getX(), treasure.getZ(), (byte)2, true, true);
+        ItemMap.renderBiomePreviewMap(world, map);
+        MapData.addTargetDecoration(map, treasure, "+", MapDecoration.Type.TARGET_X);
+        for (int slot = 0; slot < chest.getSizeInventory(); slot++) {
+            if (chest.getStackInSlot(slot).isEmpty()) {
+                chest.setInventorySlotContents(slot, map);
+                return;
+            }
+        }
+    }
+
+    @Nullable
+    private BlockPos generateNearbyBuriedTreasure(World world, Random random, int originX, int originZ) {
+        for (int attempt = 0; attempt < 24; attempt++) {
+            int x = originX - 8 + random.nextInt(16);
+            int z = originZ - 8 + random.nextInt(16);
+            if (!world.isBlockLoaded(new BlockPos(x, 0, z))) {
+                continue;
+            }
+            BlockPos surface = world.getTopSolidOrLiquidBlock(new BlockPos(x, 0, z));
+            if (surface.getY() <= 4 || surface.getY() > world.getSeaLevel() + 8) {
+                continue;
+            }
+
+            IBlockState surfaceState = world.getBlockState(surface);
+            if (surfaceState.getMaterial() != Material.SAND && surfaceState.getBlock() != Blocks.GRAVEL
+                    && surfaceState.getBlock() != Blocks.DIRT) {
+                continue;
+            }
+
+            BlockPos chest = surface.down(2 + random.nextInt(3));
+            IBlockState chestState = world.getBlockState(chest);
+            if (chestState.getMaterial() != Material.SAND && chestState.getBlock() != Blocks.GRAVEL
+                    && chestState.getBlock() != Blocks.DIRT) {
+                continue;
+            }
+            placeLootChest(world, random, chest, AquaticLootTables.BURIED_TREASURE);
+            return chest;
+        }
+        return null;
     }
 
     private void spawnDrownedGroup(World world, Random random, BlockPos origin, int count) {

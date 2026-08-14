@@ -1,6 +1,7 @@
 package com.canoestudio.retrofuturethewildupdate.block;
 
 import com.canoestudio.retrofuturethewildupdate.RTWU;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import java.util.Random;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -30,7 +31,7 @@ public class BlockMud extends BlockWildSimple {
             if (below.getBlock() == com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks.POINTED_DRIPSTONE) {
                 return true;
             }
-            if (!below.getMaterial().isReplaceable() && below.getMaterial() != Material.WATER
+            if (!below.getMaterial().isReplaceable() && !FluidloggedSupport.isWater(world, pos.down(i))
                 && below.getBlock() != com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks.DRIPSTONE_BLOCK) {
                 return false;
             }

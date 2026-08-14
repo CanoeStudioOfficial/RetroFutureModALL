@@ -4,6 +4,7 @@ import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf.SmallDripleaf;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
 import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.block.*;
 import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.block.material.Material;
@@ -52,10 +53,10 @@ public class MossCreator extends Block implements IGrowable {
 
         switch(plantType) {
             case Beach:
-                boolean hasWater = (world.getBlockState(pos.east()).getMaterial() == Material.WATER ||
-                        world.getBlockState(pos.west()).getMaterial() == Material.WATER ||
-                        world.getBlockState(pos.north()).getMaterial() == Material.WATER ||
-                        world.getBlockState(pos.south()).getMaterial() == Material.WATER);
+                boolean hasWater = (FluidloggedSupport.isWater(world, pos.east()) ||
+                        FluidloggedSupport.isWater(world, pos.west()) ||
+                        FluidloggedSupport.isWater(world, pos.north()) ||
+                        FluidloggedSupport.isWater(world, pos.south()));
                 return hasWater;
             case Plains:
                 return true;

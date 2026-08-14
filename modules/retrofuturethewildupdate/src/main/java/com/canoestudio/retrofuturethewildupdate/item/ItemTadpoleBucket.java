@@ -2,6 +2,7 @@ package com.canoestudio.retrofuturethewildupdate.item;
 
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityTadpole;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Items;
@@ -38,10 +39,10 @@ public class ItemTadpoleBucket extends Item {
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand,
                                       EnumFacing facing, float hitX, float hitY, float hitZ) {
         ItemStack stack = player.getHeldItem(hand);
-        BlockPos placePos = world.getBlockState(pos).getMaterial() == Material.WATER ? pos : pos.offset(facing);
+        BlockPos placePos = FluidloggedSupport.isWater(world, pos) ? pos : pos.offset(facing);
 
         if (!world.isRemote) {
-            if (world.getBlockState(placePos).getMaterial() != Material.WATER && !world.isAirBlock(placePos)) {
+            if (!FluidloggedSupport.isWater(world, placePos) && !world.isAirBlock(placePos)) {
                 return EnumActionResult.FAIL;
             }
             if (world.isAirBlock(placePos)) {

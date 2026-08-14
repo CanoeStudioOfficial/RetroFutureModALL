@@ -26,6 +26,26 @@ public final class ModPotions {
     public static final PotionType LONG_TURTLE_MASTER_TYPE = null;
     @GameRegistry.ObjectHolder("strong_turtle_master")
     public static final PotionType STRONG_TURTLE_MASTER_TYPE = null;
+    @GameRegistry.ObjectHolder("splash_slow_falling")
+    public static final PotionType SPLASH_SLOW_FALLING_TYPE = null;
+    @GameRegistry.ObjectHolder("long_splash_slow_falling")
+    public static final PotionType LONG_SPLASH_SLOW_FALLING_TYPE = null;
+    @GameRegistry.ObjectHolder("lingering_slow_falling")
+    public static final PotionType LINGERING_SLOW_FALLING_TYPE = null;
+    @GameRegistry.ObjectHolder("long_lingering_slow_falling")
+    public static final PotionType LONG_LINGERING_SLOW_FALLING_TYPE = null;
+    @GameRegistry.ObjectHolder("splash_turtle_master")
+    public static final PotionType SPLASH_TURTLE_MASTER_TYPE = null;
+    @GameRegistry.ObjectHolder("long_splash_turtle_master")
+    public static final PotionType LONG_SPLASH_TURTLE_MASTER_TYPE = null;
+    @GameRegistry.ObjectHolder("strong_splash_turtle_master")
+    public static final PotionType STRONG_SPLASH_TURTLE_MASTER_TYPE = null;
+    @GameRegistry.ObjectHolder("lingering_turtle_master")
+    public static final PotionType LINGERING_TURTLE_MASTER_TYPE = null;
+    @GameRegistry.ObjectHolder("long_lingering_turtle_master")
+    public static final PotionType LONG_LINGERING_TURTLE_MASTER_TYPE = null;
+    @GameRegistry.ObjectHolder("strong_lingering_turtle_master")
+    public static final PotionType STRONG_LINGERING_TURTLE_MASTER_TYPE = null;
 
     public static PotionEffect slowFalling(int duration) {
         return new PotionEffect(SLOW_FALLING, duration, 0, true, true);

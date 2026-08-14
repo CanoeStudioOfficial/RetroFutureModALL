@@ -1,5 +1,6 @@
 package com.canoestudio.retrofutureupdateaquatic.client.model;
 
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
@@ -60,7 +61,7 @@ public class ModelTurtle extends ModelBase {
             float headPitch, float scaleFactor, Entity entityIn) {
         this.head.rotateAngleX = headPitch * 0.017453292F;
         this.head.rotateAngleY = netHeadYaw * 0.017453292F;
-        float swim = entityIn.isInWater() ? 0.75F : 0.35F;
+        float swim = FluidloggedSupport.isEntityInWater(entityIn) ? 0.75F : 0.35F;
         this.leftFrontLeg.rotateAngleY = MathHelper.cos(ageInTicks * swim) * 0.45F;
         this.rightFrontLeg.rotateAngleY = -this.leftFrontLeg.rotateAngleY;
         this.leftHindLeg.rotateAngleY = -this.leftFrontLeg.rotateAngleY * 0.6F;

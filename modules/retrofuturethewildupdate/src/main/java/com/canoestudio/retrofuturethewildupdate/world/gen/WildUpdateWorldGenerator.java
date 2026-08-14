@@ -3,6 +3,7 @@ package com.canoestudio.retrofuturethewildupdate.world.gen;
 import com.canoestudio.retrofuturemccore.api.world.RetroAncientCityPlacement;
 import com.canoestudio.retrofuturemccore.api.world.RetroStructurePlacement;
 import com.canoestudio.retrofuturemccore.api.world.RetroWorldgenRegistry;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.block.BlockSculkVein;
 import com.canoestudio.retrofuturethewildupdate.block.ModBlocks;
@@ -148,7 +149,7 @@ public class WildUpdateWorldGenerator implements IWorldGenerator {
             int z = blockZ + random.nextInt(16);
             for (int y = SEA_LEVEL_BIAS + 3; y >= SEA_LEVEL_BIAS - 5; y--) {
                 BlockPos pos = new BlockPos(x, y, z);
-                if (world.getBlockState(pos).getMaterial() == Material.WATER
+                if (FluidloggedSupport.isWater(world, pos)
                     && world.getBlockState(pos.down()).isSideSolid(world, pos.down(), EnumFacing.UP)) {
                     return pos;
                 }
@@ -199,7 +200,7 @@ public class WildUpdateWorldGenerator implements IWorldGenerator {
     private BlockPos findNearbyLand(World world, BlockPos water) {
         for (EnumFacing facing : EnumFacing.HORIZONTALS) {
             BlockPos land = water.offset(facing);
-            if (world.getBlockState(land).getMaterial() != Material.WATER
+            if (!FluidloggedSupport.isWater(world, land)
                 && world.getBlockState(land).isSideSolid(world, land, EnumFacing.UP)
                 && world.isAirBlock(land.up())) {
                 return land;
@@ -370,7 +371,8 @@ public class WildUpdateWorldGenerator implements IWorldGenerator {
         for (int y = Math.min(world.getActualHeight() - 2, 96); y > 36; y--) {
             BlockPos pos = new BlockPos(x, y, z);
             IBlockState state = world.getBlockState(pos);
-            if (state.getMaterial() != Material.AIR && state.getMaterial() != Material.WATER && state.getMaterial() != Material.LAVA) {
+            if (state.getMaterial() != Material.AIR && !FluidloggedSupport.isWater(world, pos)
+                && state.getMaterial() != Material.LAVA) {
                 return pos;
             }
         }
@@ -381,7 +383,7 @@ public class WildUpdateWorldGenerator implements IWorldGenerator {
         for (int x = -radius; x <= radius; x++) {
             for (int z = -radius; z <= radius; z++) {
                 for (int y = -1; y <= 1; y++) {
-                    if (world.getBlockState(center.add(x, y, z)).getMaterial() == Material.WATER) {
+                    if (FluidloggedSupport.isWater(world, center.add(x, y, z))) {
                         return true;
                     }
                 }

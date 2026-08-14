@@ -1,5 +1,6 @@
 package com.canoestudio.retrofuturelushcave.contents.mobs.axolotl;
 
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.block.material.Material;
 import com.canoestudio.retrofuturemccore.api.tag.RetroTagRegistry;
 import com.canoestudio.retrofuturemccore.api.tag.RetroTags;
@@ -451,7 +452,7 @@ public class EntityAxolotl extends EntityWaterMob {
     }
 
     private boolean isWater(BlockPos pos) {
-        return world.isBlockLoaded(pos) && world.getBlockState(pos).getMaterial() == Material.WATER;
+        return world.isBlockLoaded(pos) && FluidloggedSupport.isWater(world, pos);
     }
 
     private void moveToward(double targetX, double targetY, double targetZ, double speed, double inertia) {

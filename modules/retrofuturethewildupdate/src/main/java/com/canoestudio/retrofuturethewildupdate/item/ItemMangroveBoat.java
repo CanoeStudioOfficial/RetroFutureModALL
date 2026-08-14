@@ -2,6 +2,7 @@ package com.canoestudio.retrofuturethewildupdate.item;
 
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityMangroveBoat;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
@@ -70,7 +71,7 @@ public class ItemMangroveBoat extends Item {
         }
 
         Block block = world.getBlockState(hit.getBlockPos()).getBlock();
-        boolean water = block == Blocks.WATER || block == Blocks.FLOWING_WATER;
+        boolean water = FluidloggedSupport.isWater(world, hit.getBlockPos());
         EntityMangroveBoat boat = this.createBoat(world, hit.hitVec.x, water ? hit.hitVec.y - 0.12D : hit.hitVec.y,
             hit.hitVec.z);
         boat.rotationYaw = player.rotationYaw;

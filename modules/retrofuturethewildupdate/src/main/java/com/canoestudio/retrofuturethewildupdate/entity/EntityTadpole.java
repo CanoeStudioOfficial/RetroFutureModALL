@@ -1,6 +1,7 @@
 package com.canoestudio.retrofuturethewildupdate.entity;
 
 import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import com.canoestudio.retrofuturethewildupdate.item.ItemTadpoleBucket;
 import com.canoestudio.retrofuturethewildupdate.item.ModItems;
 import net.minecraft.block.material.Material;
@@ -153,7 +154,7 @@ public class EntityTadpole extends EntityWaterMob {
     }
 
     private boolean isWater(BlockPos pos) {
-        return this.world.isBlockLoaded(pos) && this.world.getBlockState(pos).getMaterial() == Material.WATER;
+        return this.world.isBlockLoaded(pos) && FluidloggedSupport.isWater(this.world, pos);
     }
 
     private double getDistanceSqToTargetCenter(BlockPos pos) {
@@ -226,7 +227,7 @@ public class EntityTadpole extends EntityWaterMob {
     @Override
     public boolean getCanSpawnHere() {
         BlockPos pos = new BlockPos(this);
-        return this.world.getBlockState(pos).getMaterial() == Material.WATER && pos.getY() < this.world.getSeaLevel();
+        return FluidloggedSupport.isWater(this.world, pos) && pos.getY() < this.world.getSeaLevel();
     }
 
     @Override

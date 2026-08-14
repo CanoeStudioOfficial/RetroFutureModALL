@@ -2,6 +2,7 @@ package com.canoestudio.retrofuturethewildupdate.block;
 
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.entity.EntityTadpole;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -38,7 +39,7 @@ public class BlockFrogspawn extends Block {
 
     @Override
     public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
-        return worldIn.isAirBlock(pos) && worldIn.getBlockState(pos.down()).getMaterial() == Material.WATER;
+        return worldIn.isAirBlock(pos) && FluidloggedSupport.isWater(worldIn, pos.down());
     }
 
     @Override
@@ -56,7 +57,7 @@ public class BlockFrogspawn extends Block {
     }
 
     private boolean canBlockStay(World worldIn, BlockPos pos) {
-        return worldIn.getBlockState(pos.down()).getMaterial() == Material.WATER;
+        return FluidloggedSupport.isWater(worldIn, pos.down());
     }
 
     @Override

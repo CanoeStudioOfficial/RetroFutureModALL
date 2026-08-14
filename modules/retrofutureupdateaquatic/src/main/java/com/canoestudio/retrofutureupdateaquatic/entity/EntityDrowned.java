@@ -45,9 +45,10 @@ public class EntityDrowned extends EntityZombie {
     public void onLivingUpdate() {
         super.onLivingUpdate();
         updateTridentAttack();
-        if (this.isInWater() && this.getAttackTarget() != null && this.getAttackTarget().isInWater()) {
+        if (FluidloggedSupport.isEntityInWater(this) && this.getAttackTarget() != null
+                && FluidloggedSupport.isEntityInWater(this.getAttackTarget())) {
             moveToward(this.getAttackTarget().posX, this.getAttackTarget().posY, this.getAttackTarget().posZ, 0.045D);
-        } else if (this.isInWater() && this.swimTargetCooldown-- <= 0) {
+        } else if (FluidloggedSupport.isEntityInWater(this) && this.swimTargetCooldown-- <= 0) {
             BlockPos target = new BlockPos(this).add(this.rand.nextInt(11) - 5, this.rand.nextInt(5) - 2,
                 this.rand.nextInt(11) - 5);
             if (FluidloggedSupport.isWater(this.world, target)) {
@@ -114,8 +115,17 @@ public class EntityDrowned extends EntityZombie {
     @Override
     protected void dropFewItems(boolean wasRecentlyHit, int lootingModifier) {
         super.dropFewItems(wasRecentlyHit, lootingModifier);
-        if (this.rand.nextInt(100) < 3 + lootingModifier) {
-            this.dropItem(Items.ROTTEN_FLESH, 1);
+        // The rare drowned drops are player-kill loot in the mature 1.12.2
+        // implementation, matching the 1.13 loot-table conditions.
+        if (wasRecentlyHit && this.rand.nextInt(100) < 5 + lootingModifier) {
+            this.dropItem(Items.GOLD_INGOT, 1);
+        }
+        if (wasRecentlyHit && this.getHeldItemMainhand().getItem() == ModItems.TRIDENT
+                && this.rand.nextInt(100) < 9 + lootingModifier * 2) {
+            this.dropItem(ModItems.TRIDENT, 1);
+        }
+        if (wasRecentlyHit && this.rand.nextInt(100) < 3 + lootingModifier) {
+            this.dropItem(ModItems.NAUTILUS_SHELL, 1);
         }
     }
 
