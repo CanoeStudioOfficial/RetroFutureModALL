@@ -16,8 +16,7 @@ final class AquaticWaterHelper {
     }
 
     static boolean isWater(IBlockAccess world, BlockPos pos) {
-        IBlockState state = world.getBlockState(pos);
-        return isWater(getFluidState(world, pos, state));
+        return FluidloggedSupport.isWater(world, pos);
     }
 
     static boolean isWaterOrBubble(IBlockAccess world, BlockPos pos) {

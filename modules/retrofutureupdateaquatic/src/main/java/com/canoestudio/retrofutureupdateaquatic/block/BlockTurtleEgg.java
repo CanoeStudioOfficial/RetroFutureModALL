@@ -168,7 +168,7 @@ public class BlockTurtleEgg extends Block {
     public IBlockState getStateFromMeta(int meta) {
         return this.getDefaultState()
             .withProperty(EGGS, (meta & 3) + 1)
-            .withProperty(HATCH, (meta >> 2) & 3);
+            .withProperty(HATCH, Math.min(2, (meta >> 2) & 3));
     }
 
     @Override

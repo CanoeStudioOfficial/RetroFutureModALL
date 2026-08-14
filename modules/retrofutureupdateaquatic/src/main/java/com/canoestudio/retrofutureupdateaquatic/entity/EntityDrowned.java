@@ -17,14 +17,31 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.World;
+import net.minecraft.pathfinding.PathNavigate;
+import net.minecraft.pathfinding.PathNavigateGround;
+import net.minecraft.pathfinding.PathNavigateSwimmer;
 
 public class EntityDrowned extends EntityZombie {
 
     private int swimTargetCooldown;
     private int tridentAttackCooldown;
+    private final PathNavigateSwimmer waterNavigator;
+    private final PathNavigateGround groundNavigator;
 
     public EntityDrowned(World worldIn) {
         super(worldIn);
+        this.waterNavigator = new PathNavigateSwimmer(this, worldIn);
+        this.groundNavigator = new PathNavigateGround(this, worldIn);
+        this.navigator = this.groundNavigator;
+    }
+
+    @Override
+    protected void initEntityAI() {
+        super.initEntityAI();
+        // Keep the mature zombie combat/target tasks and add OE's underwater
+        // wander goal.  The active navigator is switched per tick below.
+        this.tasks.addTask(4, new com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAIWanderUnderwater(
+            this, 1.0D, 80, false));
     }
 
     @Override
@@ -43,12 +60,21 @@ public class EntityDrowned extends EntityZombie {
 
     @Override
     public void onLivingUpdate() {
+        boolean inWater = FluidloggedSupport.isEntityInWater(this);
+        PathNavigate desired = inWater ? this.waterNavigator : this.groundNavigator;
+        if (this.navigator != desired) {
+            this.navigator.clearPath();
+            this.navigator = desired;
+        }
         super.onLivingUpdate();
+        if (inWater) {
+            this.setAir(300);
+        }
         updateTridentAttack();
-        if (FluidloggedSupport.isEntityInWater(this) && this.getAttackTarget() != null
+        if (inWater && this.getAttackTarget() != null
                 && FluidloggedSupport.isEntityInWater(this.getAttackTarget())) {
             moveToward(this.getAttackTarget().posX, this.getAttackTarget().posY, this.getAttackTarget().posZ, 0.045D);
-        } else if (FluidloggedSupport.isEntityInWater(this) && this.swimTargetCooldown-- <= 0) {
+        } else if (inWater && this.swimTargetCooldown-- <= 0) {
             BlockPos target = new BlockPos(this).add(this.rand.nextInt(11) - 5, this.rand.nextInt(5) - 2,
                 this.rand.nextInt(11) - 5);
             if (FluidloggedSupport.isWater(this.world, target)) {

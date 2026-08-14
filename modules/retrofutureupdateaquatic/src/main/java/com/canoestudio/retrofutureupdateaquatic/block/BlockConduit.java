@@ -104,8 +104,9 @@ public class BlockConduit extends Block implements ITileEntityProvider, IFluidlo
     @Override
     public boolean removedByPlayer(IBlockState state, World world, BlockPos pos, EntityPlayer player,
             boolean willHarvest) {
+        boolean wasWaterlogged = FluidloggedSupport.isWater(world, pos);
         boolean removed = super.removedByPlayer(state, world, pos, player, willHarvest);
-        if (removed && !world.isRemote && FluidloggedSupport.isWater(world, pos)) {
+        if (removed && !world.isRemote && wasWaterlogged) {
             AquaticWaterHelper.restoreWater(world, pos, state);
         }
         return removed;

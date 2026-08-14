@@ -59,7 +59,8 @@ public class TileEntityConduit extends TileEntity implements ITickable {
             for (int y = -1; y <= 1; y++) {
                 for (int z = -1; z <= 1; z++) {
                     BlockPos check = this.pos.add(x, y, z);
-                    if (!AquaticWaterHelper.isWaterOrBubble(this.world, check)) {
+                    // 潮涌核心自身占据中心位置，不应被当作未浸没方块。
+                    if (!check.equals(this.pos) && !AquaticWaterHelper.isWaterOrBubble(this.world, check)) {
                         return false;
                     }
                 }

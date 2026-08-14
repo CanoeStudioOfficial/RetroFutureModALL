@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=north": { "model": "retrofutureupdateaquatic:carved_pumpkin" },
+        "facing=south": { "model": "retrofutureupdateaquatic:carved_pumpkin", "y": 180 },
+        "facing=west": { "model": "retrofutureupdateaquatic:carved_pumpkin", "y": 270 },
+        "facing=east": { "model": "retrofutureupdateaquatic:carved_pumpkin", "y": 90 }
+    }
+}

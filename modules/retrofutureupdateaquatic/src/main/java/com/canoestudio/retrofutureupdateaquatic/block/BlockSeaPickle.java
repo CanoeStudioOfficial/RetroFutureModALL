@@ -63,12 +63,14 @@ public class BlockSeaPickle extends BlockBush implements IGrowable, IFluidloggab
 
     @Override
     public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
-        return AquaticWaterHelper.isSolidTop(worldIn, pos.down());
+        return AquaticWaterHelper.isWater(worldIn, pos)
+            && AquaticWaterHelper.isSolidTop(worldIn, pos.down());
     }
 
     @Override
     public boolean canBlockStay(World worldIn, BlockPos pos, IBlockState state) {
-        return AquaticWaterHelper.isSolidTop(worldIn, pos.down());
+        return AquaticWaterHelper.isWater(worldIn, pos)
+            && AquaticWaterHelper.isSolidTop(worldIn, pos.down());
     }
 
     @Override
@@ -114,22 +116,25 @@ public class BlockSeaPickle extends BlockBush implements IGrowable, IFluidloggab
 
     @Override
     public boolean canGrow(World worldIn, BlockPos pos, IBlockState state, boolean isClient) {
-        return state.getValue(PICKLES) < 4 || worldIn.getBlockState(pos.down()).getBlock() instanceof BlockCoralBlock;
+        return state.getValue(PICKLES) < 4
+            && worldIn.getBlockState(pos.down()).getBlock() instanceof BlockCoralBlock;
     }
 
     @Override
     public boolean canUseBonemeal(World worldIn, Random rand, BlockPos pos, IBlockState state) {
-        return true;
+        return this.canGrow(worldIn, pos, state, true);
     }
 
     @Override
     public void grow(World worldIn, Random rand, BlockPos pos, IBlockState state) {
-        if (state.getValue(PICKLES) < 4) {
-            worldIn.setBlockState(pos, state.withProperty(PICKLES, Math.min(4, state.getValue(PICKLES) + rand.nextInt(3) + 1)), 3);
+        if (!this.canGrow(worldIn, pos, state, false)) {
+            return;
         }
-        if (worldIn.getBlockState(pos.down()).getBlock() instanceof BlockCoralBlock) {
-            spreadOnCoral(worldIn, pos, rand);
-        }
+
+        IBlockState grown = state.withProperty(PICKLES,
+            Math.min(4, state.getValue(PICKLES) + rand.nextInt(3) + 1));
+        FluidloggedSupport.setFluidloggableBlock(worldIn, pos, grown, 3);
+        spreadOnCoral(worldIn, pos, rand);
     }
 
     private void spreadOnCoral(World worldIn, BlockPos pos, Random rand) {
@@ -138,7 +143,7 @@ public class BlockSeaPickle extends BlockBush implements IGrowable, IFluidloggab
             if (AquaticWaterHelper.isWater(worldIn, target)
                     && worldIn.getBlockState(target.down()).getBlock() instanceof BlockCoralBlock
                     && this.canPlaceBlockAt(worldIn, target)) {
-                worldIn.setBlockState(target, this.getDefaultState()
+                FluidloggedSupport.setFluidloggableBlock(worldIn, target, this.getDefaultState()
                     .withProperty(PICKLES, rand.nextInt(4) + 1), 3);
                 return;
             }

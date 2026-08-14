@@ -1,5 +1,7 @@
 package com.canoestudio.retrofuturemccore.api.block;
 
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.MapColor;
@@ -13,8 +15,11 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.IStringSerializable;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraftforge.fluids.Fluid;
 
-public abstract class RetroSlabBlock extends BlockSlab {
+public abstract class RetroSlabBlock extends BlockSlab implements IFluidloggable {
 
     public static final PropertyEnum<Variant> VARIANT = PropertyEnum.create("variant", Variant.class);
 
@@ -92,6 +97,11 @@ public abstract class RetroSlabBlock extends BlockSlab {
         return this.isDouble()
             ? new BlockStateContainer(this, VARIANT)
             : new BlockStateContainer(this, VARIANT, HALF);
+    }
+
+    @Override
+    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, Fluid fluid) {
+        return FluidloggedSupport.isWater(fluid);
     }
 
     public enum Variant implements IStringSerializable {

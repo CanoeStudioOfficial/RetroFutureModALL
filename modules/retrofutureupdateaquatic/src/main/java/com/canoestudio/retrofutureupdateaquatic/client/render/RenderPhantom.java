@@ -26,6 +26,9 @@ public class RenderPhantom extends RenderLiving<EntityPhantom> {
     protected void preRenderCallback(EntityPhantom entity, float partialTickTime) {
         float scale = 1.0F + 0.15F * entity.getPhantomSize();
         net.minecraft.client.renderer.GlStateManager.scale(scale, scale, scale);
+        // 原版 1.13 / 参考 Phantoms 的模型原点位于身体中心，必须保留这个
+        // 偏移，否则翅膀会贴近碰撞箱底部，飞行姿态看起来像僵硬地平移。
+        net.minecraft.client.renderer.GlStateManager.translate(0.0F, 1.3125F, 0.1875F);
     }
 
     @Override

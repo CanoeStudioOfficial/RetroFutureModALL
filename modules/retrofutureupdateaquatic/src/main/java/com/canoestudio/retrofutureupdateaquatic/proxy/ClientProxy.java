@@ -1,6 +1,7 @@
 package com.canoestudio.retrofutureupdateaquatic.proxy;
 
 import com.canoestudio.retrofuturemccore.api.client.model.RetroModelRegistry;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
 import com.canoestudio.retrofutureupdateaquatic.block.ModBlocks;
 import com.canoestudio.retrofutureupdateaquatic.client.render.RenderAquaticFish;
@@ -16,8 +17,14 @@ import com.canoestudio.retrofutureupdateaquatic.entity.EntityPhantom;
 import com.canoestudio.retrofutureupdateaquatic.entity.EntityThrownTrident;
 import com.canoestudio.retrofutureupdateaquatic.entity.EntityTurtle;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
+import com.canoestudio.retrofutureupdateaquatic.world.biome.AquaticBiomes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.RenderSnowball;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.biome.Biome;
+import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -25,6 +32,30 @@ import net.minecraftforge.fml.relauncher.Side;
 
 @Mod.EventBusSubscriber(value = {Side.CLIENT}, modid = RetroFutureUpdateAquatic.ID)
 public class ClientProxy extends CommonProxy {
+
+    /**
+     * Forge exposes the 1.12 fog hook, so no renderer overwrite or Mixin is
+     * needed. Fluidlogged API supplies the water state at the camera even
+     * when a solid block is occupying the position.
+     */
+    @SubscribeEvent
+    public static void onFogDensity(EntityViewRenderEvent.FogDensity event) {
+        Entity entity = event.getEntity();
+        if (!(entity instanceof EntityPlayer) || entity.world == null) {
+            return;
+        }
+
+        BlockPos eyePos = new BlockPos(entity.posX, entity.posY + entity.getEyeHeight(), entity.posZ);
+        if (!FluidloggedSupport.isWater(entity.world, eyePos)) {
+            return;
+        }
+
+        Biome biome = entity.world.getBiome(eyePos);
+        float density = AquaticBiomes.isWarm(biome) ? 0.045F
+            : AquaticBiomes.isFrozen(biome) ? 0.075F : 0.06F;
+        event.setDensity(density);
+        event.setCanceled(true);
+    }
 
     @Override
     public void preInit() {
@@ -62,6 +93,7 @@ public class ClientProxy extends CommonProxy {
             ModItems.SCUTE,
             ModItems.TURTLE_HELMET,
             ModItems.PHANTOM_MEMBRANE,
+            ModItems.DEBUG_STICK,
             ModItems.COD_BUCKET,
             ModItems.SALMON_BUCKET,
             ModItems.PUFFERFISH_BUCKET,

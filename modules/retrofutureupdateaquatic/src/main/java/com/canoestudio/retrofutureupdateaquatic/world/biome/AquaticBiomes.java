@@ -15,6 +15,9 @@ import net.minecraft.world.gen.layer.GenLayer;
 @Mod.EventBusSubscriber(modid = RetroFutureUpdateAquatic.ID)
 public final class AquaticBiomes {
 
+    /** Registered through Forge's extensible WorldType array at class load. */
+    public static final net.minecraft.world.WorldType BUFFET = new BuffetWorldType();
+
     public static final Biome WARM_OCEAN = new AquaticBiome(AquaticBiome.Kind.WARM_OCEAN);
     public static final Biome LUKEWARM_OCEAN = new AquaticBiome(AquaticBiome.Kind.LUKEWARM_OCEAN);
     public static final Biome COLD_OCEAN = new AquaticBiome(AquaticBiome.Kind.COLD_OCEAN);

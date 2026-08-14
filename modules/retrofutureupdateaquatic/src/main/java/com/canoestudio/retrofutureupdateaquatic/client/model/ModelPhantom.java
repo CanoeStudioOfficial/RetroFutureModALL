@@ -4,6 +4,8 @@ import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.model.ModelRenderer;
 import net.minecraft.entity.Entity;
 
+import com.canoestudio.retrofutureupdateaquatic.entity.EntityPhantom;
+
 public class ModelPhantom extends ModelBase {
 
     private final ModelRenderer body;
@@ -76,8 +78,16 @@ public class ModelPhantom extends ModelBase {
     @Override
     public void setRotationAngles(float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw,
             float headPitch, float scaleFactor, Entity entityIn) {
-        float t = entityIn.getEntityId() * 3.0F + ageInTicks * 7.448451F * (float)Math.PI / 180.0F;
-        float flap = (float)Math.cos(t) * 16.0F * (float)Math.PI / 180.0F;
+        // 参考 1.13 幻翼的 tick 公式，并按俯冲状态提高拍翼频率/幅度。
+        // 状态通过 DataManager 同步到客户端，因此不会出现服务端俯冲而客户端仍
+        // 使用待机动作的问题。
+        boolean swooping = entityIn instanceof EntityPhantom
+            && ((EntityPhantom)entityIn).isSwooping();
+        float speed = swooping ? 1.22F : 1.0F;
+        float amplitude = swooping ? 20.0F : 16.0F;
+        float t = entityIn.getEntityId() * 3.0F
+            + ageInTicks * 7.448451F * speed * (float)Math.PI / 180.0F;
+        float flap = (float)Math.cos(t) * amplitude * (float)Math.PI / 180.0F;
         this.leftWing.rotateAngleZ = flap;
         this.leftWingTip.rotateAngleZ = flap;
         this.rightWing.rotateAngleZ = -flap;
@@ -85,5 +95,8 @@ public class ModelPhantom extends ModelBase {
         float tailSwing = -(5.0F + (float)Math.cos(t * 2.0F) * 5.0F) * (float)Math.PI / 180.0F;
         this.tail.rotateAngleX = tailSwing;
         this.tailTip.rotateAngleX = tailSwing;
+        this.body.rotateAngleX = -0.1F + (swooping ? -0.06F : 0.0F)
+            + (float)Math.sin(t * 0.5F) * 0.025F;
+        this.head.rotateAngleX = 0.2F + (swooping ? -0.08F : 0.0F);
     }
 }

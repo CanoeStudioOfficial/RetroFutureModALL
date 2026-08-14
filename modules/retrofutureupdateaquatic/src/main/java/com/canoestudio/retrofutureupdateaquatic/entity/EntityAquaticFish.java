@@ -11,9 +11,7 @@ import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.EntityAIAvoidEntity;
-import net.minecraft.entity.ai.EntityAIFollowParent;
 import net.minecraft.entity.ai.EntityAILookIdle;
-import net.minecraft.entity.ai.EntityAIMate;
 import net.minecraft.entity.ai.EntityMoveHelper;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
@@ -56,8 +54,6 @@ public class EntityAquaticFish extends EntityAnimal {
         this.tasks.addTask(1, new EntityAIAvoidEntity<EntityPlayer>(this, EntityPlayer.class, 8.0F, 1.6D, 1.4D));
         this.tasks.addTask(2, new EntityAIWanderUnderwater(this, 1.0D, 20, true));
         this.tasks.addTask(3, new EntityAILookIdle(this));
-        this.tasks.addTask(4, new EntityAIMate(this, 1.0D));
-        this.tasks.addTask(5, new EntityAIFollowParent(this, 1.25D));
     }
 
     @Override

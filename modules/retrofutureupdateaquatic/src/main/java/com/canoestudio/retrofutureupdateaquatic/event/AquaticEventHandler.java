@@ -8,23 +8,30 @@ import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
 import com.canoestudio.retrofutureupdateaquatic.potion.ModPotions;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import java.util.List;
-import java.util.Map;
-import java.util.WeakHashMap;
+import net.minecraft.block.BlockPumpkin;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.monster.EntityHusk;
 import net.minecraft.entity.monster.EntityZombie;
+import net.minecraft.entity.monster.EntityZombieVillager;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.EnumCreatureAttribute;
 import net.minecraft.world.EnumDifficulty;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.init.MobEffects;
 import net.minecraft.inventory.EntityEquipmentSlot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.SoundCategory;
+import net.minecraft.world.storage.MapData;
+import net.minecraft.world.storage.MapDecoration;
 import net.minecraftforge.event.AnvilUpdateEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
@@ -33,7 +40,6 @@ import net.minecraftforge.event.entity.player.ItemFishedEvent;
 import net.minecraftforge.event.furnace.FurnaceFuelBurnTimeEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -43,9 +49,9 @@ public final class AquaticEventHandler {
 
     private static final int ZOMBIE_WATER_TIME = 600;
     private static final int ZOMBIE_CONVERSION_TIME = 300;
-    private static final Map<EntityZombie, Integer> ZOMBIE_WATER_TICKS = new WeakHashMap<EntityZombie, Integer>();
-    private static final Map<EntityZombie, Integer> ZOMBIE_CONVERSION_TICKS =
-        new WeakHashMap<EntityZombie, Integer>();
+    private static final String ZOMBIE_WATER_TICKS = "RetroFutureAquaticZombieWaterTicks";
+    private static final String ZOMBIE_CONVERSION_TICKS = "RetroFutureAquaticZombieConversionTicks";
+    private static final String INSOMNIA_TICKS = "RetroFutureAquaticInsomniaTicks";
 
     private AquaticEventHandler() {
     }
@@ -77,9 +83,40 @@ public final class AquaticEventHandler {
         }
     }
 
+    /**
+     * Refreshes a column when a base or its water is changed.  This keeps
+     * player placement, fluid placement, and piston-like block updates
+     * covered without scanning every block in a loaded chunk.
+     */
+    @SubscribeEvent
+    public static void onNeighborNotify(BlockEvent.NeighborNotifyEvent event) {
+        if (event.getWorld().isRemote) {
+            return;
+        }
+        refreshBubbleColumn(event.getWorld(), event.getPos());
+        refreshBubbleColumn(event.getWorld(), event.getPos().up());
+        refreshBubbleColumn(event.getWorld(), event.getPos().down());
+    }
+
+    private static void refreshBubbleColumn(net.minecraft.world.World world, BlockPos columnPos) {
+        if (BlockBubbleColumn.isColumnBase(world.getBlockState(columnPos.down()))
+                && (FluidloggedSupport.isWater(world, columnPos)
+                    || world.getBlockState(columnPos).getBlock() == ModBlocks.BUBBLE_COLUMN)) {
+            BlockBubbleColumn.updateColumn(world, columnPos);
+        }
+    }
+
     @SubscribeEvent
     public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
         ItemStack stack = event.getItemStack();
+        if (tryMarkBannerOnMap(event, stack)) {
+            return;
+        }
+
+        if (tryCarvePumpkin(event, stack)) {
+            return;
+        }
+
         if (stack.isEmpty() || !stack.getItem().getToolClasses(stack).contains("axe")) {
             return;
         }
@@ -101,25 +138,66 @@ public final class AquaticEventHandler {
         event.setCanceled(true);
     }
 
-    @SubscribeEvent
-    public static void onChunkLoad(ChunkEvent.Load event) {
-        if (event.getWorld().isRemote || event.getWorld().provider.getDimension() != 0) {
-            return;
+    private static boolean tryCarvePumpkin(PlayerInteractEvent.RightClickBlock event, ItemStack stack) {
+        if (stack.isEmpty() || stack.getItem() != Items.SHEARS
+                || event.getWorld().getBlockState(event.getPos()).getBlock() != Blocks.PUMPKIN) {
+            return false;
         }
 
-        int startX = event.getChunk().x << 4;
-        int startZ = event.getChunk().z << 4;
-        int top = Math.min(event.getWorld().getSeaLevel(), event.getWorld().getHeight() - 2);
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                for (int y = 1; y <= top; y++) {
-                    BlockPos pos = new BlockPos(startX + x, y, startZ + z);
-                    if (BlockBubbleColumn.isColumnBase(event.getWorld().getBlockState(pos))) {
-                        BlockBubbleColumn.updateColumn(event.getWorld(), pos.up());
-                    }
-                }
+        if (!event.getWorld().isRemote) {
+            EnumFacing facing = event.getEntityPlayer().getHorizontalFacing().getOpposite();
+            event.getWorld().setBlockState(event.getPos(), ModBlocks.CARVED_PUMPKIN.getDefaultState()
+                .withProperty(BlockPumpkin.FACING, facing), 11);
+            for (int i = 0; i < 4; i++) {
+                event.getWorld().spawnEntity(new EntityItem(event.getWorld(), event.getPos().getX() + 0.5D,
+                    event.getPos().getY() + 0.5D, event.getPos().getZ() + 0.5D,
+                    new ItemStack(Items.PUMPKIN_SEEDS)));
+            }
+            if (!event.getEntityPlayer().capabilities.isCreativeMode) {
+                stack.damageItem(1, event.getEntityPlayer());
+            }
+            event.getWorld().playSound(null, event.getPos(), SoundEvents.BLOCK_WOOD_BREAK,
+                SoundCategory.BLOCKS, 1.0F, 1.0F);
+        }
+        event.setCancellationResult(EnumActionResult.SUCCESS);
+        event.setCanceled(true);
+        return true;
+    }
+
+    private static boolean tryMarkBannerOnMap(PlayerInteractEvent.RightClickBlock event, ItemStack stack) {
+        if (stack.isEmpty() || stack.getItem() != Items.FILLED_MAP) {
+            return false;
+        }
+        IBlockState state = event.getWorld().getBlockState(event.getPos());
+        if (state.getBlock() != Blocks.STANDING_BANNER && state.getBlock() != Blocks.WALL_BANNER) {
+            return false;
+        }
+
+        MapData map = Items.FILLED_MAP.getMapData(stack, event.getWorld());
+        if (map == null) {
+            return false;
+        }
+        String id = "banner-" + event.getPos().getX() + "-" + event.getPos().getY() + "-"
+            + event.getPos().getZ();
+        if (!event.getWorld().isRemote && !hasMapDecoration(stack, id)) {
+            MapData.addTargetDecoration(stack, event.getPos(), id, MapDecoration.Type.RED_MARKER);
+        }
+        event.setCancellationResult(EnumActionResult.SUCCESS);
+        event.setCanceled(true);
+        return true;
+    }
+
+    private static boolean hasMapDecoration(ItemStack map, String id) {
+        if (!map.hasTagCompound() || !map.getTagCompound().hasKey("Decorations", 9)) {
+            return false;
+        }
+        NBTTagList decorations = map.getTagCompound().getTagList("Decorations", 10);
+        for (int i = 0; i < decorations.tagCount(); i++) {
+            if (id.equals(decorations.getCompoundTagAt(i).getString("id"))) {
+                return true;
             }
         }
+        return false;
     }
 
     @SubscribeEvent
@@ -133,6 +211,16 @@ public final class AquaticEventHandler {
         }
         if (living.isPotionActive(ModPotions.SLOW_FALLING)) {
             applySlowFallingMotion(living);
+        }
+
+        if (!(living instanceof EntityDrowned) && !(living instanceof EntityPhantom)
+                && living.getCreatureAttribute() == EnumCreatureAttribute.UNDEAD
+                && FluidloggedSupport.isEntityInWater(living)) {
+            // 1.13 undead mobs sink instead of inheriting the old water
+            // floating behaviour.  Drowned and phantoms have their own
+            // movement controllers and are intentionally excluded.
+            living.motionY = Math.max(living.motionY - 0.02D, -0.35D);
+            living.fallDistance = 0.0F;
         }
 
         updateZombieDrownedConversion(living);
@@ -170,6 +258,14 @@ public final class AquaticEventHandler {
             return;
         }
         EntityPlayer player = event.player;
+        if (!player.world.isRemote) {
+            if (player.isPlayerSleeping()) {
+                player.getEntityData().setInteger(INSOMNIA_TICKS, 0);
+            } else {
+                int insomnia = Math.min(72000, player.getEntityData().getInteger(INSOMNIA_TICKS) + 1);
+                player.getEntityData().setInteger(INSOMNIA_TICKS, insomnia);
+            }
+        }
         if (!player.capabilities.isFlying && FluidloggedSupport.isEntityInWater(player)
                 && player.isPotionActive(ModPotions.DOLPHINS_GRACE)) {
             // 1.13's Dolphin's Grace changes water drag from 0.8 to 0.96.
@@ -177,6 +273,12 @@ public final class AquaticEventHandler {
             player.motionX *= 1.2D;
             player.motionZ *= 1.2D;
         }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerClone(PlayerEvent.Clone event) {
+        event.getEntityPlayer().getEntityData().setInteger(INSOMNIA_TICKS,
+            event.getOriginal().getEntityData().getInteger(INSOMNIA_TICKS));
     }
 
     @SubscribeEvent
@@ -225,6 +327,7 @@ public final class AquaticEventHandler {
 
     private static void updateZombieDrownedConversion(EntityLivingBase living) {
         if (living.world.isRemote || !(living instanceof EntityZombie) || living instanceof EntityDrowned
+                || living instanceof EntityZombieVillager
                 || living.world.getDifficulty() == EnumDifficulty.PEACEFUL) {
             return;
         }
@@ -235,25 +338,24 @@ public final class AquaticEventHandler {
             return;
         }
 
-        Integer conversionTicks = ZOMBIE_CONVERSION_TICKS.get(zombie);
-        if (conversionTicks != null) {
-            int remaining = conversionTicks.intValue() - 1;
+        int conversionTicks = zombie.getEntityData().getInteger(ZOMBIE_CONVERSION_TICKS);
+        if (conversionTicks > 0) {
+            int remaining = conversionTicks - 1;
             if (remaining <= 0) {
                 convertUnderwaterZombie(zombie);
             } else {
-                ZOMBIE_CONVERSION_TICKS.put(zombie, Integer.valueOf(remaining));
+                zombie.getEntityData().setInteger(ZOMBIE_CONVERSION_TICKS, remaining);
             }
             return;
         }
 
         if (isEyeInWater(zombie)) {
-            int waterTicks = ZOMBIE_WATER_TICKS.containsKey(zombie)
-                ? ZOMBIE_WATER_TICKS.get(zombie).intValue() + 1 : 1;
+            int waterTicks = zombie.getEntityData().getInteger(ZOMBIE_WATER_TICKS) + 1;
             if (waterTicks >= ZOMBIE_WATER_TIME) {
-                ZOMBIE_WATER_TICKS.remove(zombie);
-                ZOMBIE_CONVERSION_TICKS.put(zombie, Integer.valueOf(ZOMBIE_CONVERSION_TIME));
+                zombie.getEntityData().removeTag(ZOMBIE_WATER_TICKS);
+                zombie.getEntityData().setInteger(ZOMBIE_CONVERSION_TICKS, ZOMBIE_CONVERSION_TIME);
             } else {
-                ZOMBIE_WATER_TICKS.put(zombie, Integer.valueOf(waterTicks));
+                zombie.getEntityData().setInteger(ZOMBIE_WATER_TICKS, waterTicks);
             }
         } else {
             clearZombieConversion(zombie);
@@ -261,8 +363,8 @@ public final class AquaticEventHandler {
     }
 
     private static void clearZombieConversion(EntityZombie zombie) {
-        ZOMBIE_WATER_TICKS.remove(zombie);
-        ZOMBIE_CONVERSION_TICKS.remove(zombie);
+        zombie.getEntityData().removeTag(ZOMBIE_WATER_TICKS);
+        zombie.getEntityData().removeTag(ZOMBIE_CONVERSION_TICKS);
     }
 
     private static void convertUnderwaterZombie(EntityZombie zombie) {
@@ -345,7 +447,7 @@ public final class AquaticEventHandler {
         List<EntityPlayer> players = event.world.playerEntities;
         for (EntityPlayer player : players) {
             if (player.capabilities.isCreativeMode || player.isSpectator()
-                    || player.ticksExisted < 72000
+                    || player.getEntityData().getInteger(INSOMNIA_TICKS) < 72000
                     || event.world.rand.nextInt(3) != 0) {
                 continue;
             }
@@ -358,7 +460,13 @@ public final class AquaticEventHandler {
             if (!event.world.isAirBlock(spawn) || !event.world.canBlockSeeSky(spawn)) {
                 continue;
             }
+            int nearbyPhantoms = event.world.getEntitiesWithinAABB(EntityPhantom.class,
+                player.getEntityBoundingBox().grow(32.0D)).size();
+            if (nearbyPhantoms >= 8) {
+                continue;
+            }
             int groupSize = 1 + event.world.rand.nextInt(event.world.getDifficulty().getId() + 1);
+            groupSize = Math.min(groupSize, 8 - nearbyPhantoms);
             for (int i = 0; i < groupSize; i++) {
                 EntityPhantom phantom = new EntityPhantom(event.world);
                 phantom.setLocationAndAngles(spawn.getX() + 0.5D, spawn.getY(), spawn.getZ() + 0.5D,

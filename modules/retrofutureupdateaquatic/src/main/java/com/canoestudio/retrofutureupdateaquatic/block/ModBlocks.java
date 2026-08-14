@@ -43,6 +43,8 @@ public final class ModBlocks {
     public static final BlockBubbleColumn BUBBLE_COLUMN = new BlockBubbleColumn();
     public static final BlockConduit CONDUIT = new BlockConduit();
     public static final BlockTurtleEgg TURTLE_EGG = new BlockTurtleEgg();
+    public static final BlockCarvedPumpkin CARVED_PUMPKIN = new BlockCarvedPumpkin(
+        new net.minecraft.util.ResourceLocation(RetroFutureUpdateAquatic.ID, "carved_pumpkin"));
     public static final Block DRIED_KELP_BLOCK = new BlockAquaticSimple("dried_kelp_block", Material.GRASS,
         MapColor.BROWN, SoundType.PLANT, 0.5F, 2.5F, CreativeTabs.BUILDING_BLOCKS);
     public static final Block PRISMARINE_STAIRS = new RetroStairsBlock(RetroFutureUpdateAquatic.ID,
@@ -95,6 +97,7 @@ public final class ModBlocks {
         Collections.addAll(WOODS, OAK_WOOD_SET, SPRUCE_WOOD_SET, BIRCH_WOOD_SET, JUNGLE_WOOD_SET,
             ACACIA_WOOD_SET, DARK_OAK_WOOD_SET);
         Collections.addAll(BLOCKS, SEAGRASS, KELP, SEA_PICKLE, BLUE_ICE, BUBBLE_COLUMN, CONDUIT, TURTLE_EGG,
+            CARVED_PUMPKIN,
             DRIED_KELP_BLOCK, PRISMARINE_STAIRS, PRISMARINE_BRICK_STAIRS, DARK_PRISMARINE_STAIRS,
             PRISMARINE_SLAB, DOUBLE_PRISMARINE_SLAB, PRISMARINE_BRICK_SLAB, DOUBLE_PRISMARINE_BRICK_SLAB,
             DARK_PRISMARINE_SLAB, DOUBLE_DARK_PRISMARINE_SLAB);

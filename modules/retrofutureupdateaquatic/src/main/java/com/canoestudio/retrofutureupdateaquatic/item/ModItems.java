@@ -30,6 +30,7 @@ public final class ModItems {
     public static final Item SCUTE = simpleItem("scute", CreativeTabs.MATERIALS);
     public static final Item TURTLE_HELMET = new ItemTurtleHelmet();
     public static final Item PHANTOM_MEMBRANE = simpleItem("phantom_membrane", CreativeTabs.MATERIALS);
+    public static final Item DEBUG_STICK = new ItemDebugStick();
     public static final Item COD_BUCKET = new ItemFishBucket(AquaticFishType.COD);
     public static final Item SALMON_BUCKET = new ItemFishBucket(AquaticFishType.SALMON);
     public static final Item PUFFERFISH_BUCKET = new ItemFishBucket(AquaticFishType.PUFFERFISH);
@@ -47,7 +48,7 @@ public final class ModItems {
     public static void registerItems(RegistryEvent.Register<Item> event) {
         event.getRegistry().registerAll(DRIED_KELP, NAUTILUS_SHELL, HEART_OF_THE_SEA, TRIDENT,
             COD, SALMON, PUFFERFISH, TROPICAL_FISH, COOKED_COD, COOKED_SALMON, SCUTE, TURTLE_HELMET,
-            PHANTOM_MEMBRANE,
+            PHANTOM_MEMBRANE, DEBUG_STICK,
             COD_BUCKET, SALMON_BUCKET, PUFFERFISH_BUCKET, TROPICAL_FISH_BUCKET);
     }
 

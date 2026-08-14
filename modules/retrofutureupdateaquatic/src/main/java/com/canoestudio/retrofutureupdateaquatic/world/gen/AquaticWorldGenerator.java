@@ -1,6 +1,7 @@
 package com.canoestudio.retrofutureupdateaquatic.world.gen;
 
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import com.canoestudio.retrofutureupdateaquatic.block.BlockBubbleColumn;
 import com.canoestudio.retrofutureupdateaquatic.block.BlockCoralFan;
 import com.canoestudio.retrofutureupdateaquatic.block.BlockKelp;
 import com.canoestudio.retrofutureupdateaquatic.block.BlockSeaPickle;
@@ -76,11 +77,41 @@ public class AquaticWorldGenerator implements IWorldGenerator {
 
         generatePlants(world, random, blockX, blockZ, ocean, river, swamp);
         if (ocean) {
+            generateBubbleColumnBases(world, random, blockX, blockZ);
             if (AquaticBiomes.isWarm(biome) || AquaticBiomes.isLukewarm(biome)
                     || isWarmOceanLike(biome)) {
                 generateWarmOceanFeatures(world, random, blockX, blockZ, chunkX, chunkZ);
             }
             generateFrozenOceanFeatures(world, random, blockX, blockZ, chunkX, chunkZ, biome);
+        }
+    }
+
+    /**
+     * 1.13's underwater ravines expose magma blocks and soul sand.  The
+     * 1.12.2 terrain generator has no equivalent ocean-ravine pass, so place
+     * rare deep-floor bases and immediately materialize their Fluidlogged API
+     * bubble columns.  Only stone/gravel floors are replaced, avoiding edits
+     * to structures and player-built terrain.
+     */
+    private void generateBubbleColumnBases(World world, Random random, int blockX, int blockZ) {
+        for (int attempt = 0; attempt < 2; attempt++) {
+            if (random.nextInt(8) != 0) {
+                continue;
+            }
+            BlockPos floor = findSeaFloor(world, blockX + random.nextInt(16), blockZ + random.nextInt(16));
+            if (floor == null || floor.getY() >= world.getSeaLevel() - 12
+                    || !FluidloggedSupport.isWater(world, floor.up())) {
+                continue;
+            }
+
+            Block floorBlock = world.getBlockState(floor).getBlock();
+            if (floorBlock != Blocks.STONE && floorBlock != Blocks.GRAVEL) {
+                continue;
+            }
+
+            boolean downward = random.nextBoolean();
+            world.setBlockState(floor, (downward ? Blocks.MAGMA : Blocks.SOUL_SAND).getDefaultState(), 18);
+            BlockBubbleColumn.updateColumn(world, floor.up());
         }
     }
 
@@ -480,9 +511,7 @@ public class AquaticWorldGenerator implements IWorldGenerator {
 
     private boolean isFrozenOceanLike(Biome biome) {
         String name = biome.getBiomeName().toLowerCase(Locale.ROOT);
-        return AquaticBiomes.isFrozen(biome) || name.contains("frozen") || name.contains("ice") || name.contains("glacier")
-            || (name.contains("ocean") && (BiomeDictionary.hasType(biome, BiomeDictionary.Type.COLD)
-            || BiomeDictionary.hasType(biome, BiomeDictionary.Type.SNOWY)
-            || biome.getDefaultTemperature() <= 0.15F));
+        return AquaticBiomes.isFrozen(biome) || name.contains("frozen") || name.contains("ice")
+            || name.contains("glacier");
     }
 }
