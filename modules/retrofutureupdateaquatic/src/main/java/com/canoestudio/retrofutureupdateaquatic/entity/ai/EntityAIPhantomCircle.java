@@ -104,9 +104,9 @@ public class EntityAIPhantomCircle extends EntityAIBase {
         this.angle += this.clockwise ? -15.0F : 15.0F;
         BlockPos target = this.phantom.getTargetPos();
         double radians = Math.toRadians(this.angle);
-        this.nextPos = new Vec3d(target.getX() + 0.5D,
-            target.getY() + this.height - 4.0D, target.getZ() + 0.5D)
-            .addVector(Math.cos(radians) * this.radius, 0.0D,
-                Math.sin(radians) * this.radius);
+        this.nextPos = new Vec3d(target.getX() + 0.5D
+                + Math.cos(radians) * this.radius,
+            target.getY() + this.height - 4.0D,
+            target.getZ() + 0.5D + Math.sin(radians) * this.radius);
     }
 }

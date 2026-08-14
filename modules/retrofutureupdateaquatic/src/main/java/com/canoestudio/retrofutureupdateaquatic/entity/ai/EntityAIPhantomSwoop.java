@@ -27,7 +27,7 @@ public class EntityAIPhantomSwoop extends EntityAIBase {
             this.phantom.setSwoopCooldown(this.phantom.getSwoopCooldown() - 1);
             return false;
         }
-        return this.phantom.rand.nextInt(20) == 0;
+        return this.phantom.getRNG().nextInt(20) == 0;
     }
 
     @Override
@@ -48,7 +48,7 @@ public class EntityAIPhantomSwoop extends EntityAIBase {
     @Override
     public void resetTask() {
         this.phantom.setAttackState(EntityPhantom.AttackState.CIRCLING);
-        this.phantom.setSwoopCooldown(80 + this.phantom.rand.nextInt(80));
+        this.phantom.setSwoopCooldown(80 + this.phantom.getRNG().nextInt(80));
     }
 
     @Override
@@ -61,7 +61,7 @@ public class EntityAIPhantomSwoop extends EntityAIBase {
         double distanceSq = this.phantom.getDistanceSq(target);
         if (distanceSq < 225.0D && !this.playedSound) {
             this.phantom.playSound(ModSounds.PHANTOM_SWOOP, 1.6F,
-                0.95F + this.phantom.rand.nextFloat() * 0.1F);
+                0.95F + this.phantom.getRNG().nextFloat() * 0.1F);
             this.playedSound = true;
         }
         if (distanceSq < 4.0D) {
@@ -69,7 +69,7 @@ public class EntityAIPhantomSwoop extends EntityAIBase {
                 .getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getAttributeValue();
             if (target.attackEntityFrom(DamageSource.causeMobDamage(this.phantom), damage)) {
                 this.phantom.playSound(ModSounds.PHANTOM_BITE, 0.8F,
-                    0.95F + this.phantom.rand.nextFloat() * 0.1F);
+                    0.95F + this.phantom.getRNG().nextFloat() * 0.1F);
             }
             this.resetTask();
             return;
