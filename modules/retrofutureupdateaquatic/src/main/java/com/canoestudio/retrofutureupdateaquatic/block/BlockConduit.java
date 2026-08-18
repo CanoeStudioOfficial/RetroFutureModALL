@@ -74,7 +74,7 @@ public class BlockConduit extends Block implements ITileEntityProvider, IFluidlo
 
     @Override
     public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
-        return AquaticWaterHelper.isWater(worldIn, pos) || worldIn.isAirBlock(pos);
+        return AquaticWaterHelper.isWater(worldIn, pos);
     }
 
     @Override

@@ -4,13 +4,9 @@ import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
 import net.minecraft.world.biome.Biome;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.common.BiomeManager;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.event.terraingen.WorldTypeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraft.init.Biomes;
-import net.minecraft.world.gen.layer.GenLayer;
 
 @Mod.EventBusSubscriber(modid = RetroFutureUpdateAquatic.ID)
 public final class AquaticBiomes {
@@ -32,7 +28,6 @@ public final class AquaticBiomes {
     };
 
     private static boolean initialized;
-    private static boolean terrainHandlerRegistered;
 
     private AquaticBiomes() {
     }
@@ -70,11 +65,12 @@ public final class AquaticBiomes {
                 BiomeManager.oceanBiomes.add(biome);
             }
         }
+    }
 
-        if (!terrainHandlerRegistered) {
-            MinecraftForge.TERRAIN_GEN_BUS.register(new AquaticBiomeGenerationHandler());
-            terrainHandlerRegistered = true;
-        }
+    /** OE decorates vanilla OCEAN/BEACH biomes instead of rewriting GenLayer output. */
+    public static boolean isOceanOrBeach(Biome biome) {
+        return biome != null && (BiomeDictionary.hasType(biome, BiomeDictionary.Type.OCEAN)
+            || BiomeDictionary.hasType(biome, BiomeDictionary.Type.BEACH));
     }
 
     public static boolean isWarm(Biome biome) {
@@ -97,92 +93,5 @@ public final class AquaticBiomes {
     private static void registerAquaticBiome(Biome biome, BiomeDictionary.Type... types) {
         BiomeDictionary.addTypes(biome, types);
         BiomeManager.addSpawnBiome(biome);
-    }
-
-    /**
-     * Forge 1.12 has no 1.13 ocean climate layer.  Decorate the vanilla ocean
-     * layer at world creation time so these registered biomes actually occur
-     * in newly generated Overworld chunks.
-     */
-    private static final class AquaticBiomeGenerationHandler {
-
-        @SubscribeEvent
-        public void onInitBiomeGens(WorldTypeEvent.InitBiomeGens event) {
-            GenLayer[] original = event.getNewBiomeGens();
-            if (original == null || original.length < 2) {
-                return;
-            }
-
-            GenLayer[] replacement = original.clone();
-            replacement[0] = new GenLayerAquaticOceans(1729L, replacement[0]);
-            replacement[1] = new GenLayerAquaticOceans(1731L, replacement[1]);
-            if (replacement.length > 2 && replacement[2] != null) {
-                replacement[2] = new GenLayerAquaticOceans(1733L, replacement[2]);
-            }
-            for (GenLayer layer : replacement) {
-                if (layer != null) {
-                    layer.initWorldGenSeed(event.getSeed());
-                }
-            }
-            event.setNewBiomeGens(replacement);
-        }
-    }
-
-    private static final class GenLayerAquaticOceans extends GenLayer {
-
-        private GenLayerAquaticOceans(long seed, GenLayer parent) {
-            super(seed);
-            this.parent = parent;
-        }
-
-        @Override
-        public int[] getInts(int areaX, int areaY, int areaWidth, int areaHeight) {
-            int[] source = this.parent.getInts(areaX, areaY, areaWidth, areaHeight);
-            int[] result = net.minecraft.world.gen.layer.IntCache.getIntCache(areaWidth * areaHeight);
-            int oceanId = Biome.getIdForBiome(Biomes.OCEAN);
-            int deepOceanId = Biome.getIdForBiome(Biomes.DEEP_OCEAN);
-            int frozenOceanId = Biome.getIdForBiome(Biomes.FROZEN_OCEAN);
-
-            for (int z = 0; z < areaHeight; z++) {
-                for (int x = 0; x < areaWidth; x++) {
-                    int index = x + z * areaWidth;
-                    int biomeId = source[index];
-                    this.initChunkSeed(x + areaX, z + areaY);
-                    if (biomeId == oceanId) {
-                        result[index] = Biome.getIdForBiome(shallowOceanVariant(this.nextInt(100)));
-                    } else if (biomeId == deepOceanId) {
-                        result[index] = Biome.getIdForBiome(deepOceanVariant(this.nextInt(100)));
-                    } else if (biomeId == frozenOceanId) {
-                        result[index] = Biome.getIdForBiome(FROZEN_OCEAN);
-                    } else {
-                        result[index] = biomeId;
-                    }
-                }
-            }
-            return result;
-        }
-
-        private Biome shallowOceanVariant(int roll) {
-            if (roll < 30) {
-                return WARM_OCEAN;
-            }
-            if (roll < 60) {
-                return LUKEWARM_OCEAN;
-            }
-            if (roll < 88) {
-                return COLD_OCEAN;
-            }
-            return FROZEN_OCEAN;
-        }
-
-        private Biome deepOceanVariant(int roll) {
-            if (roll < 35) {
-                return DEEP_LUKEWARM_OCEAN;
-            }
-            if (roll < 75) {
-                return DEEP_COLD_OCEAN;
-            }
-            return DEEP_FROZEN_OCEAN;
-        }
     }
 }

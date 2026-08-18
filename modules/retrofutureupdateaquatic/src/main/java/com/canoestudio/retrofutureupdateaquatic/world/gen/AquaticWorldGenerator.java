@@ -8,7 +8,6 @@ import com.canoestudio.retrofutureupdateaquatic.block.BlockSeaPickle;
 import com.canoestudio.retrofutureupdateaquatic.block.BlockSeagrass;
 import com.canoestudio.retrofutureupdateaquatic.block.ModBlocks;
 import java.util.List;
-import java.util.Locale;
 import java.util.Random;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -56,9 +55,10 @@ public class AquaticWorldGenerator implements IWorldGenerator {
         int blockZ = chunkZ * 16;
         Biome biome = world.getBiome(new BlockPos(blockX + 8, 0, blockZ + 8));
         boolean ocean = BiomeDictionary.hasType(biome, BiomeDictionary.Type.OCEAN);
+        boolean oceanOrBeach = AquaticBiomes.isOceanOrBeach(biome);
         boolean river = BiomeDictionary.hasType(biome, BiomeDictionary.Type.RIVER);
         boolean swamp = BiomeDictionary.hasType(biome, BiomeDictionary.Type.SWAMP);
-        if (!ocean && !river && !swamp) {
+        if (!oceanOrBeach && !river && !swamp) {
             return;
         }
 
@@ -76,13 +76,15 @@ public class AquaticWorldGenerator implements IWorldGenerator {
             16, 1, 16, 1.0D, 1.0D, 1.0D);
 
         generatePlants(world, random, blockX, blockZ, ocean, river, swamp);
-        if (ocean) {
-            generateBubbleColumnBases(world, random, blockX, blockZ);
-            if (AquaticBiomes.isWarm(biome) || AquaticBiomes.isLukewarm(biome)
-                    || isWarmOceanLike(biome)) {
-                generateWarmOceanFeatures(world, random, blockX, blockZ, chunkX, chunkZ);
+        if (oceanOrBeach) {
+            if (ocean) {
+                generateBubbleColumnBases(world, random, blockX, blockZ);
             }
-            generateFrozenOceanFeatures(world, random, blockX, blockZ, chunkX, chunkZ, biome);
+            // Oceanic Expanse decorates the vanilla OCEAN/BEACH set with
+            // independent warm and frozen noise fields instead of replacing
+            // the final GenLayer output.
+            generateWarmOceanFeatures(world, random, blockX, blockZ, chunkX, chunkZ);
+            generateFrozenOceanFeatures(world, random, blockX, blockZ, chunkX, chunkZ);
         }
     }
 
@@ -171,7 +173,7 @@ public class AquaticWorldGenerator implements IWorldGenerator {
                         && world.getBlockState(floor).getBlock() == Blocks.GRAVEL) {
                     world.setBlockState(floor, Blocks.SAND.getDefaultState(), 18);
                 }
-                if (value > 0.72D) {
+                if (value > 0.96D) {
                     reefPatch = true;
                 }
             }
@@ -230,7 +232,7 @@ public class AquaticWorldGenerator implements IWorldGenerator {
                         && coral.livePlant.canPlaceBlockAt(world, pos)) {
                     setWaterlogged(world, pos, coral.livePlant.getDefaultState());
                 }
-                tryPlaceFan(world, random, pos, coral);
+                tryPlaceFan(world, random, floor, coral);
             }
         }
     }
@@ -326,12 +328,12 @@ public class AquaticWorldGenerator implements IWorldGenerator {
         world.setBlockState(pos, state, 18);
     }
 
-    private void tryPlaceFan(World world, Random random, BlockPos pos, ModBlocks.CoralSet coral) {
+    private void tryPlaceFan(World world, Random random, BlockPos supportPos, ModBlocks.CoralSet coral) {
         if (random.nextInt(3) != 0) {
             return;
         }
         for (EnumFacing facing : EnumFacing.HORIZONTALS) {
-            BlockPos target = pos.offset(facing);
+            BlockPos target = supportPos.offset(facing);
             if (FluidloggedSupport.isWater(world, target)
                     && coral.liveFan.canPlaceBlockOnSide(world, target, facing)) {
                 setWaterlogged(world, target, coral.liveFan.getDefaultState()
@@ -342,15 +344,13 @@ public class AquaticWorldGenerator implements IWorldGenerator {
     }
 
     private void generateFrozenOceanFeatures(World world, Random random, int blockX, int blockZ,
-            int chunkX, int chunkZ, Biome biome) {
-        if (!isFrozenOceanLike(biome)) {
-            return;
-        }
+            int chunkX, int chunkZ) {
         boolean frozenPatch = false;
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
                 double value = frozenNoise[x * 16 + z] / 4.0D - random.nextDouble() * 0.01D;
-                if (value <= 0.6D) {
+                double sandValue = warmNoise[x * 16 + z] / 4.0D - random.nextDouble() * 0.01D;
+                if (value <= 0.6D || sandValue > 0.6D) {
                     continue;
                 }
                 frozenPatch = true;
@@ -359,7 +359,7 @@ public class AquaticWorldGenerator implements IWorldGenerator {
                         && world.getBlockState(floor).getBlock() == Blocks.SAND) {
                     world.setBlockState(floor, Blocks.GRAVEL.getDefaultState(), 18);
                 }
-                if (iceNoise[x * 16 + z] / 4.0D - random.nextDouble() * 0.225D > 0.55D) {
+                if (iceNoise[x * 16 + z] / 4.0D - random.nextDouble() * 0.225D > 0.3D) {
                     BlockPos ice = new BlockPos(blockX + x, world.getSeaLevel() - 1, blockZ + z);
                     if (isWaterOrAir(world, ice)) {
                         world.setBlockState(ice, Blocks.ICE.getDefaultState(), 18);
@@ -503,15 +503,4 @@ public class AquaticWorldGenerator implements IWorldGenerator {
         return null;
     }
 
-    private boolean isWarmOceanLike(Biome biome) {
-        String name = biome.getBiomeName().toLowerCase(Locale.ROOT);
-        return name.contains("warm") || name.contains("lukewarm") || name.contains("tropical")
-            || (!isFrozenOceanLike(biome) && biome.getDefaultTemperature() >= 0.8F);
-    }
-
-    private boolean isFrozenOceanLike(Biome biome) {
-        String name = biome.getBiomeName().toLowerCase(Locale.ROOT);
-        return AquaticBiomes.isFrozen(biome) || name.contains("frozen") || name.contains("ice")
-            || name.contains("glacier");
-    }
 }

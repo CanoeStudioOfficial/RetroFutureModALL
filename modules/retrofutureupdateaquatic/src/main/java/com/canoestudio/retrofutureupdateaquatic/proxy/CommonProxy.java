@@ -28,14 +28,18 @@ import net.minecraftforge.oredict.ShapelessOreRecipe;
 public class CommonProxy {
 
     public void preInit() {
+        // Register the optional Buffet climate variants before collecting the
+        // OE-style OCEAN/BEACH generation set.
+        AquaticBiomes.init();
         AquaticLootTables.init();
         RetroWorldgenRegistry.registerGenerator(new AquaticStructureGenerator(), 0);
-        RetroWorldgenRegistry.registerGenerator(new AquaticWorldGenerator(), 8);
+        // Match Oceanic Expanse: aquatic climate decoration runs in the
+        // normal world-generation pass rather than as a late post-pass.
+        RetroWorldgenRegistry.registerGenerator(new AquaticWorldGenerator(), 0);
         GameRegistry.registerTileEntity(TileEntityConduit.class, prefix("conduit"));
     }
 
     public void init() {
-        AquaticBiomes.init();
         ModAquaticSpawns.init();
         registerRecipes();
         registerBrewingRecipes();

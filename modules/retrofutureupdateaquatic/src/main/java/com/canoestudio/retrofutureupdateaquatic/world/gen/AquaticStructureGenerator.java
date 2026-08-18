@@ -92,6 +92,9 @@ public class AquaticStructureGenerator implements IWorldGenerator {
             .setReplacedBlock(Blocks.STRUCTURE_VOID)
             .setRotation(rotation);
         Template template = manager.get(server, SHIPWRECKS[random.nextInt(SHIPWRECKS.length)]);
+        if (template == null) {
+            return;
+        }
         BlockPos size = template.getSize();
         if (size.getX() <= 0 || size.getZ() <= 0) {
             return;
