@@ -1,10 +1,8 @@
 package com.canoestudio.retrofutureupdateaquatic.event;
 
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
-import com.canoestudio.retrofutureupdateaquatic.block.BlockBubbleColumn;
 import com.canoestudio.retrofutureupdateaquatic.block.ModBlocks;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
-import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.block.BlockPumpkin;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
@@ -24,7 +22,6 @@ import net.minecraft.world.storage.MapDecoration;
 import net.minecraftforge.event.entity.player.ItemFishedEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.furnace.FurnaceFuelBurnTimeEvent;
-import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
@@ -50,34 +47,6 @@ public final class AquaticInteractionEvents {
         // so preserve the same aggregate 1/120 chance.
         if (event.getEntityPlayer().world.rand.nextInt(120) == 0) {
             event.getDrops().add(new ItemStack(ModItems.NAUTILUS_SHELL));
-        }
-    }
-
-    @SubscribeEvent
-    public static void onBlockPlaced(BlockEvent.PlaceEvent event) {
-        if (BlockBubbleColumn.isColumnBase(event.getPlacedBlock())) {
-            BlockBubbleColumn.updateColumn(event.getWorld(), event.getPos().up());
-        } else if (event.getPlacedBlock().getBlock() == ModBlocks.BUBBLE_COLUMN) {
-            BlockBubbleColumn.updateColumn(event.getWorld(), event.getPos());
-        }
-    }
-
-    /** Refresh a column when its base, water, or nearby block changes. */
-    @SubscribeEvent
-    public static void onNeighborNotify(BlockEvent.NeighborNotifyEvent event) {
-        if (event.getWorld().isRemote) {
-            return;
-        }
-        refreshBubbleColumn(event.getWorld(), event.getPos());
-        refreshBubbleColumn(event.getWorld(), event.getPos().up());
-        refreshBubbleColumn(event.getWorld(), event.getPos().down());
-    }
-
-    private static void refreshBubbleColumn(World world, BlockPos columnPos) {
-        if (BlockBubbleColumn.isColumnBase(world.getBlockState(columnPos.down()))
-                && (FluidloggedSupport.isWater(world, columnPos)
-                    || world.getBlockState(columnPos).getBlock() == ModBlocks.BUBBLE_COLUMN)) {
-            BlockBubbleColumn.updateColumn(world, columnPos);
         }
     }
 

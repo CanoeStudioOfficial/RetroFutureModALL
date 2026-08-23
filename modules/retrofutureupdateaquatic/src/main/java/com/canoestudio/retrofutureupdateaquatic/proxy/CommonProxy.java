@@ -7,7 +7,6 @@ import com.canoestudio.retrofutureupdateaquatic.block.ModBlocks;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
 import com.canoestudio.retrofutureupdateaquatic.potion.ModPotions;
 import com.canoestudio.retrofutureupdateaquatic.world.ModAquaticSpawns;
-import com.canoestudio.retrofutureupdateaquatic.world.biome.AquaticBiomes;
 import com.canoestudio.retrofutureupdateaquatic.world.gen.AquaticWorldGenerator;
 import com.canoestudio.retrofutureupdateaquatic.world.gen.AquaticStructureGenerator;
 import com.canoestudio.retrofutureupdateaquatic.world.AquaticLootTables;
@@ -28,14 +27,11 @@ import net.minecraftforge.oredict.ShapelessOreRecipe;
 public class CommonProxy {
 
     public void preInit() {
-        // Register the optional Buffet climate variants before collecting the
-        // OE-style OCEAN/BEACH generation set.
-        AquaticBiomes.init();
         AquaticLootTables.init();
-        RetroWorldgenRegistry.registerGenerator(new AquaticStructureGenerator(), 0);
         // Match Oceanic Expanse: aquatic climate decoration runs in the
         // normal world-generation pass rather than as a late post-pass.
         RetroWorldgenRegistry.registerGenerator(new AquaticWorldGenerator(), 0);
+        RetroWorldgenRegistry.registerGenerator(new AquaticStructureGenerator(), 0);
         GameRegistry.registerTileEntity(TileEntityConduit.class, prefix("conduit"));
     }
 

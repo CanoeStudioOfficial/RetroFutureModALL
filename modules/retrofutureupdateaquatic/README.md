@@ -10,7 +10,7 @@ The implementation is organized against the Update Aquatic feature groups:
 
 | Wiki area | Current implementation |
 | --- | --- |
-| Water behavior | Fluidlogged-compatible aquatic blocks, water restoration, bubble columns, magma upward flow, soul-sand downward flow |
+| Water behavior | Fluidlogged-compatible aquatic blocks and water restoration |
 | Seafloor life | Kelp, seagrass, tall seagrass, coral blocks, coral fans/plants, sea pickles, dead variants and growth behavior |
 | Ocean climate | OE-style noise patches over the native OCEAN/BEACH biomes: warm sand/coral reefs, frozen seafloor, ice sheets and icebergs; optional Buffet climate variants remain available |
 | Exploration | Shipwreck templates and loot, ocean ruins, buried treasure, treasure maps, icebergs and blue ice |
@@ -23,8 +23,8 @@ The implementation is organized against the Update Aquatic feature groups:
 
 Event handling is deliberately split by responsibility:
 
-- `event/AquaticInteractionEvents.java` contains block, item, fishing and
-  bubble-column interactions.
+- `event/AquaticInteractionEvents.java` contains block, item and fishing
+  interactions.
 - `event/AquaticPlayerEvents.java` contains player ticks, insomnia, slow
   falling, anvil repair and player-only compatibility behavior.
 - `event/AquaticEntityEvents.java` contains conduit-derived effects, undead

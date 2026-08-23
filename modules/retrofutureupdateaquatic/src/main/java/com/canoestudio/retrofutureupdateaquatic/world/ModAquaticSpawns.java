@@ -6,7 +6,6 @@ import com.canoestudio.retrofutureupdateaquatic.entity.EntityAquaticFish;
 import com.canoestudio.retrofutureupdateaquatic.entity.EntityDolphin;
 import com.canoestudio.retrofutureupdateaquatic.entity.EntityDrowned;
 import com.canoestudio.retrofutureupdateaquatic.entity.EntityTurtle;
-import com.canoestudio.retrofutureupdateaquatic.world.biome.AquaticBiomes;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.init.Biomes;
 import net.minecraft.world.biome.Biome;
@@ -50,8 +49,7 @@ public final class ModAquaticSpawns {
     }
 
     private static boolean isPufferfishSpawnBiome(Biome biome) {
-        return biome == Biomes.DEEP_OCEAN || AquaticBiomes.isWarm(biome)
-            || AquaticBiomes.isLukewarm(biome);
+        return biome == Biomes.DEEP_OCEAN;
     }
 
     private static boolean isTropicalFishSpawnBiome(Biome biome) {

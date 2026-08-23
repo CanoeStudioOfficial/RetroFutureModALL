@@ -51,8 +51,7 @@ public class ClientProxy extends CommonProxy {
         }
 
         Biome biome = entity.world.getBiome(eyePos);
-        float density = AquaticBiomes.isWarm(biome) ? 0.045F
-            : AquaticBiomes.isFrozen(biome) ? 0.075F : 0.06F;
+        float density = AquaticBiomes.isFrozen(biome) ? 0.075F : 0.06F;
         event.setDensity(density);
         event.setCanceled(true);
     }

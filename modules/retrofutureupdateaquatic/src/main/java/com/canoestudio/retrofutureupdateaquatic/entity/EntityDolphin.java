@@ -353,10 +353,7 @@ public class EntityDolphin extends EntityWaterMob {
     }
 
     private boolean isWater(BlockPos pos) {
-        return this.world.isBlockLoaded(pos)
-            && (FluidloggedSupport.isWater(this.world, pos)
-                || this.world.getBlockState(pos).getBlock()
-                    == com.canoestudio.retrofutureupdateaquatic.block.ModBlocks.BUBBLE_COLUMN);
+        return this.world.isBlockLoaded(pos) && FluidloggedSupport.isWater(this.world, pos);
     }
 
     private void moveToward(double x, double y, double z, double speed, double inertia) {

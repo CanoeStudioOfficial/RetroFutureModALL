@@ -19,11 +19,6 @@ final class AquaticWaterHelper {
         return FluidloggedSupport.isWater(world, pos);
     }
 
-    static boolean isWaterOrBubble(IBlockAccess world, BlockPos pos) {
-        IBlockState state = world.getBlockState(pos);
-        return isWater(world, pos) || state.getBlock() == ModBlocks.BUBBLE_COLUMN;
-    }
-
     static boolean canReplaceWater(World world, BlockPos pos) {
         return FluidloggedSupport.canReplaceWater(world, pos);
     }

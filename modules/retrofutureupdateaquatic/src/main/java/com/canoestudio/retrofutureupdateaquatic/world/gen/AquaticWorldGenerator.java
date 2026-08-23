@@ -1,20 +1,23 @@
 package com.canoestudio.retrofutureupdateaquatic.world.gen;
 
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
-import com.canoestudio.retrofutureupdateaquatic.block.BlockBubbleColumn;
-import com.canoestudio.retrofutureupdateaquatic.block.BlockCoralFan;
+import com.canoestudio.retrofutureupdateaquatic.block.BlockCoralBlock;
 import com.canoestudio.retrofutureupdateaquatic.block.BlockKelp;
 import com.canoestudio.retrofutureupdateaquatic.block.BlockSeaPickle;
-import com.canoestudio.retrofutureupdateaquatic.block.BlockSeagrass;
 import com.canoestudio.retrofutureupdateaquatic.block.ModBlocks;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockStone;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Biomes;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.IChunkProvider;
@@ -22,255 +25,413 @@ import net.minecraft.world.gen.IChunkGenerator;
 import net.minecraft.world.gen.NoiseGeneratorOctaves;
 import net.minecraftforge.common.BiomeDictionary;
 import net.minecraftforge.fml.common.IWorldGenerator;
-import com.canoestudio.retrofutureupdateaquatic.world.biome.AquaticBiomes;
 
 /**
- * 1.13 aquatic terrain and seafloor features, adapted from Oceanic Expanse.
- * OE-only blocks such as coquina, sea oats and tube sponge are intentionally
- * not referenced here.
+ * Oceanic Expanse-style decoration.
+ *
+ * OE does not register warm/cold/deep replacement biomes or alter GenLayer.
+ * It decorates the OCEAN and BEACH biomes that the world provider already
+ * selected. The noise seeds and placement thresholds below are copied from
+ * OE; only the block writes are adapted to this module's Fluidlogged API.
  */
 public class AquaticWorldGenerator implements IWorldGenerator {
 
-    private final NoiseGeneratorOctaves warmOceanNoise = new NoiseGeneratorOctaves(new Random(2560), 4);
-    private final NoiseGeneratorOctaves frozenOceanNoise = new NoiseGeneratorOctaves(new Random(5120), 4);
-    private final NoiseGeneratorOctaves iceSheetNoise = new NoiseGeneratorOctaves(new Random(1280), 4);
-    private final NoiseGeneratorOctaves kelpForestNoise = new NoiseGeneratorOctaves(new Random(1244), 4);
-    private final NoiseGeneratorOctaves icebergNoise = new NoiseGeneratorOctaves(new Random(3840), 6);
+    private static final double OCEAN_NOISE_SCALE = 0.00764D;
+    private static final double OCEAN_NOISE_MIN = 0.6D;
+    private static final double REEF_NOISE_MIN = 0.96D;
+    private static final double ICE_SHEET_SPREAD = 0.3D;
+    private static final double KELP_CONNECTIVE = 0.2D;
+    private static final double KELP_SPREAD = 0.1D;
+    private static final double KELP_DENSITY = 0.2D;
+
+    private final Biome[] oceanAndBeachBiomes;
+    private final Biome[] oceanBiomes;
+    private final NoiseGeneratorOctaves warmNoiseGenerator =
+        new NoiseGeneratorOctaves(new Random(2560), 4);
+    private final NoiseGeneratorOctaves frozenNoiseGenerator =
+        new NoiseGeneratorOctaves(new Random(5120), 4);
+    private final NoiseGeneratorOctaves iceSheetNoiseGenerator =
+        new NoiseGeneratorOctaves(new Random(1280), 4);
+    private final NoiseGeneratorOctaves kelpNoiseGenerator =
+        new NoiseGeneratorOctaves(new Random(1244), 4);
+    private final NoiseGeneratorOctaves icebergNoiseGenerator =
+        new NoiseGeneratorOctaves(new Random(3840), 6);
 
     private double[] warmNoise = new double[256];
+    private double[] sandNoise = new double[256];
     private double[] frozenNoise = new double[256];
-    private double[] iceNoise = new double[256];
+    private double[] iceSheetNoise = new double[256];
     private double[] kelpNoise = new double[256];
     private double[] icebergIceNoise = new double[256];
     private double[] icebergCircleNoise = new double[256];
+    private double[] icebergSnowNoise = new double[256];
+
+    public AquaticWorldGenerator() {
+        oceanAndBeachBiomes = collectOceanAndBeachBiomes();
+        oceanBiomes = collectBiomes(BiomeDictionary.Type.OCEAN);
+    }
 
     @Override
-    public void generate(Random random, int chunkX, int chunkZ, World world, IChunkGenerator chunkGenerator,
-            IChunkProvider chunkProvider) {
-        if (world.provider.getDimension() != 0) {
-            return;
-        }
+    public void generate(Random random, int chunkX, int chunkZ, World world,
+            IChunkGenerator chunkGenerator, IChunkProvider chunkProvider) {
+        generateWarmOcean(random, chunkX, chunkZ, world);
+        generateFrozenOcean(random, chunkX, chunkZ, world);
+        generateKelpForest(random, chunkX, chunkZ, world);
 
-        int blockX = chunkX * 16;
-        int blockZ = chunkZ * 16;
-        Biome biome = world.getBiome(new BlockPos(blockX + 8, 0, blockZ + 8));
-        boolean ocean = BiomeDictionary.hasType(biome, BiomeDictionary.Type.OCEAN);
-        boolean oceanOrBeach = AquaticBiomes.isOceanOrBeach(biome);
-        boolean river = BiomeDictionary.hasType(biome, BiomeDictionary.Type.RIVER);
-        boolean swamp = BiomeDictionary.hasType(biome, BiomeDictionary.Type.SWAMP);
-        if (!oceanOrBeach && !river && !swamp) {
-            return;
-        }
-
-        warmNoise = warmOceanNoise.generateNoiseOctaves(warmNoise, blockX, 0, blockZ,
-            16, 1, 16, 0.00764D, 1.0D, 0.00764D);
-        frozenNoise = frozenOceanNoise.generateNoiseOctaves(frozenNoise, blockX, 0, blockZ,
-            16, 1, 16, 0.00764D, 1.0D, 0.00764D);
-        iceNoise = iceSheetNoise.generateNoiseOctaves(iceNoise, blockX, 0, blockZ,
-            16, 1, 16, 0.225D, 1.0D, 0.225D);
-        kelpNoise = kelpForestNoise.generateNoiseOctaves(kelpNoise, blockX, 0, blockZ,
-            16, 1, 16, 0.035D, 1.0D, 0.035D);
-        icebergIceNoise = icebergNoise.generateNoiseOctaves(icebergIceNoise, blockX, 0, blockZ,
-            16, 1, 16, 1.0D, 1.0D, 1.0D);
-        icebergCircleNoise = icebergNoise.generateNoiseOctaves(icebergCircleNoise, blockX, 0, blockZ,
-            16, 1, 16, 1.0D, 1.0D, 1.0D);
-
-        generatePlants(world, random, blockX, blockZ, ocean, river, swamp);
-        if (oceanOrBeach) {
-            if (ocean) {
-                generateBubbleColumnBases(world, random, blockX, blockZ);
-            }
-            // Oceanic Expanse decorates the vanilla OCEAN/BEACH set with
-            // independent warm and frozen noise fields instead of replacing
-            // the final GenLayer output.
-            generateWarmOceanFeatures(world, random, blockX, blockZ, chunkX, chunkZ);
-            generateFrozenOceanFeatures(world, random, blockX, blockZ, chunkX, chunkZ);
-        }
+        // Same four WorldGenOceanPatch registrations as OE.
+        generatePatch(random, chunkX, chunkZ, world, ModBlocks.SEAGRASS.getDefaultState(),
+            2, 2, 48, 8, 4, 0.4D, -1, -1, -1, PatchTarget.RIVER);
+        generatePatch(random, chunkX, chunkZ, world, ModBlocks.SEAGRASS.getDefaultState(),
+            6, 2, 48, 8, 4, 0.3D, -1, -1, -1, PatchTarget.OCEAN);
+        generatePatch(random, chunkX, chunkZ, world, ModBlocks.SEAGRASS.getDefaultState(),
+            6, 2, 64, 8, 4, 0.8D, -1, -1, -1, PatchTarget.DEEP_OCEAN);
+        generatePatch(random, chunkX, chunkZ, world, ModBlocks.SEAGRASS.getDefaultState(),
+            2, 2, 48, 8, 4, 0.6D, -1, -1, -1, PatchTarget.SWAMP);
     }
 
-    /**
-     * 1.13's underwater ravines expose magma blocks and soul sand.  The
-     * 1.12.2 terrain generator has no equivalent ocean-ravine pass, so place
-     * rare deep-floor bases and immediately materialize their Fluidlogged API
-     * bubble columns.  Only stone/gravel floors are replaced, avoiding edits
-     * to structures and player-built terrain.
-     */
-    private void generateBubbleColumnBases(World world, Random random, int blockX, int blockZ) {
-        for (int attempt = 0; attempt < 2; attempt++) {
-            if (random.nextInt(8) != 0) {
-                continue;
-            }
-            BlockPos floor = findSeaFloor(world, blockX + random.nextInt(16), blockZ + random.nextInt(16));
-            if (floor == null || floor.getY() >= world.getSeaLevel() - 12
-                    || !FluidloggedSupport.isWater(world, floor.up())) {
-                continue;
-            }
+    private void generateWarmOcean(Random random, int chunkX, int chunkZ, World world) {
+        warmNoise = warmNoiseGenerator.generateNoiseOctaves(warmNoise, chunkX * 16, 0, chunkZ * 16,
+            16, 1, 16, OCEAN_NOISE_SCALE, 1.0D, OCEAN_NOISE_SCALE);
 
-            Block floorBlock = world.getBlockState(floor).getBlock();
-            if (floorBlock != Blocks.STONE && floorBlock != Blocks.GRAVEL) {
-                continue;
-            }
-
-            boolean downward = random.nextBoolean();
-            world.setBlockState(floor, (downward ? Blocks.MAGMA : Blocks.SOUL_SAND).getDefaultState(), 18);
-            BlockBubbleColumn.updateColumn(world, floor.up());
-        }
-    }
-
-    private void generatePlants(World world, Random random, int blockX, int blockZ,
-            boolean ocean, boolean river, boolean swamp) {
-        int seagrassAttempts = ocean ? 18 : 8;
-        for (int i = 0; i < seagrassAttempts; i++) {
-            BlockPos floor = findSeaFloor(world, blockX + random.nextInt(16), blockZ + random.nextInt(16));
-            if (floor == null) {
-                continue;
-            }
-            BlockPos place = floor.up();
-            if (!FluidloggedSupport.isWater(world, place)
-                    || !ModBlocks.SEAGRASS.canPlaceBlockAt(world, place)) {
-                continue;
-            }
-            if (random.nextFloat() < (ocean ? 0.35F : swamp ? 0.55F : 0.18F)
-                    && FluidloggedSupport.isWater(world, place.up())) {
-                placeTallSeagrass(world, place);
-            } else {
-                setWaterlogged(world, place, ModBlocks.SEAGRASS.getDefaultState());
-            }
-        }
-
-        if (!ocean) {
-            return;
-        }
-        for (int i = 0; i < 18; i++) {
-            int x = blockX + random.nextInt(16);
-            int z = blockZ + random.nextInt(16);
-            int index = random.nextInt(16) * 16 + random.nextInt(16);
-            if (kelpNoise[index] / 4.0D - random.nextDouble() * 0.07D < 0.2D) {
-                continue;
-            }
-            BlockPos floor = findSeaFloor(world, x, z);
-            if (floor == null || random.nextInt(3) == 0) {
-                continue;
-            }
-            BlockPos place = floor.up();
-            if (ModBlocks.KELP.canPlaceBlockAt(world, place)) {
-                growKelpColumn(world, random, place, 2 + random.nextInt(10));
-            }
-        }
-    }
-
-    private void generateWarmOceanFeatures(World world, Random random, int blockX, int blockZ,
-            int chunkX, int chunkZ) {
-        boolean reefPatch = false;
+        boolean hasWarmFloor = false;
+        boolean hasReef = false;
+        BlockPos.MutableBlockPos mutable = new BlockPos.MutableBlockPos();
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
-                double value = warmNoise[x * 16 + z] / 4.0D - random.nextDouble() * 0.01D;
-                if (value <= 0.6D) {
-                    continue;
+                int posX = chunkX * 16 + x;
+                int posZ = chunkZ * 16 + z;
+                mutable.setPos(posX, 0, posZ);
+                BlockPos waterFloor = world.getTopSolidOrLiquidBlock(mutable);
+                Biome biome = world.getBiomeForCoordsBody(waterFloor);
+                boolean valid = contains(oceanAndBeachBiomes, biome);
+                double noise = warmNoise[x * 16 + z] / 4.0D - random.nextDouble() * 0.01D;
+
+                if (valid && noise > OCEAN_NOISE_MIN) {
+                    hasWarmFloor = true;
+                    mutable.setPos(waterFloor.getX(), waterFloor.getY() - 1, waterFloor.getZ());
+                    if (world.getBlockState(mutable).getBlock() == Blocks.GRAVEL) {
+                        world.setBlockState(mutable, Blocks.SAND.getDefaultState(), 16 | 2);
+                    }
                 }
-                BlockPos floor = findSeaFloor(world, blockX + x, blockZ + z);
-                if (floor != null && floor.getY() < world.getSeaLevel() - 3
-                        && world.getBlockState(floor).getBlock() == Blocks.GRAVEL) {
-                    world.setBlockState(floor, Blocks.SAND.getDefaultState(), 18);
-                }
-                if (value > 0.96D) {
-                    reefPatch = true;
+                if (valid && noise > REEF_NOISE_MIN) {
+                    hasReef = true;
                 }
             }
-        }
-        if (!reefPatch) {
-            return;
         }
 
-        for (int i = 0; i < 12; i++) {
-            BlockPos floor = findSeaFloor(world, blockX + random.nextInt(16), blockZ + random.nextInt(16));
-            if (floor == null || floor.getY() >= world.getSeaLevel() - 3) {
-                continue;
-            }
-            BlockPos place = floor.up();
-            if (random.nextInt(3) == 0 && ModBlocks.SEA_PICKLE.canPlaceBlockAt(world, place)) {
-                setWaterlogged(world, place, ModBlocks.SEA_PICKLE.getDefaultState()
-                    .withProperty(com.canoestudio.retrofutureupdateaquatic.block.BlockSeaPickle.PICKLES,
-                        random.nextInt(4) + 1));
-            }
+        if (hasWarmFloor) {
+            generatePatch(random, chunkX, chunkZ, world, ModBlocks.SEA_PICKLE.getDefaultState(),
+                1, 6, 16, 8, 4, 0.0D, 1, 1, 3, PatchTarget.OCEAN_AND_BEACH);
         }
-        generateCoralReef(world, random, blockX, blockZ);
+        if (hasReef) {
+            generateCoralReef(random, chunkX, chunkZ, world);
+        }
     }
 
-    private void generateCoralReef(World world, Random random, int blockX, int blockZ) {
+    private void generateCoralReef(Random random, int chunkX, int chunkZ, World world) {
         List<ModBlocks.CoralSet> corals = ModBlocks.corals();
-        for (int i = 0; i < 8; i++) {
-            BlockPos floor = findSeaFloor(world, blockX + random.nextInt(16), blockZ + random.nextInt(16));
-            if (floor == null || floor.getY() > world.getSeaLevel() - 5
-                    || world.getBlockState(floor).getBlock()
-                        instanceof com.canoestudio.retrofutureupdateaquatic.block.BlockCoralBlock) {
-                continue;
-            }
+        int chunkPosX = chunkX * 16;
+        int chunkPosZ = chunkZ * 16;
+
+        for (int i = 0; i <= 7; i++) {
             ModBlocks.CoralSet coral = corals.get(random.nextInt(corals.size()));
-            BlockPos origin = floor.up();
-            switch (random.nextInt(3)) {
-                case 0:
-                    generateCoralBulb(world, random, origin, coral.liveBlock.getDefaultState());
-                    break;
-                case 1:
-                    generateCoralBranch(world, random, origin, coral.liveBlock.getDefaultState());
-                    break;
-                default:
-                    generateCoralStalk(world, random, origin, coral.liveBlock.getDefaultState());
-                    break;
+            BlockPos coralPos = world.getTopSolidOrLiquidBlock(new BlockPos(
+                chunkPosX + 8 + random.nextInt(16), 0,
+                chunkPosZ + 8 + random.nextInt(16)));
+            int shape = random.nextInt(11);
+            if (coralPos.getY() <= world.getSeaLevel() - 5
+                    && !(world.getBlockState(coralPos.down()).getBlock() instanceof BlockCoralBlock)) {
+                if (shape >= 8) {
+                    generateCoralBulb(world, random, coralPos, coral.liveBlock.getDefaultState());
+                } else if (shape >= 4) {
+                    generateCoralBranch(world, random, coralPos, coral.liveBlock.getDefaultState());
+                } else {
+                    generateCoralStalk(world, random, coralPos, coral.liveBlock.getDefaultState());
+                }
             }
         }
 
         for (ModBlocks.CoralSet coral : corals) {
-            for (int i = 0; i < 8; i++) {
-                BlockPos floor = findSeaFloor(world, blockX + random.nextInt(16), blockZ + random.nextInt(16));
-                if (floor == null) {
+            generatePatch(random, chunkX, chunkZ, world, coral.liveFan.getDefaultState(),
+                8, 2, 48, 8, 16, 0.0D, 10, -1, -1, PatchTarget.OCEAN_AND_BEACH);
+            generatePatch(random, chunkX, chunkZ, world, coral.livePlant.getDefaultState(),
+                8, 2, 48, 8, 16, 0.0D, 10, -1, -1, PatchTarget.OCEAN_AND_BEACH);
+        }
+    }
+
+    private void generateFrozenOcean(Random random, int chunkX, int chunkZ, World world) {
+        sandNoise = warmNoiseGenerator.generateNoiseOctaves(sandNoise, chunkX * 16, 0, chunkZ * 16,
+            16, 1, 16, OCEAN_NOISE_SCALE, 1.0D, OCEAN_NOISE_SCALE);
+        frozenNoise = frozenNoiseGenerator.generateNoiseOctaves(frozenNoise, chunkX * 16, 0, chunkZ * 16,
+            16, 1, 16, OCEAN_NOISE_SCALE, 1.0D, OCEAN_NOISE_SCALE);
+        iceSheetNoise = iceSheetNoiseGenerator.generateNoiseOctaves(iceSheetNoise, chunkX * 16, 0, chunkZ * 16,
+            16, 1, 16, 0.225D, 1.0D, 0.225D);
+        icebergIceNoise = icebergNoiseGenerator.generateNoiseOctaves(icebergIceNoise, chunkX * 16, 0, chunkZ * 16,
+            16, 1, 16, 1.0D, 1.0D, 1.0D);
+        icebergCircleNoise = icebergNoiseGenerator.generateNoiseOctaves(icebergCircleNoise, chunkX * 16, 0, chunkZ * 16,
+            16, 1, 16, 1.0D, 1.0D, 1.0D);
+        icebergSnowNoise = icebergNoiseGenerator.generateNoiseOctaves(icebergSnowNoise, chunkX * 16, 0, chunkZ * 16,
+            16, 1, 16, 0.825D, 1.0D, 0.825D);
+
+        int chunkPosX = chunkX * 16 + 8;
+        int chunkPosZ = chunkZ * 16 + 8;
+        int groundReplaceLowest = world.getSeaLevel() - 3;
+        boolean frozenAtChunkEnd = false;
+
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                int posX = chunkPosX + x;
+                int posZ = chunkPosZ + z;
+                BlockPos waterFloor = world.getTopSolidOrLiquidBlock(new BlockPos(posX, 0, posZ));
+                Biome biome = world.getBiomeForCoordsBody(waterFloor);
+                boolean valid = contains(oceanAndBeachBiomes, biome);
+                boolean beach = BiomeDictionary.hasType(biome, BiomeDictionary.Type.BEACH);
+                double frozenValue = frozenNoise[x * 16 + z] / 4.0D - random.nextDouble() * 0.01D;
+                double sandValue = sandNoise[x * 16 + z] / 4.0D - random.nextDouble() * 0.01D;
+                if (!valid || frozenValue <= OCEAN_NOISE_MIN || sandValue > OCEAN_NOISE_MIN) {
                     continue;
                 }
-                BlockPos pos = floor.up();
-                if (FluidloggedSupport.isWater(world, pos)
-                        && coral.livePlant.canPlaceBlockAt(world, pos)) {
-                    setWaterlogged(world, pos, coral.livePlant.getDefaultState());
+                if (x == 15 && z == 15) {
+                    frozenAtChunkEnd = true;
                 }
-                tryPlaceFan(world, random, floor, coral);
+
+                BlockPos seaLevel = new BlockPos(posX, world.getSeaLevel(), posZ);
+                if (world.getBlockState(waterFloor.down()).getBlock() == Blocks.SAND
+                        && waterFloor.getY() < groundReplaceLowest) {
+                    world.setBlockState(waterFloor.down(), Blocks.GRAVEL.getDefaultState(), 16 | 2);
+                }
+                if (!beach) {
+                    spawnIceberg(world, random, chunkX, chunkZ, x, z, false, 0.3D, 0.01D, 3.0D, 1.0D);
+                    spawnIceberg(world, random, chunkX, chunkZ, x, z, true, 0.3D, 0.01D, 10.0D, 0.5D);
+                    icebergToppings(world, random, chunkX, chunkZ, x, z);
+                }
+                if (iceSheetNoise[x * 16 + z] / 4.0D - random.nextDouble() * 0.225D > ICE_SHEET_SPREAD
+                        && world.getBlockState(seaLevel.down()).getBlock().isReplaceable(world, seaLevel.down())) {
+                    world.setBlockState(seaLevel.down(), Blocks.ICE.getDefaultState(), 16 | 2);
+                }
+            }
+        }
+        if (frozenAtChunkEnd) {
+            generateFrozenBlueIce(random, chunkX, chunkZ, world);
+        }
+    }
+
+    private void spawnIceberg(World world, Random random, int chunkX, int chunkZ, int x, int z,
+            boolean stack, double scale, double verticalScale, double smoothing, double slope) {
+        int seaLevel = world.getSeaLevel();
+        double noise = icebergIceNoise[x * 16 + z] / 2.0D;
+        double circleNoise = icebergCircleNoise[x * 16 + z];
+        for (int y = Math.min(seaLevel + 40, 256); y >= seaLevel - 18; y--) {
+            BlockPos icePos = new BlockPos(chunkX * 16 + 8 + x, y, chunkZ * 16 + 8 + z);
+            int difference = y - seaLevel;
+            double topRatio = Math.pow((double) difference / smoothing, slope);
+            double bottomRatio = Math.pow((double) -difference * 2 / smoothing / 4.0D, slope);
+            double bottomDropoff = scale - difference * verticalScale / 1.5D + bottomRatio;
+            if (difference <= 0) {
+                difference = 1;
+                topRatio = Math.pow((double) difference / smoothing, slope);
+            }
+            double topDropoff = scale + difference * verticalScale + topRatio;
+            if (y > seaLevel - 2) {
+                if (noise / 6.0D > topDropoff && (!stack || circleNoise > topDropoff)
+                        && canReplaceIcebergBlock(world, icePos)) {
+                    placeIcebergBlock(world, icePos);
+                }
+            } else if (noise / 6.0D - random.nextDouble() * 0.2D > bottomDropoff
+                    && (!stack || circleNoise > bottomDropoff)
+                    && canReplaceIcebergBlock(world, icePos)) {
+                placeIcebergBlock(world, icePos);
             }
         }
     }
 
-    private void generateCoralBulb(World world, Random random, BlockPos origin, IBlockState state) {
+    private void icebergToppings(World world, Random random, int chunkX, int chunkZ, int x, int z) {
+        for (int y = Math.min(world.getSeaLevel() + 42, 256); y >= world.getSeaLevel() - 18; y--) {
+            BlockPos icePos = new BlockPos(chunkX * 16 + 8 + x, y, chunkZ * 16 + 8 + z);
+            int difference = y - world.getSeaLevel();
+            BlockPos above = icePos.up(difference / 3);
+            if (y > world.getSeaLevel() - 2
+                    && icebergSnowNoise[x * 16 + z] / 8.0D - random.nextDouble() * 0.8D
+                        < difference * 0.2D - 3.0D
+                    && world.getBlockState(icePos).getBlock() == Blocks.PACKED_ICE
+                    && world.getBlockState(above).getMaterial() == Material.AIR) {
+                world.setBlockState(icePos, Blocks.SNOW.getDefaultState(), 16 | 2);
+            }
+        }
+    }
+
+    private boolean canReplaceIcebergBlock(World world, BlockPos pos) {
+        IBlockState state = world.getBlockState(pos);
+        return state.getMaterial() == Material.WATER || FluidloggedSupport.isWater(world, pos)
+            || state.getBlock() == Blocks.ICE || state.getMaterial() == Material.AIR;
+    }
+
+    private void placeIcebergBlock(World world, BlockPos pos) {
+        world.setBlockState(pos, Blocks.PACKED_ICE.getDefaultState(), 16 | 2);
+    }
+
+    private void generateFrozenBlueIce(Random random, int chunkX, int chunkZ, World world) {
+        ChunkPos chunk = world.getChunk(chunkX, chunkZ).getPos();
+        for (int attempt = 0; attempt < 8; attempt++) {
+            int x = random.nextInt(16) + 8;
+            int z = random.nextInt(16) + 8;
+            int y = Math.max(world.getSeaLevel() - 1 - random.nextInt(20), 1);
+            if (random.nextInt(2) != 0) {
+                continue;
+            }
+            BlockPos pos = chunk.getBlock(0, 0, 0).add(x, y, z);
+            while ((world.getBlockState(pos).getBlock().isReplaceable(world, pos)
+                    || FluidloggedSupport.isWater(world, pos)) && pos.getY() > 0) {
+                pos = pos.down();
+            }
+            if (world.getBlockState(pos).getBlock() != Blocks.PACKED_ICE) {
+                continue;
+            }
+            for (int i = 0; i < 50; i++) {
+                BlockPos target = pos.add(random.nextInt(3) - random.nextInt(3),
+                    random.nextInt(3) - random.nextInt(3), random.nextInt(3) - random.nextInt(3));
+                int maxY = Math.max(world.getSeaLevel() + 2, 1);
+                if (target.getY() > maxY) {
+                    target = new BlockPos(target.getX(), maxY, target.getZ());
+                }
+                IBlockState state = world.getBlockState(target);
+                if (state.getBlock() == Blocks.ICE || state.getBlock() == Blocks.PACKED_ICE
+                        || state.getMaterial() == Material.WATER || FluidloggedSupport.isWater(world, target)) {
+                    world.setBlockState(target, ModBlocks.BLUE_ICE.getDefaultState(), 16 | 2);
+                } else if (random.nextInt(2) == 0) {
+                    i--;
+                }
+            }
+        }
+    }
+
+    private void generateKelpForest(Random random, int chunkX, int chunkZ, World world) {
+        if (!contains(oceanBiomes, biomeAtChunkOrigin(world, chunkX, chunkZ))) {
+            return;
+        }
+        double[] localFrozen = frozenNoiseGenerator.generateNoiseOctaves(new double[256], chunkX * 16, 0,
+            chunkZ * 16, 16, 1, 16, OCEAN_NOISE_SCALE, 1.0D, OCEAN_NOISE_SCALE);
+        double[] localSand = warmNoiseGenerator.generateNoiseOctaves(new double[256], chunkX * 16, 0,
+            chunkZ * 16, 16, 1, 16, OCEAN_NOISE_SCALE, 1.0D, OCEAN_NOISE_SCALE);
+        kelpNoise = kelpNoiseGenerator.generateNoiseOctaves(kelpNoise, chunkX * 16, 0, chunkZ * 16,
+            16, 1, 16, KELP_CONNECTIVE, 1.0D, KELP_CONNECTIVE);
+
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                double kelp = kelpNoise[x * 16 + z] / 4.0D - random.nextDouble() * 0.07D;
+                double frozen = localFrozen[x * 16 + z] / 4.0D - random.nextDouble() * 0.01D;
+                double sand = localSand[x * 16 + z] / 4.0D - random.nextDouble() * 0.01D;
+                if (kelp <= KELP_SPREAD || frozen > OCEAN_NOISE_MIN || sand > 0.95D) {
+                    continue;
+                }
+                BlockPos pos = world.getTopSolidOrLiquidBlock(new BlockPos(
+                    chunkX * 16 + 8 + x, 0, chunkZ * 16 + 8 + z));
+                if (random.nextDouble() < KELP_DENSITY
+                        && ModBlocks.KELP.canPlaceBlockAt(world, pos)
+                        && world.getBlockState(pos.down()).getBlock() != ModBlocks.KELP) {
+                    growKelpStalk(world, random, pos);
+                }
+            }
+        }
+    }
+
+    private void growKelpStalk(World world, Random random, BlockPos pos) {
+        int growthLimit = random.nextInt(15);
+        for (int i = 0; i < growthLimit && ModBlocks.KELP.canPlaceBlockAt(world, pos); i++) {
+            world.setBlockState(pos, ModBlocks.KELP.getDefaultState()
+                .withProperty(BlockKelp.AGE, i == growthLimit - 1 ? random.nextInt(15) : 0)
+                .withProperty(BlockKelp.TOP, i == growthLimit - 1), 2 | 64);
+            pos = pos.up();
+        }
+    }
+
+    private void generatePatch(Random random, int chunkX, int chunkZ, World world, IBlockState state,
+            int attempts, int chance, int amount, int spreadXZ, int spreadY, double tallChance,
+            int seaLevelMin, int pickleMin, int pickleMax, PatchTarget target) {
+        if (!target.matches(world, chunkX, chunkZ)) {
+            return;
+        }
+        BlockPos chunkOrigin = new BlockPos(chunkX * 16, 0, chunkZ * 16);
+        for (int attempt = 0; attempt < attempts; attempt++) {
+            if (random.nextInt(chance) != 0) {
+                continue;
+            }
+            BlockPos pos = chunkOrigin.add(random.nextInt(16) + 8,
+                Math.max(world.getSeaLevel() - 1, 1), random.nextInt(16) + 8);
+            while ((world.getBlockState(pos).getBlock().isReplaceable(world, pos)
+                    || FluidloggedSupport.isWater(world, pos)) && pos.getY() > 0) {
+                pos = pos.down();
+            }
+            if (!canPlace(state, world, pos.up())) {
+                continue;
+            }
+            for (int i = 0; i < amount; i++) {
+                BlockPos targetPos = pos.up().add(
+                    random.nextInt(spreadXZ) - random.nextInt(spreadXZ),
+                    random.nextInt(spreadY) - random.nextInt(spreadY),
+                    random.nextInt(spreadXZ) - random.nextInt(spreadXZ));
+                if (!FluidloggedSupport.isWater(world, targetPos)
+                        || !canPlace(state, world, targetPos)
+                        || (seaLevelMin > -1 && targetPos.getY() >= world.getSeaLevel() - seaLevelMin)) {
+                    continue;
+                }
+                IBlockState placeState = state;
+                if (state.getBlock() == ModBlocks.SEA_PICKLE) {
+                    placeState = state.withProperty(BlockSeaPickle.PICKLES,
+                        pickleMin + random.nextInt(pickleMax - pickleMin + 1));
+                }
+                if (state.getBlock() == ModBlocks.SEAGRASS && random.nextDouble() < tallChance
+                        && FluidloggedSupport.isWater(world, targetPos.up())) {
+                    ModBlocks.SEAGRASS.placeTallAt(world, targetPos, 2 | 64);
+                } else {
+                    FluidloggedSupport.setFluidloggableBlock(world, targetPos, placeState, 2 | 64);
+                }
+            }
+        }
+    }
+
+    private static boolean canPlace(IBlockState state, World world, BlockPos pos) {
+        return state.getBlock().canPlaceBlockAt(world, pos);
+    }
+
+    private void generateCoralBulb(World world, Random random, BlockPos pos, IBlockState state) {
+        int down = random.nextInt(2) + 1;
         int length = random.nextInt(3) + 3;
         int height = random.nextInt(3) + 3;
         int width = random.nextInt(3) + 3;
-        int down = random.nextInt(2) + 1;
         for (int x = 0; x <= length; x++) {
             for (int y = 0; y <= height; y++) {
                 for (int z = 0; z <= width; z++) {
-                    boolean edge = (x == 0 || x == length || y == 0 || y == height || z == 0 || z == width);
-                    if (edge && random.nextFloat() > 0.1F) {
-                        placeCoralBlock(world, origin.add(x, y - down, z), state);
+                    boolean edge = (x != 0 || (y != 0 && z != 0 && y != height && z != width))
+                        && (x != length || (y != 0 && z != 0 && y != height && z != width))
+                        && (y != 0 || (z != 0 && z != width))
+                        && (y != height || (z != 0 && z != width));
+                    boolean inside = x != 0 && y != 0 && z != 0
+                        && x != length && y != height && z != width;
+                    if (edge && !inside && random.nextFloat() > 0.1F) {
+                        placeCoralBlock(world, pos.add(x, y - down, z), state);
                     }
                 }
             }
         }
     }
 
-    private void generateCoralBranch(World world, Random random, BlockPos origin, IBlockState state) {
+    private void generateCoralBranch(World world, Random random, BlockPos pos, IBlockState state) {
         int branchCount = 2 + random.nextInt(2);
         EnumFacing first = EnumFacing.Plane.HORIZONTAL.random(random);
-        List<EnumFacing> directions = new java.util.ArrayList<EnumFacing>();
+        List<EnumFacing> directions = new ArrayList<EnumFacing>();
         directions.add(first);
         directions.add(first.rotateY());
         directions.add(first.rotateYCCW());
         java.util.Collections.shuffle(directions, random);
-        placeCoralBlock(world, origin, state);
+        placeCoralBlock(world, pos, state);
         for (int branch = 0; branch < branchCount; branch++) {
             EnumFacing facing = directions.get(branch);
-            BlockPos cursor = origin;
+            BlockPos cursor = pos;
             if (facing != first) {
-                cursor = origin.up();
-                int sideLength = Math.max(random.nextInt(6) - 3, 1);
-                for (int i = 1; i <= sideLength; i++) {
-                    cursor = origin.offset(facing, i).up();
+                cursor = pos.up();
+                for (int i = 1; i <= Math.max(random.nextInt(6) - 3, 1); i++) {
+                    cursor = pos.offset(facing, i).up();
                     placeCoralBlock(world, cursor, state);
                 }
             }
@@ -285,222 +446,119 @@ public class AquaticWorldGenerator implements IWorldGenerator {
         }
     }
 
-    private void generateCoralStalk(World world, Random random, BlockPos origin, IBlockState state) {
+    private void generateCoralStalk(World world, Random random, BlockPos pos, IBlockState state) {
         int baseHeight = random.nextInt(3) + 1;
-        int branches = 2 + random.nextInt(3);
-        List<EnumFacing> directions = new java.util.ArrayList<EnumFacing>();
+        List<EnumFacing> directions = new ArrayList<EnumFacing>();
         for (EnumFacing facing : EnumFacing.Plane.HORIZONTAL) {
             directions.add(facing);
         }
         java.util.Collections.shuffle(directions, random);
-        int branchIndex = 0;
-        BlockPos cursor = origin;
+        int branch = 0;
+        BlockPos cursor = pos;
         for (int i = 0; i <= baseHeight; i++) {
             placeCoralBlock(world, cursor, state);
-            if (branchIndex < branches && random.nextFloat() < 0.75F) {
-                generateCoralBranchArm(world, random, cursor, directions.get(branchIndex++), state);
+            if (branch != 4 && random.nextFloat() < 0.75F) {
+                generateCoralBranchArm(world, random, cursor, directions.get(branch++), state);
             }
             cursor = cursor.up();
         }
     }
 
-    private void generateCoralBranchArm(World world, Random random, BlockPos origin, EnumFacing facing,
-            IBlockState state) {
-        BlockPos cursor = origin;
-        int height = 1 + random.nextInt(4);
+    private void generateCoralBranchArm(World world, Random random, BlockPos pos,
+            EnumFacing facing, IBlockState state) {
+        BlockPos cursor = pos;
+        int height = random.nextInt(4) + 1;
         for (int i = 0; i <= height; i++) {
-            if (!isWaterOrAir(world, cursor)) {
+            if (!FluidloggedSupport.isWater(world, cursor)) {
                 cursor = cursor.up();
                 if (i <= 1) {
                     cursor = cursor.offset(facing);
                 } else if (random.nextFloat() < 0.25F) {
                     cursor = cursor.offset(EnumFacing.Plane.HORIZONTAL.random(random));
                 }
+                placeCoralBlock(world, cursor, state);
             }
-            placeCoralBlock(world, cursor, state);
         }
     }
 
     private void placeCoralBlock(World world, BlockPos pos, IBlockState state) {
-        if (pos.getY() >= world.getSeaLevel() - 1 || !isWaterOrAir(world, pos)) {
-            return;
-        }
-        world.setBlockState(pos, state, 18);
-    }
-
-    private void tryPlaceFan(World world, Random random, BlockPos supportPos, ModBlocks.CoralSet coral) {
-        if (random.nextInt(3) != 0) {
-            return;
-        }
-        for (EnumFacing facing : EnumFacing.HORIZONTALS) {
-            BlockPos target = supportPos.offset(facing);
-            if (FluidloggedSupport.isWater(world, target)
-                    && coral.liveFan.canPlaceBlockOnSide(world, target, facing)) {
-                setWaterlogged(world, target, coral.liveFan.getDefaultState()
-                    .withProperty(BlockCoralFan.FACING, facing));
-                return;
-            }
+        if (pos.getY() < world.getSeaLevel() - 1) {
+            FluidloggedSupport.setFluidloggableBlock(world, pos, state, 16 | 2);
         }
     }
 
-    private void generateFrozenOceanFeatures(World world, Random random, int blockX, int blockZ,
-            int chunkX, int chunkZ) {
-        boolean frozenPatch = false;
-        for (int x = 0; x < 16; x++) {
-            for (int z = 0; z < 16; z++) {
-                double value = frozenNoise[x * 16 + z] / 4.0D - random.nextDouble() * 0.01D;
-                double sandValue = warmNoise[x * 16 + z] / 4.0D - random.nextDouble() * 0.01D;
-                if (value <= 0.6D || sandValue > 0.6D) {
-                    continue;
-                }
-                frozenPatch = true;
-                BlockPos floor = findSeaFloor(world, blockX + x, blockZ + z);
-                if (floor != null && floor.getY() < world.getSeaLevel() - 3
-                        && world.getBlockState(floor).getBlock() == Blocks.SAND) {
-                    world.setBlockState(floor, Blocks.GRAVEL.getDefaultState(), 18);
-                }
-                if (iceNoise[x * 16 + z] / 4.0D - random.nextDouble() * 0.225D > 0.3D) {
-                    BlockPos ice = new BlockPos(blockX + x, world.getSeaLevel() - 1, blockZ + z);
-                    if (isWaterOrAir(world, ice)) {
-                        world.setBlockState(ice, Blocks.ICE.getDefaultState(), 18);
-                    }
-                }
-            }
-        }
-        if (!frozenPatch || random.nextInt(3) != 0) {
-            return;
-        }
-        int x = blockX + 4 + random.nextInt(8);
-        int z = blockZ + 4 + random.nextInt(8);
-        generateIceberg(world, random, chunkX, chunkZ, x, z);
+    private Biome biomeAtChunkOrigin(World world, int chunkX, int chunkZ) {
+        return world.getBiomeForCoordsBody(new BlockPos(chunkX * 16, 0, chunkZ * 16));
     }
 
-    private void generateIceberg(World world, Random random, int chunkX, int chunkZ, int x, int z) {
-        BlockPos surface = new BlockPos(x, world.getSeaLevel(), z);
-        if (!isWaterOrAir(world, surface) && !isWaterOrAir(world, surface.down())) {
-            return;
-        }
-        int height = 7 + random.nextInt(10);
-        int below = Math.min(12 + random.nextInt(7), height + 8);
-        int width = 5 + random.nextInt(5);
-        boolean elongated = random.nextBoolean();
-        boolean blue = random.nextInt(5) == 0;
-        int blockX = chunkX * 16;
-        int blockZ = chunkZ * 16;
-        for (int y = -below; y <= height; y++) {
-            double progress = y >= 0 ? (double)y / Math.max(1, height) : (double)-y / Math.max(1, below);
-            double radius = width * (1.0D - progress * (y >= 0 ? 0.72D : 0.55D));
-            if (y > height - 3) {
-                radius *= 0.65D;
-            }
-            radius = Math.max(1.5D, radius);
-            int range = (int)Math.ceil(radius) + 1;
-            for (int dx = -range; dx <= range; dx++) {
-                for (int dz = -range; dz <= range; dz++) {
-                    double xScale = elongated ? 1.45D : 1.0D;
-                    double zScale = elongated ? 0.8D : 1.0D;
-                    double distance = (dx * dx) / (radius * radius * xScale)
-                        + (dz * dz) / (radius * radius * zScale);
-                    if (distance > 1.0D || random.nextDouble() < distance * 0.11D) {
-                        continue;
-                    }
-                    BlockPos pos = surface.add(dx, y, dz);
-                    if (pos.getX() >= blockX && pos.getX() < blockX + 16
-                            && pos.getZ() >= blockZ && pos.getZ() < blockZ + 16
-                            && canReplaceForIceberg(world, pos)) {
-                        world.setBlockState(pos, blue && y <= 0 && random.nextInt(18) == 0
-                            ? ModBlocks.BLUE_ICE.getDefaultState() : Blocks.PACKED_ICE.getDefaultState(), 18);
-                    }
-                }
-            }
-        }
-        addIcebergSnow(world, random, blockX, blockZ, surface, width + 2, height);
-        growBlueIce(world, random, blockX, blockZ, surface, width + 2, below);
-    }
-
-    private void addIcebergSnow(World world, Random random, int blockX, int blockZ, BlockPos surface,
-            int radius, int height) {
-        for (int dx = -radius; dx <= radius; dx++) {
-            for (int dz = -radius; dz <= radius; dz++) {
-                for (int y = height + 1; y >= 0; y--) {
-                    BlockPos pos = surface.add(dx, y, dz);
-                    if (isInsideChunk(pos, blockX, blockZ) && world.getBlockState(pos).getBlock() == Blocks.PACKED_ICE
-                            && world.isAirBlock(pos.up()) && random.nextInt(3) != 0) {
-                        world.setBlockState(pos.up(), Blocks.SNOW_LAYER.getDefaultState(), 18);
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    private void growBlueIce(World world, Random random, int blockX, int blockZ, BlockPos surface,
-            int radius, int below) {
-        for (int i = 0; i < 40; i++) {
-            BlockPos pos = surface.add(random.nextInt(radius * 2 + 1) - radius,
-                -random.nextInt(Math.max(2, below)), random.nextInt(radius * 2 + 1) - radius);
-            if (isInsideChunk(pos, blockX, blockZ) && world.getBlockState(pos).getBlock() == Blocks.PACKED_ICE
-                    && touchesBlueIce(world, pos)) {
-                world.setBlockState(pos, ModBlocks.BLUE_ICE.getDefaultState(), 18);
-            }
-        }
-    }
-
-    private boolean touchesBlueIce(World world, BlockPos pos) {
-        for (EnumFacing facing : EnumFacing.values()) {
-            if (world.getBlockState(pos.offset(facing)).getBlock() == ModBlocks.BLUE_ICE) {
+    private static boolean contains(Biome[] biomes, Biome biome) {
+        for (Biome candidate : biomes) {
+            if (candidate == biome) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean canReplaceForIceberg(World world, BlockPos pos) {
-        return world.isAirBlock(pos) || FluidloggedSupport.isWater(world, pos)
-            || world.getBlockState(pos).getBlock() == Blocks.ICE
-            || world.getBlockState(pos).getBlock() == Blocks.SNOW_LAYER;
+    private static Biome[] collectOceanAndBeachBiomes() {
+        List<Biome> biomes = new ArrayList<Biome>();
+        addUnique(biomes, BiomeDictionary.getBiomes(BiomeDictionary.Type.OCEAN));
+        addUnique(biomes, BiomeDictionary.getBiomes(BiomeDictionary.Type.BEACH));
+        return biomes.toArray(new Biome[biomes.size()]);
     }
 
-    private boolean isWaterOrAir(World world, BlockPos pos) {
-        return world.isAirBlock(pos) || FluidloggedSupport.isWater(world, pos);
+    private static Biome[] collectBiomes(BiomeDictionary.Type type) {
+        List<Biome> biomes = new ArrayList<Biome>();
+        addUnique(biomes, BiomeDictionary.getBiomes(type));
+        return biomes.toArray(new Biome[biomes.size()]);
     }
 
-    private boolean isInsideChunk(BlockPos pos, int blockX, int blockZ) {
-        return pos.getX() >= blockX && pos.getX() < blockX + 16
-            && pos.getZ() >= blockZ && pos.getZ() < blockZ + 16;
-    }
-
-    private void placeTallSeagrass(World world, BlockPos pos) {
-        setWaterlogged(world, pos, ModBlocks.SEAGRASS.getDefaultState().withProperty(BlockSeagrass.TYPE, 1));
-        setWaterlogged(world, pos.up(), ModBlocks.SEAGRASS.getDefaultState().withProperty(BlockSeagrass.TYPE, 2));
-    }
-
-    private void growKelpColumn(World world, Random random, BlockPos pos, int height) {
-        BlockPos cursor = pos;
-        for (int i = 0; i < height && ModBlocks.KELP.canPlaceBlockAt(world, cursor); i++) {
-            setWaterlogged(world, cursor, ModBlocks.KELP.getDefaultState()
-                .withProperty(BlockKelp.AGE, i == height - 1 ? random.nextInt(15) : 0)
-                .withProperty(BlockKelp.TOP, i == height - 1));
-            cursor = cursor.up();
-        }
-    }
-
-    private void setWaterlogged(World world, BlockPos pos, IBlockState state) {
-        FluidloggedSupport.setFluidloggableBlock(world, pos, state, 18);
-    }
-
-    private BlockPos findSeaFloor(World world, int x, int z) {
-        BlockPos pos = new BlockPos(x, Math.max(1, world.getSeaLevel() - 1), z);
-        while (pos.getY() > 1) {
-            IBlockState state = world.getBlockState(pos);
-            Material material = state.getMaterial();
-            if (!FluidloggedSupport.isWater(world, pos) && !state.getBlock().isReplaceable(world, pos)
-                    && material != Material.LEAVES && material != Material.ICE) {
-                return FluidloggedSupport.isWater(world, pos.up()) ? pos : null;
+    private static void addUnique(List<Biome> target, Set<Biome> source) {
+        for (Biome biome : source) {
+            if (!target.contains(biome)) {
+                target.add(biome);
             }
-            pos = pos.down();
         }
-        return null;
     }
 
+    private enum PatchTarget {
+        RIVER {
+            @Override
+            boolean matches(World world, int chunkX, int chunkZ) {
+                return BiomeDictionary.hasType(biome(world, chunkX, chunkZ), BiomeDictionary.Type.RIVER);
+            }
+        },
+        OCEAN {
+            @Override
+            boolean matches(World world, int chunkX, int chunkZ) {
+                return biome(world, chunkX, chunkZ) == Biomes.OCEAN;
+            }
+        },
+        DEEP_OCEAN {
+            @Override
+            boolean matches(World world, int chunkX, int chunkZ) {
+                return biome(world, chunkX, chunkZ) == Biomes.DEEP_OCEAN;
+            }
+        },
+        SWAMP {
+            @Override
+            boolean matches(World world, int chunkX, int chunkZ) {
+                return BiomeDictionary.hasType(biome(world, chunkX, chunkZ), BiomeDictionary.Type.SWAMP);
+            }
+        },
+        OCEAN_AND_BEACH {
+            @Override
+            boolean matches(World world, int chunkX, int chunkZ) {
+                Biome biome = biome(world, chunkX, chunkZ);
+                return BiomeDictionary.hasType(biome, BiomeDictionary.Type.OCEAN)
+                    || BiomeDictionary.hasType(biome, BiomeDictionary.Type.BEACH);
+            }
+        };
+
+        abstract boolean matches(World world, int chunkX, int chunkZ);
+
+        private static Biome biome(World world, int chunkX, int chunkZ) {
+            return world.getBiomeForCoordsBody(new BlockPos(chunkX * 16, 0, chunkZ * 16));
+        }
+    }
 }

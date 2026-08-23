@@ -40,7 +40,6 @@ public final class ModBlocks {
     public static final BlockKelp KELP = new BlockKelp();
     public static final BlockSeaPickle SEA_PICKLE = new BlockSeaPickle();
     public static final BlockBlueIce BLUE_ICE = new BlockBlueIce();
-    public static final BlockBubbleColumn BUBBLE_COLUMN = new BlockBubbleColumn();
     public static final BlockConduit CONDUIT = new BlockConduit();
     public static final BlockTurtleEgg TURTLE_EGG = new BlockTurtleEgg();
     public static final BlockCarvedPumpkin CARVED_PUMPKIN = new BlockCarvedPumpkin(
@@ -96,7 +95,7 @@ public final class ModBlocks {
         Collections.addAll(CORALS, TUBE_CORAL, BRAIN_CORAL, BUBBLE_CORAL, FIRE_CORAL, HORN_CORAL);
         Collections.addAll(WOODS, OAK_WOOD_SET, SPRUCE_WOOD_SET, BIRCH_WOOD_SET, JUNGLE_WOOD_SET,
             ACACIA_WOOD_SET, DARK_OAK_WOOD_SET);
-        Collections.addAll(BLOCKS, SEAGRASS, KELP, SEA_PICKLE, BLUE_ICE, BUBBLE_COLUMN, CONDUIT, TURTLE_EGG,
+        Collections.addAll(BLOCKS, SEAGRASS, KELP, SEA_PICKLE, BLUE_ICE, CONDUIT, TURTLE_EGG,
             CARVED_PUMPKIN,
             DRIED_KELP_BLOCK, PRISMARINE_STAIRS, PRISMARINE_BRICK_STAIRS, DARK_PRISMARINE_STAIRS,
             PRISMARINE_SLAB, DOUBLE_PRISMARINE_SLAB, PRISMARINE_BRICK_SLAB, DOUBLE_PRISMARINE_BRICK_SLAB,
