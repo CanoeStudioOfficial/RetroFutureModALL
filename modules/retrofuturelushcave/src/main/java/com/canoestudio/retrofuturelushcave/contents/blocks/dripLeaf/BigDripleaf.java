@@ -25,6 +25,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.*;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -35,7 +36,7 @@ import java.util.Random;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
-public class BigDripleaf extends BlockBush implements IGrowable, RetroWaterloggedBlock {
+public class BigDripleaf extends Block implements IGrowable, RetroWaterloggedBlock {
     public static final String name = "Big_Dripleaf";
     public static final SoundType DRIPLEAF = new SoundType(1.0F, 1.0F, ModSoundHandler.BLOCK_BIG_DRIPLEAF_BREAK, ModSoundHandler.BLOCK_BIG_DRIPLEAF_STEP, ModSoundHandler.BLOCK_BIG_DRIPLEAF_PLACE, ModSoundHandler.BLOCK_BIG_DRIPLEAF_HIT, ModSoundHandler.BLOCK_BIG_DRIPLEAF_FALL);
     public static final int MAX_GROWTH_HEIGHT = 5;
@@ -43,39 +44,79 @@ public class BigDripleaf extends BlockBush implements IGrowable, RetroWaterlogge
     private static final int PARTIAL_TILT_DELAY = 10;
     private static final int FULL_TILT_DELAY = 100;
 
-    protected static final AxisAlignedBB HALF_AABB = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.5D, 1.0D);
-    protected static final AxisAlignedBB DRIP_AABB = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.9375D, 1.0D);
+    private static final AxisAlignedBB NORMAL_AABB =
+            new AxisAlignedBB(0.0D, 0.6875D, 0.0D, 1.0D, 0.9375D, 1.0D);
+    private static final AxisAlignedBB PARTIAL_AABB =
+            new AxisAlignedBB(0.0D, 0.6875D, 0.0D, 1.0D, 0.8125D, 1.0D);
+    private static final AxisAlignedBB NORTH_STEM_AABB =
+            new AxisAlignedBB(0.3125D, 0.0D, 0.5625D, 0.6875D, 0.8125D, 0.9375D);
+    private static final AxisAlignedBB SOUTH_STEM_AABB =
+            new AxisAlignedBB(0.3125D, 0.0D, 0.0625D, 0.6875D, 0.8125D, 0.4375D);
+    private static final AxisAlignedBB EAST_STEM_AABB =
+            new AxisAlignedBB(0.0625D, 0.0D, 0.3125D, 0.4375D, 0.8125D, 0.6875D);
+    private static final AxisAlignedBB WEST_STEM_AABB =
+            new AxisAlignedBB(0.5625D, 0.0D, 0.3125D, 0.9375D, 0.8125D, 0.6875D);
 
     public static final PropertyEnum<EnumFacing> FACING = BlockHorizontal.FACING;
     public static final PropertyEnum<BigDripleaf.EnumTilt> TILT = PropertyEnum.<BigDripleaf.EnumTilt>create("tilt", BigDripleaf.EnumTilt.class);
     public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
+    private final boolean waterloggedVariant;
 
     public BigDripleaf() {
-        super(Material.VINE);
+        this(false);
+    }
+
+    public BigDripleaf(boolean waterloggedVariant) {
+        super(waterloggedVariant ? Material.WATER : Material.VINE);
+        this.waterloggedVariant = waterloggedVariant;
 
         setHardness(0.0F);
 
-        setTranslationKey(Tags.MOD_ID + "." + name.toLowerCase());
-        setRegistryName(name);
-        setCreativeTab(CREATIVE_TABS);
+        String registryName = waterloggedVariant ? name + "_Waterlogged" : name;
+        setRegistryName(registryName);
+        setCreativeTab(waterloggedVariant ? null : CREATIVE_TABS);
+        setTranslationKey(Tags.MOD_ID + "." + registryName.toLowerCase());
         setHardness(0.1F);
         setResistance(0.1F);
         setHarvestLevel("axe", 0);
 
         setSoundType(BigDripleaf.DRIPLEAF);
 
-        this.setTickRandomly(true);
+        this.setTickRandomly(false);
 
         ModBlocks.BLOCKS.add(this);
-        ModItems.ITEMS.add(new ItemBlock(this).setRegistryName(this.getRegistryName()));
+        if (!waterloggedVariant) {
+            ModItems.ITEMS.add(new ItemBlock(this).setRegistryName(this.getRegistryName()));
+        }
 
         setDefaultState(RetroWaterlogging.withStillWaterLevel(this.blockState.getBaseState()
-                .withProperty(FACING, EnumFacing.SOUTH)
+                .withProperty(FACING, EnumFacing.NORTH)
                 .withProperty(TILT, EnumTilt.NONE)
-                .withProperty(WATERLOGGED, false)));
+                .withProperty(WATERLOGGED, waterloggedVariant)));
     }
 
-    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) { return FULL_BLOCK_AABB; }
+    public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
+        EnumTilt tilt = state.getValue(TILT);
+        AxisAlignedBB stem = getStemBox(state.getValue(FACING));
+        if (tilt == EnumTilt.FULL) {
+            return stem;
+        }
+        AxisAlignedBB leaf = tilt == EnumTilt.PARTIAL ? PARTIAL_AABB : NORMAL_AABB;
+        return leaf.union(stem);
+    }
+
+    private static AxisAlignedBB getStemBox(EnumFacing facing) {
+        switch (facing) {
+            case SOUTH:
+                return SOUTH_STEM_AABB;
+            case EAST:
+                return EAST_STEM_AABB;
+            case WEST:
+                return WEST_STEM_AABB;
+            default:
+                return NORTH_STEM_AABB;
+        }
+    }
 
     @Override
     public IBlockState getExtendedState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
@@ -86,43 +127,38 @@ public class BigDripleaf extends BlockBush implements IGrowable, RetroWaterlogge
     public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos)
     {
         EnumTilt tilt = blockState.getValue(TILT);
-
-        if(tilt == EnumTilt.FULL)
-            return NULL_AABB;
-        else if(tilt == EnumTilt.PARTIAL)
-            return HALF_AABB;
-
-        return DRIP_AABB;
+        return tilt == EnumTilt.FULL ? NULL_AABB
+                : tilt == EnumTilt.PARTIAL ? PARTIAL_AABB : NORMAL_AABB;
     }
 
     public void randomTick(World worldIn, BlockPos pos, IBlockState state, Random random)
     {
     }
 
-    public void updateTick(World worldIn, BlockPos pos, IBlockState state, Random rand)
-    {
-        if (RetroWaterlogging.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
-            com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid.updateTick(
-                    worldIn, pos, worldIn.getBlockState(pos));
+    public void updateTick(World worldIn, BlockPos pos, IBlockState state, Random rand) {
+        if (worldIn.isRemote || worldIn.getBlockState(pos).getBlock() != this) {
+            return;
         }
-        if (worldIn.isBlockPowered(pos))
-        {
-            resetTilt(worldIn, pos, state);
+        if (!canBlockStay(worldIn, pos, state)) {
+            dropBlockAsItem(worldIn, pos, state, 0);
+            restoreContainedFluidOrAir(worldIn, pos, state, 3);
+            return;
+        }
+        com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid.updateTick(
+                worldIn, pos, state);
+        if (worldIn.isBlockPowered(pos)) {
+            if (state.getValue(TILT) != EnumTilt.NONE) {
+                resetTilt(worldIn, pos, state);
+            }
             return;
         }
 
         EnumTilt tilt = state.getValue(TILT);
-        
-        if (tilt == EnumTilt.UNSTABLE)
-        {
+        if (tilt == EnumTilt.UNSTABLE) {
             setTiltAndScheduleTick(worldIn, pos, state, EnumTilt.PARTIAL, true);
-        }
-        else if (tilt == EnumTilt.PARTIAL)
-        {
+        } else if (tilt == EnumTilt.PARTIAL) {
             setTiltAndScheduleTick(worldIn, pos, state, EnumTilt.FULL, true);
-        }
-        else if (tilt == EnumTilt.FULL)
-        {
+        } else if (tilt == EnumTilt.FULL) {
             resetTilt(worldIn, pos, state);
         }
     }
@@ -139,28 +175,24 @@ public class BigDripleaf extends BlockBush implements IGrowable, RetroWaterlogge
         }
     }
 
-    public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos)
-    {
-        if (!canBlockStay(worldIn, pos, state))
-        {
-            if (!worldIn.isRemote)
-            {
-                dropBlockAsItem(worldIn, pos, state, 0);
-                restoreContainedFluidOrAir(worldIn, pos, state, 3);
-            }
+    public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
+        if (worldIn.isRemote) {
             return;
         }
-
-        RetroWaterlogging.onNeighborChanged(worldIn, pos, state);
-        if (!worldIn.isRemote)
-        {
-            if (worldIn.isBlockPowered(pos))
-            {
-                resetTilt(worldIn, pos, state);
-            }
+        if (isBigDripleafBlock(worldIn.getBlockState(pos.up()).getBlock())) {
+            RetroWaterlogging.setFluidloggableBlock(worldIn, pos,
+                    ModBlocks.DRIPLEAF_STEM.getDefaultState().withProperty(FACING, state.getValue(FACING)), 3);
+            return;
         }
-        scheduleContainedFluidTick(worldIn, pos, state);
-        super.neighborChanged(state, worldIn, pos, blockIn, fromPos);
+        if (!canBlockStay(worldIn, pos, state)) {
+            dropBlockAsItem(worldIn, pos, state, 0);
+            restoreContainedFluidOrAir(worldIn, pos, state, 3);
+            return;
+        }
+        if (worldIn.isBlockPowered(pos) && state.getValue(TILT) != EnumTilt.NONE) {
+            resetTilt(worldIn, pos, state);
+        }
+        RetroWaterlogging.onNeighborChanged(worldIn, pos, state);
     }
 
     private boolean canEntityTilt(BlockPos pos, Entity entity)
@@ -223,83 +255,20 @@ public class BigDripleaf extends BlockBush implements IGrowable, RetroWaterlogge
 
     public boolean canPlaceBlockAt(World worldIn, BlockPos pos)
     {
-        IBlockState downState = worldIn.getBlockState(pos.down());
-        Block downBlock = downState.getBlock();
-        
-        if (downBlock == ModBlocks.DRIPLEAF_STEM)
-        {
-            return true;
-        }
-        
-        if (downBlock == ModBlocks.BIG_DRIPLEAF && isTopDripleaf(worldIn, pos.down()))
-        {
-            return true;
-        }
-
-        if (canSustainDripleaf(downBlock))
-        {
-            return true;
-        }
-        
-        if (downBlock.canSustainPlant(downState, worldIn, pos.down(), EnumFacing.UP, this))
-        {
-            return true;
-        }
-        
-        return false;
-    }
-
-    private boolean isTopDripleaf(World world, BlockPos pos)
-    {
-        IBlockState state = world.getBlockState(pos);
-        if (state.getBlock() != ModBlocks.BIG_DRIPLEAF)
-        {
-            return false;
-        }
-        
-        IBlockState upState = world.getBlockState(pos.up());
-        return upState.getBlock() != ModBlocks.BIG_DRIPLEAF && upState.getBlock() != ModBlocks.DRIPLEAF_STEM;
+        return DripleafPlacement.canPlaceHead(worldIn, pos);
     }
 
     public boolean canBlockStay(World worldIn, BlockPos pos, IBlockState state)
     {
-        IBlockState downState = worldIn.getBlockState(pos.down());
-        Block downBlock = downState.getBlock();
-
-        if (downBlock == ModBlocks.DRIPLEAF_STEM)
-        {
-            return true;
-        }
-        
-        if (downBlock == ModBlocks.BIG_DRIPLEAF)
-        {
-            return true;
-        }
-
-        if (canSustainDripleaf(downBlock))
-        {
-            return true;
-        }
-        
-        return downBlock.canSustainPlant(downState, worldIn, pos.down(), EnumFacing.UP, this);
-    }
-
-    private boolean canSustainDripleaf(Block block)
-    {
-        return block == Blocks.CLAY || block == ModBlocks.MOSS_BLOCK || block == ModBlocks.ROOTED_DIRT || block == Blocks.DIRT || block == Blocks.GRASS || block == Blocks.MYCELIUM || block == Blocks.FARMLAND;
+        IBlockState below = worldIn.getBlockState(pos.down());
+        return isBigDripleafBlock(below.getBlock()) || below.getBlock() == ModBlocks.DRIPLEAF_STEM
+                || DripleafPlacement.isBigDripleafGround(below);
     }
 
     public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state)
     {
         super.onBlockAdded(worldIn, pos, state);
         RetroWaterlogging.onBlockAdded(worldIn, pos, state, WATERLOGGED);
-        
-        IBlockState downState = worldIn.getBlockState(pos.down());
-        if (downState.getBlock() == ModBlocks.BIG_DRIPLEAF)
-        {
-            EnumFacing facing = state.getValue(FACING);
-            setFluidloggableBlock(worldIn, pos.down(), ModBlocks.DRIPLEAF_STEM.getDefaultState().withProperty(FACING, facing), 2);
-        }
     }
 
     public boolean isReplaceable(IBlockAccess worldIn, BlockPos pos) { return false; }
@@ -333,18 +302,13 @@ public class BigDripleaf extends BlockBush implements IGrowable, RetroWaterlogge
         BlockPos topPos = findTopPosition(world, pos);
         IBlockState topState = world.getBlockState(topPos);
         
-        if (topState.getBlock() != ModBlocks.BIG_DRIPLEAF)
+        if (!isBigDripleafBlock(topState.getBlock()))
         {
             return false;
         }
 
-        if (getPlantHeight(world, pos) >= MAX_GROWTH_HEIGHT)
-        {
-            return false;
-        }
-        
         BlockPos aboveTop = topPos.up();
-        return canGrowInto(world, aboveTop);
+        return DripleafPlacement.canReplace(world, aboveTop);
     }
 
     public static BlockPos findTopPosition(World world, BlockPos pos)
@@ -392,7 +356,12 @@ public class BigDripleaf extends BlockBush implements IGrowable, RetroWaterlogge
 
     public static boolean isBigDripleafPart(Block block)
     {
-        return block == ModBlocks.BIG_DRIPLEAF || block == ModBlocks.DRIPLEAF_STEM;
+        return isBigDripleafBlock(block) || block == ModBlocks.DRIPLEAF_STEM;
+    }
+
+    public static boolean isBigDripleafBlock(Block block)
+    {
+        return block == ModBlocks.BIG_DRIPLEAF || block == ModBlocks.BIG_DRIPLEAF_WATERLOGGED;
     }
 
     private void growWithBonemeal(World world, BlockPos pos, IBlockState state)
@@ -400,9 +369,7 @@ public class BigDripleaf extends BlockBush implements IGrowable, RetroWaterlogge
         BlockPos topPos = findTopPosition(world, pos);
         IBlockState topState = world.getBlockState(topPos);
         EnumFacing facing = topState.getValue(FACING);
-        
-        setFluidloggableBlock(world, topPos, ModBlocks.DRIPLEAF_STEM.getDefaultState().withProperty(FACING, facing), 2);
-        setFluidloggableBlock(world, topPos.up(), this.getDefaultState().withProperty(FACING, facing), 3);
+        DripleafPlacement.growHead(world, topPos, facing);
     }
 
     public static boolean canGrowInto(World world, BlockPos pos)
@@ -437,8 +404,8 @@ public class BigDripleaf extends BlockBush implements IGrowable, RetroWaterlogge
 
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer)
     {
-        return this.getDefaultState().withProperty(FACING, placer.getHorizontalFacing())
-                .withProperty(WATERLOGGED, RetroWaterlogging.isWater(worldIn, pos));
+        return getWaterloggedState(this.getDefaultState().withProperty(FACING, placer.getHorizontalFacing()),
+                RetroWaterlogging.isWater(worldIn, pos));
     }
 
     public IBlockState withRotation(IBlockState state, Rotation rot)
@@ -453,19 +420,14 @@ public class BigDripleaf extends BlockBush implements IGrowable, RetroWaterlogge
 
     public IBlockState getStateFromMeta(int meta)
     {
-        int i = meta / 4;
-        IBlockState state = this.getDefaultState().withProperty(FACING, EnumFacing.byHorizontalIndex(i));
-
-        int j = meta % 4;
-
-        return state.withProperty(TILT, EnumTilt.byMetadata(j))
-                .withProperty(WATERLOGGED, (meta & 16) != 0);
+        return this.getDefaultState()
+                .withProperty(FACING, EnumFacing.byHorizontalIndex((meta >> 2) & 3))
+                .withProperty(TILT, EnumTilt.byMetadata(meta & 3));
     }
 
     public int getMetaFromState(IBlockState state)
     {
-        int meta = state.getValue(TILT).getMetadata() + state.getValue(FACING).getHorizontalIndex() * 4;
-        return state.getValue(WATERLOGGED) ? meta | 16 : meta;
+        return state.getValue(TILT).getMetadata() + state.getValue(FACING).getHorizontalIndex() * 4;
     }
 
     protected BlockStateContainer createBlockState()
@@ -478,9 +440,28 @@ public class BigDripleaf extends BlockBush implements IGrowable, RetroWaterlogge
         return getWaterloggedMaterial(state, super.getMaterial(state));
     }
 
+    public static boolean isWaterlogged(IBlockState state) {
+        return state != null && (state.getBlock() == ModBlocks.BIG_DRIPLEAF_WATERLOGGED
+                || state.getPropertyKeys().contains(WATERLOGGED) && state.getValue(WATERLOGGED));
+    }
+
     @Override
     public PropertyBool getWaterloggedProperty() {
         return WATERLOGGED;
+    }
+
+    @Override
+    public IBlockState getWaterloggedState(IBlockState state, boolean waterlogged) {
+        if (RetroWaterlogging.isFluidloggedAvailable()) {
+            return state.withProperty(WATERLOGGED, waterlogged);
+        }
+        Block target = waterlogged ? ModBlocks.BIG_DRIPLEAF_WATERLOGGED : ModBlocks.BIG_DRIPLEAF;
+        if (target == this) {
+            return state.withProperty(WATERLOGGED, waterlogged);
+        }
+        return target.getDefaultState()
+                .withProperty(FACING, state.getValue(FACING))
+                .withProperty(TILT, state.getValue(TILT));
     }
 
     @Override
@@ -495,15 +476,39 @@ public class BigDripleaf extends BlockBush implements IGrowable, RetroWaterlogge
 
     public void grow(World worldIn, Random rand, BlockPos pos, IBlockState state)
     {
-        if (canGrowWithBonemeal(worldIn, pos))
-        {
-            growWithBonemeal(worldIn, pos, state);
-        }
+        growWithBonemeal(worldIn, pos, state);
     }
 
     public Item getItemDropped(IBlockState state, Random rand, int fortune) 
     { 
-        return Item.getItemFromBlock(this); 
+        return Item.getItemFromBlock(ModBlocks.BIG_DRIPLEAF);
+    }
+
+    @Override
+    public ItemStack getItem(World worldIn, BlockPos pos, IBlockState state) {
+        return new ItemStack(ModBlocks.BIG_DRIPLEAF);
+    }
+
+    @Override
+    public Vec3d modifyAcceleration(World worldIn, BlockPos pos, Entity entityIn, Vec3d motion) {
+        return isWaterlogged(worldIn.getBlockState(pos))
+                ? Blocks.WATER.modifyAcceleration(worldIn, pos, entityIn, motion) : motion;
+    }
+
+    @Override
+    public boolean canRenderInLayer(IBlockState state, BlockRenderLayer layer) {
+        return layer == BlockRenderLayer.CUTOUT
+                || isWaterlogged(state) && layer == BlockRenderLayer.TRANSLUCENT;
+    }
+
+    @Override
+    public boolean shouldSideBeRendered(IBlockState state, IBlockAccess worldIn, BlockPos pos,
+            EnumFacing side) {
+        if (isWaterlogged(state)
+                && worldIn.getBlockState(pos.offset(side)).getMaterial() == Material.WATER) {
+            return false;
+        }
+        return super.shouldSideBeRendered(state, worldIn, pos, side);
     }
 
     public static enum EnumTilt implements IStringSerializable

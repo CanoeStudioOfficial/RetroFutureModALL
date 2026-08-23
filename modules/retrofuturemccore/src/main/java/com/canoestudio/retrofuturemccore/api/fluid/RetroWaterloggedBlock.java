@@ -12,6 +12,10 @@ public interface RetroWaterloggedBlock extends RetroFluidloggableBlock {
 
     PropertyBool getWaterloggedProperty();
 
+    default IBlockState getWaterloggedState(IBlockState state, boolean waterlogged) {
+        return state.withProperty(getWaterloggedProperty(), waterlogged);
+    }
+
     default void swapWaterProperty(World world, BlockPos pos, IBlockState state) {
         boolean underwater = checkSurroundingUnderwaterPosition(world, pos);
         PropertyBool property = getWaterloggedProperty();

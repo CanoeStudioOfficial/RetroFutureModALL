@@ -46,10 +46,14 @@ public class ClientProxy extends CommonProxy {
                 BlockLiquid.LEVEL, DripleafStem.WATERLOGGED);
         RetroModelRegistry.ignoreStateProperties(ModBlocks.BIG_DRIPLEAF,
                 BlockLiquid.LEVEL, BigDripleaf.WATERLOGGED);
+        RetroModelRegistry.ignoreStateProperties(ModBlocks.BIG_DRIPLEAF_WATERLOGGED,
+                BlockLiquid.LEVEL, BigDripleaf.WATERLOGGED);
         RetroModelRegistry.ignoreStateProperties(ModBlocks.HANGING_ROOTS,
                 BlockLiquid.LEVEL, HangingRootsBlock.WATERLOGGED);
-        RetroModelRegistry.ignoreStateProperties(ModBlocks.GLOW_LICHEN,
-                BlockLiquid.LEVEL, GlowLichenBlock.WATERLOGGED);
+        for (GlowLichenBlock glowLichen : ModBlocks.GLOW_LICHEN_VARIANTS) {
+            RetroModelRegistry.ignoreStateProperties(glowLichen,
+                    BlockLiquid.LEVEL, GlowLichenBlock.WATERLOGGED);
+        }
         RetroModelRegistry.ignoreStateProperties(ModBlocks.AMETHYST_CLUSTER,
                 BlockLiquid.LEVEL, AmethystClusterBlock.WATERLOGGED);
         RetroModelRegistry.ignoreStateProperties(ModBlocks.LARGE_AMETHYST_BUD,

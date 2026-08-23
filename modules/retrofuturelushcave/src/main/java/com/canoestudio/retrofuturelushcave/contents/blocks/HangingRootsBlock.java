@@ -29,7 +29,7 @@ import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREAT
 
 public class HangingRootsBlock extends Block implements RetroWaterloggedBlock {
     public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
-    private static final AxisAlignedBB ROOTS_AABB = new AxisAlignedBB(0.125D, 0.0D, 0.125D, 0.875D, 1.0D, 0.875D);
+    private static final AxisAlignedBB ROOTS_AABB = new AxisAlignedBB(0.125D, 0.625D, 0.125D, 0.875D, 1.0D, 0.875D);
 
     public HangingRootsBlock() {
         super(Material.VINE);
@@ -48,7 +48,8 @@ public class HangingRootsBlock extends Block implements RetroWaterloggedBlock {
 
     @Override
     public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
-        return worldIn.isSideSolid(pos.up(), EnumFacing.DOWN, true);
+        return (worldIn.isAirBlock(pos) || RetroWaterlogging.isWater(worldIn, pos))
+                && worldIn.isSideSolid(pos.up(), EnumFacing.DOWN, true);
     }
 
     @Override
@@ -66,6 +67,9 @@ public class HangingRootsBlock extends Block implements RetroWaterloggedBlock {
 
     @Override
     public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
+        if (worldIn.isRemote) {
+            return;
+        }
         if (!canPlaceBlockAt(worldIn, pos)) {
             dropBlockAsItem(worldIn, pos, state, 0);
             RetroWaterlogging.restoreWater(worldIn, pos, state);
@@ -76,7 +80,13 @@ public class HangingRootsBlock extends Block implements RetroWaterloggedBlock {
 
     @Override
     public void updateTick(World worldIn, BlockPos pos, IBlockState state, java.util.Random random) {
-        if (RetroWaterlogging.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
+        if (worldIn.isRemote || worldIn.getBlockState(pos).getBlock() != this) {
+            return;
+        }
+        if (!canPlaceBlockAt(worldIn, pos)) {
+            dropBlockAsItem(worldIn, pos, state, 0);
+            RetroWaterlogging.restoreContainedFluidOrAir(worldIn, pos, state, 3);
+        } else if (RetroWaterlogging.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
             WaterloggedPlantFluid.updateTick(worldIn, pos, worldIn.getBlockState(pos));
         }
     }
@@ -85,18 +95,21 @@ public class HangingRootsBlock extends Block implements RetroWaterloggedBlock {
     public boolean removedByPlayer(IBlockState state, World world, BlockPos pos,
             net.minecraft.entity.player.EntityPlayer player, boolean willHarvest) {
         onBlockHarvested(world, pos, state, player);
-        return world.setBlockState(pos,
-                RetroWaterlogging.isWaterlogged(state, world, pos, WATERLOGGED)
-                        ? Blocks.WATER.getDefaultState() : Blocks.AIR.getDefaultState(),
-                world.isRemote ? 11 : 3);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, world.isRemote ? 11 : 3);
+        if (!RetroWaterlogging.isWaterlogged(state, world, pos, WATERLOGGED)) {
+            world.setBlockToAir(pos);
+        }
+        return true;
     }
 
     @Override
     public void onBlockExploded(World world, BlockPos pos, net.minecraft.world.Explosion explosion) {
         IBlockState state = world.getBlockState(pos);
-        world.setBlockState(pos,
-                RetroWaterlogging.isWaterlogged(state, world, pos, WATERLOGGED)
-                        ? Blocks.WATER.getDefaultState() : Blocks.AIR.getDefaultState(), 3);
+        boolean waterlogged = RetroWaterlogging.isWaterlogged(state, world, pos, WATERLOGGED);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, 3);
+        if (!waterlogged) {
+            world.setBlockToAir(pos);
+        }
     }
 
     @Override

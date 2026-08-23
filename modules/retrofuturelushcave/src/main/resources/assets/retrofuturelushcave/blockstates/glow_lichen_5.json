@@ -27,6 +27,13 @@
         "x": 90,
         "uvlock": true
       }
+    },
+    {
+      "apply": {
+        "model": "retrofuturelushcave:glow_lichen",
+        "y": 270,
+        "uvlock": true
+      }
     }
   ]
 }

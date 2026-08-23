@@ -78,6 +78,10 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock implemen
         return RetroWaterlogging.extendedState(state, worldIn, pos);
     }
 
+    public static boolean isWaterlogged(IBlockState state) {
+        return state.getBlock() instanceof AmethystClusterBlock && state.getValue(WATERLOGGED);
+    }
+
     @Override
     public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
         super.onBlockAdded(worldIn, pos, state);
@@ -92,6 +96,36 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock implemen
             return;
         }
         super.neighborChanged(state, worldIn, pos, blockIn, fromPos);
+    }
+
+    @Override
+    public void updateTick(World world, BlockPos pos, IBlockState state, Random random) {
+        if (!world.isRemote && isWaterlogged(state)) {
+            com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid.updateTick(
+                    world, pos, state);
+        }
+    }
+
+    @Override
+    public boolean removedByPlayer(IBlockState state, World world, BlockPos pos,
+                                   net.minecraft.entity.player.EntityPlayer player,
+                                   boolean willHarvest) {
+        onBlockHarvested(world, pos, state, player);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, world.isRemote ? 11 : 3);
+        if (!RetroWaterlogging.isWaterlogged(state, world, pos, WATERLOGGED)) {
+            world.setBlockToAir(pos);
+        }
+        return true;
+    }
+
+    @Override
+    public void onBlockExploded(World world, BlockPos pos, net.minecraft.world.Explosion explosion) {
+        IBlockState state = world.getBlockState(pos);
+        boolean waterlogged = RetroWaterlogging.isWaterlogged(state, world, pos, WATERLOGGED);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, 3);
+        if (!waterlogged) {
+            world.setBlockToAir(pos);
+        }
     }
 
     private boolean canBlockStay(World world, BlockPos pos, IBlockState state) {
@@ -134,7 +168,7 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock implemen
 
     @Override
     public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos) {
-        return NULL_AABB;
+        return getBoundingBox(blockState, worldIn, pos);
     }
 
     @Override
@@ -206,5 +240,30 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock implemen
     @Override
     public PropertyBool getWaterloggedProperty() {
         return WATERLOGGED;
+    }
+
+    @Override
+    public net.minecraft.util.math.Vec3d modifyAcceleration(World world, BlockPos pos,
+                                                               net.minecraft.entity.Entity entity,
+                                                               net.minecraft.util.math.Vec3d motion) {
+        return isWaterlogged(world.getBlockState(pos))
+                ? net.minecraft.init.Blocks.WATER.modifyAcceleration(world, pos, entity, motion)
+                : motion;
+    }
+
+    @Override
+    public boolean canRenderInLayer(IBlockState state, BlockRenderLayer layer) {
+        return layer == BlockRenderLayer.CUTOUT
+                || isWaterlogged(state) && layer == BlockRenderLayer.TRANSLUCENT;
+    }
+
+    @Override
+    public boolean shouldSideBeRendered(IBlockState state, IBlockAccess world, BlockPos pos,
+                                        EnumFacing side) {
+        if (isWaterlogged(state)
+                && world.getBlockState(pos.offset(side)).getMaterial() == Material.WATER) {
+            return false;
+        }
+        return super.shouldSideBeRendered(state, world, pos, side);
     }
 }

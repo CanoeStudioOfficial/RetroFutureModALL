@@ -173,7 +173,7 @@ public final class WaterloggedPlantFluid {
         }
         if (state.getBlock() instanceof RetroWaterloggedBlock) {
             RetroWaterloggedBlock block = (RetroWaterloggedBlock) state.getBlock();
-            return withStillWaterLevel(state.withProperty(block.getWaterloggedProperty(), waterlogged));
+            return withStillWaterLevel(block.getWaterloggedState(state, waterlogged));
         }
         for (net.minecraft.block.properties.IProperty<?> property : state.getPropertyKeys()) {
             if (property instanceof net.minecraft.block.properties.PropertyBool

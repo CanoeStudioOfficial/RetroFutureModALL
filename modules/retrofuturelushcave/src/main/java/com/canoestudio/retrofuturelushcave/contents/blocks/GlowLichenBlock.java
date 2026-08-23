@@ -1,204 +1,509 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+import javax.annotation.Nullable;
+
+import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
+import com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockLiquid;
+import net.minecraft.block.IGrowable;
 import net.minecraft.block.SoundType;
+import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.item.ItemStack;
+import net.minecraft.stats.StatList;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.Mirror;
+import net.minecraft.util.NonNullList;
+import net.minecraft.util.Rotation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 
-import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
-
-public class GlowLichenBlock extends Block implements RetroWaterloggedBlock {
-    public static final PropertyBool UP = PropertyBool.create("up");
+public class GlowLichenBlock extends Block implements IGrowable, RetroWaterloggedBlock {
     public static final PropertyBool DOWN = PropertyBool.create("down");
+    public static final PropertyBool UP = PropertyBool.create("up");
     public static final PropertyBool NORTH = PropertyBool.create("north");
-    public static final PropertyBool EAST = PropertyBool.create("east");
     public static final PropertyBool SOUTH = PropertyBool.create("south");
     public static final PropertyBool WEST = PropertyBool.create("west");
+    public static final PropertyBool EAST = PropertyBool.create("east");
     public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
 
-    private static final AxisAlignedBB FULL_AABB = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
+    private static final int FACE_MASK = 0x3F;
+    private static final int WATER_BIT = 0x40;
+    private static final AxisAlignedBB DOWN_AABB =
+            new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 0.0625D, 1.0D);
+    private static final AxisAlignedBB UP_AABB =
+            new AxisAlignedBB(0.0D, 0.9375D, 0.0D, 1.0D, 1.0D, 1.0D);
+    private static final AxisAlignedBB NORTH_AABB =
+            new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 0.0625D);
+    private static final AxisAlignedBB SOUTH_AABB =
+            new AxisAlignedBB(0.0D, 0.0D, 0.9375D, 1.0D, 1.0D, 1.0D);
+    private static final AxisAlignedBB WEST_AABB =
+            new AxisAlignedBB(0.0D, 0.0D, 0.0D, 0.0625D, 1.0D, 1.0D);
+    private static final AxisAlignedBB EAST_AABB =
+            new AxisAlignedBB(0.9375D, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
+
+    private final int variantIndex;
 
     public GlowLichenBlock() {
+        this("Glow_Lichen", 0);
+    }
+
+    public GlowLichenBlock(String registryName, int variantIndex) {
         super(Material.VINE);
+        this.variantIndex = variantIndex;
+        setRegistryName(registryName.toLowerCase());
         setTranslationKey(Tags.MOD_ID + ".glow_lichen");
-        setRegistryName("glow_lichen");
         setHardness(0.2F);
-        setResistance(0.2F);
         setSoundType(SoundType.PLANT);
-        setCreativeTab(CREATIVE_TABS);
+        setLightOpacity(0);
         setLightLevel(7.0F / 15.0F);
         setDefaultState(blockState.getBaseState()
-                .withProperty(UP, false)
+                .withProperty(BlockLiquid.LEVEL, 0)
                 .withProperty(DOWN, false)
-                .withProperty(NORTH, true)
-                .withProperty(EAST, false)
+                .withProperty(UP, false)
+                .withProperty(NORTH, false)
                 .withProperty(SOUTH, false)
                 .withProperty(WEST, false)
-                .withProperty(WATERLOGGED, false));
+                .withProperty(EAST, false)
+                .withProperty(WATERLOGGED, (variantIndex & 4) != 0));
 
         ModBlocks.BLOCKS.add(this);
-        ModBlocks.BLOCKITEMS.add(new ItemBlock(this).setRegistryName("glow_lichen"));
+        if (variantIndex == 0) {
+            ModBlocks.BLOCKITEMS.add(new ItemBlock(this).setRegistryName(getRegistryName()));
+        }
     }
 
     @Override
-    public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
-        EnumFacing attachment = facing.getOpposite();
-        if (canAttach(worldIn, pos, attachment)) {
-            return getStateForFace(attachment)
-                    .withProperty(WATERLOGGED, RetroWaterlogging.isWater(worldIn, pos));
-        }
+    protected BlockStateContainer createBlockState() {
+        return RetroWaterlogging.createWaterMaterialStateContainer(this,
+                DOWN, UP, NORTH, SOUTH, WEST, EAST, WATERLOGGED);
+    }
 
-        for (EnumFacing fallback : EnumFacing.values()) {
-            if (canAttach(worldIn, pos, fallback)) {
-                return getStateForFace(fallback)
-                        .withProperty(WATERLOGGED, RetroWaterlogging.isWater(worldIn, pos));
-            }
-        }
+    @Override
+    public IBlockState getExtendedState(IBlockState state, IBlockAccess world, BlockPos pos) {
+        return RetroWaterlogging.extendedState(state, world, pos);
+    }
 
-        return getDefaultState();
+    @Override
+    public Material getMaterial(IBlockState state) {
+        return getWaterloggedMaterial(state, super.getMaterial(state));
+    }
+
+    @Override
+    public IBlockState getWaterloggedState(IBlockState state, boolean waterlogged) {
+        return stateFor(getFaceMask(state), waterlogged);
+    }
+
+    public static boolean isGlowLichen(IBlockState state) {
+        return state != null && state.getBlock() instanceof GlowLichenBlock;
+    }
+
+    public static boolean isWaterlogged(IBlockState state) {
+        return isGlowLichen(state) && ((((GlowLichenBlock) state.getBlock()).variantIndex & 4) != 0
+                || state.getValue(WATERLOGGED));
+    }
+
+    public static int faceBit(EnumFacing face) {
+        return 1 << face.getIndex();
+    }
+
+    public static boolean hasFace(IBlockState state, EnumFacing face) {
+        return (getFaceMask(state) & faceBit(face)) != 0;
+    }
+
+    public static int getFaceMask(IBlockState state) {
+        if (!isGlowLichen(state)) {
+            return 0;
+        }
+        GlowLichenBlock block = (GlowLichenBlock) state.getBlock();
+        int mask = (block.variantIndex & 3) << 4;
+        if (state.getValue(DOWN)) {
+            mask |= faceBit(EnumFacing.DOWN);
+        }
+        if (state.getValue(UP)) {
+            mask |= faceBit(EnumFacing.UP);
+        }
+        if (state.getValue(NORTH)) {
+            mask |= faceBit(EnumFacing.NORTH);
+        }
+        if (state.getValue(SOUTH)) {
+            mask |= faceBit(EnumFacing.SOUTH);
+        }
+        return mask;
+    }
+
+    public static IBlockState stateFor(int faceMask, boolean waterlogged) {
+        int normalizedMask = faceMask & FACE_MASK;
+        if (normalizedMask == 0) {
+            return waterlogged ? Blocks.WATER.getDefaultState() : Blocks.AIR.getDefaultState();
+        }
+        int packed = normalizedMask | (waterlogged ? WATER_BIT : 0);
+        GlowLichenBlock block = ModBlocks.GLOW_LICHEN_VARIANTS[packed >>> 4];
+        return block.getDefaultState()
+                .withProperty(BlockLiquid.LEVEL, 0)
+                .withProperty(DOWN, (normalizedMask & faceBit(EnumFacing.DOWN)) != 0)
+                .withProperty(UP, (normalizedMask & faceBit(EnumFacing.UP)) != 0)
+                .withProperty(NORTH, (normalizedMask & faceBit(EnumFacing.NORTH)) != 0)
+                .withProperty(SOUTH, (normalizedMask & faceBit(EnumFacing.SOUTH)) != 0)
+                .withProperty(WATERLOGGED, waterlogged);
     }
 
     public IBlockState getStateForFace(EnumFacing face) {
-        return getDefaultState()
-                .withProperty(UP, face == EnumFacing.UP)
-                .withProperty(DOWN, face == EnumFacing.DOWN)
-                .withProperty(NORTH, face == EnumFacing.NORTH)
-                .withProperty(EAST, face == EnumFacing.EAST)
-                .withProperty(SOUTH, face == EnumFacing.SOUTH)
-                .withProperty(WEST, face == EnumFacing.WEST);
+        return stateFor(faceBit(face), false);
     }
 
     @Override
-    public IBlockState getExtendedState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
-        return RetroWaterlogging.extendedState(state, worldIn, pos);
+    public boolean canPlaceBlockAt(World world, BlockPos pos) {
+        return canOccupy(world, pos) && findPlacementFace(world, pos, null) != null;
     }
 
     @Override
-    public boolean canPlaceBlockOnSide(World worldIn, BlockPos pos, EnumFacing side) {
-        return canAttach(worldIn, pos, side.getOpposite());
+    public boolean canPlaceBlockOnSide(World world, BlockPos pos, EnumFacing side) {
+        return canOccupy(world, pos)
+                && findPlacementFace(world, pos, side.getOpposite()) != null;
     }
 
     @Override
-    public boolean canPlaceBlockAt(World worldIn, BlockPos pos) {
-        for (EnumFacing facing : EnumFacing.values()) {
-            if (canAttach(worldIn, pos, facing)) {
-                return true;
+    public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing,
+                                            float hitX, float hitY, float hitZ, int meta,
+                                            EntityLivingBase placer, EnumHand hand) {
+        IBlockState oldState = world.getBlockState(pos);
+        EnumFacing face = findPlacementFace(world, pos, facing.getOpposite());
+        if (face == null) {
+            return oldState;
+        }
+        int mask = getFaceMask(oldState) | faceBit(face);
+        boolean waterlogged = isGlowLichen(oldState)
+                ? isWaterlogged(oldState) : RetroWaterlogging.isWater(world, pos);
+        return stateFor(mask, waterlogged);
+    }
+
+    private static boolean canOccupy(IBlockAccess world, BlockPos pos) {
+        IBlockState state = world.getBlockState(pos);
+        return state.getMaterial() == Material.AIR || isGlowLichen(state)
+                || RetroWaterlogging.isWater(world, pos);
+    }
+
+    @Nullable
+    private static EnumFacing findPlacementFace(IBlockAccess world, BlockPos pos,
+                                                 @Nullable EnumFacing preferred) {
+        IBlockState state = world.getBlockState(pos);
+        int mask = getFaceMask(state);
+        if (preferred != null && (mask & faceBit(preferred)) == 0
+                && canAttachTo(world, pos, preferred)) {
+            return preferred;
+        }
+        for (EnumFacing face : EnumFacing.values()) {
+            if (face != preferred && (mask & faceBit(face)) == 0
+                    && canAttachTo(world, pos, face)) {
+                return face;
             }
         }
-        return false;
+        return null;
     }
 
-    private boolean canAttach(World world, BlockPos pos, EnumFacing face) {
+    public static boolean canAttachTo(IBlockAccess world, BlockPos pos, EnumFacing face) {
         BlockPos supportPos = pos.offset(face);
-        return world.getBlockState(supportPos).isSideSolid(world, supportPos, face.getOpposite());
+        IBlockState support = world.getBlockState(supportPos);
+        EnumFacing supportFace = face.getOpposite();
+        return support.isSideSolid(world, supportPos, supportFace)
+                || support.getBlockFaceShape(world, supportPos, supportFace) == BlockFaceShape.SOLID;
     }
 
     @Override
-    public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
-        IBlockState updated = removeUnsupportedFaces(worldIn, pos, state);
-        if (!hasAnyFace(updated)) {
-            dropBlockAsItem(worldIn, pos, state, 0);
-            restoreFluidOrAir(worldIn, pos, state, 3);
+    public void onBlockAdded(World world, BlockPos pos, IBlockState state) {
+        super.onBlockAdded(world, pos, state);
+        RetroWaterlogging.onBlockAdded(world, pos, state, WATERLOGGED);
+    }
+
+    @Override
+    public void neighborChanged(IBlockState state, World world, BlockPos pos,
+                                Block blockIn, BlockPos fromPos) {
+        if (world.isRemote || !isGlowLichen(world.getBlockState(pos))) {
             return;
         }
-        if (updated != state) {
-            worldIn.setBlockState(pos, updated, 2);
-        }
-        scheduleContainedFluidTick(worldIn, pos, updated);
-    }
-
-    @Override
-    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
-        super.onBlockAdded(worldIn, pos, state);
-        RetroWaterlogging.onBlockAdded(worldIn, pos, state, WATERLOGGED);
-    }
-
-    @Override
-    public void updateTick(World worldIn, BlockPos pos, IBlockState state, java.util.Random random) {
-        if (RetroWaterlogging.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
-            com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid.updateTick(
-                    worldIn, pos, worldIn.getBlockState(pos));
-        }
-    }
-
-    private IBlockState removeUnsupportedFaces(World world, BlockPos pos, IBlockState state) {
-        IBlockState updated = state;
+        int oldMask = getFaceMask(state);
+        int validMask = oldMask;
         for (EnumFacing face : EnumFacing.values()) {
-            if (hasFace(updated, face) && !canAttach(world, pos, face)) {
-                updated = setFace(updated, face, false);
+            if ((validMask & faceBit(face)) != 0 && !canAttachTo(world, pos, face)) {
+                validMask &= ~faceBit(face);
             }
         }
-        return updated;
+        if (validMask != oldMask) {
+            world.setBlockState(pos, stateFor(validMask, isWaterlogged(state)), 2);
+            if (validMask == 0) {
+                return;
+            }
+        }
+        RetroWaterlogging.onNeighborChanged(world, pos, world.getBlockState(pos));
     }
 
-    private boolean hasAnyFace(IBlockState state) {
-        for (EnumFacing face : EnumFacing.values()) {
-            if (hasFace(state, face)) {
-                return true;
+    @Override
+    public void updateTick(World world, BlockPos pos, IBlockState state, Random random) {
+        if (!world.isRemote && isWaterlogged(world.getBlockState(pos))) {
+            WaterloggedPlantFluid.updateTick(world, pos, world.getBlockState(pos));
+        }
+    }
+
+    @Override
+    public boolean removedByPlayer(IBlockState state, World world, BlockPos pos,
+                                   EntityPlayer player, boolean willHarvest) {
+        onBlockHarvested(world, pos, state, player);
+        boolean waterlogged = isWaterlogged(state)
+                || RetroWaterlogging.isWaterlogged(state, world, pos, WATERLOGGED);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, world.isRemote ? 11 : 3);
+        if (!waterlogged) {
+            world.setBlockToAir(pos);
+        }
+        return true;
+    }
+
+    @Override
+    public void onBlockExploded(World world, BlockPos pos, net.minecraft.world.Explosion explosion) {
+        IBlockState state = world.getBlockState(pos);
+        boolean waterlogged = isWaterlogged(state)
+                || RetroWaterlogging.isWaterlogged(state, world, pos, WATERLOGGED);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, 3);
+        if (!waterlogged) {
+            world.setBlockToAir(pos);
+        }
+    }
+
+    @Override
+    public Item getItemDropped(IBlockState state, Random random, int fortune) {
+        return Item.getItemFromBlock(Blocks.AIR);
+    }
+
+    @Override
+    public void getDrops(NonNullList<ItemStack> drops, IBlockAccess world, BlockPos pos,
+                         IBlockState state, int fortune) {
+    }
+
+    @Override
+    public void harvestBlock(World world, EntityPlayer player, BlockPos pos, IBlockState state,
+                             @Nullable TileEntity tile, ItemStack tool) {
+        player.addStat(StatList.getBlockStats(this));
+        player.addExhaustion(0.005F);
+        if (!world.isRemote && tool.getItem() == Items.SHEARS) {
+            spawnAsEntity(world, pos, new ItemStack(ModBlocks.GLOW_LICHEN,
+                    Integer.bitCount(getFaceMask(state))));
+        }
+    }
+
+    @Override
+    public ItemStack getItem(World world, BlockPos pos, IBlockState state) {
+        return new ItemStack(ModBlocks.GLOW_LICHEN);
+    }
+
+    @Override
+    public boolean canGrow(World world, BlockPos pos, IBlockState state, boolean isClient) {
+        return canSpreadFromAnyFace(world, pos, state);
+    }
+
+    @Override
+    public boolean canUseBonemeal(World world, Random random, BlockPos pos, IBlockState state) {
+        return true;
+    }
+
+    @Override
+    public void grow(World world, Random random, BlockPos pos, IBlockState state) {
+        spreadFromRandomFace(world, pos, state, random);
+    }
+
+    public static boolean spreadFromRandomFace(World world, BlockPos pos, IBlockState state,
+                                               Random random) {
+        List<EnumFacing> sourceFaces = presentFaces(state);
+        Collections.shuffle(sourceFaces, random);
+        for (EnumFacing sourceFace : sourceFaces) {
+            List<EnumFacing> directions = allFaces();
+            Collections.shuffle(directions, random);
+            for (EnumFacing direction : directions) {
+                if (direction.getAxis() != sourceFace.getAxis()
+                        && trySpread(world, pos, sourceFace, direction, true)) {
+                    return true;
+                }
             }
         }
         return false;
     }
 
-    private boolean hasFace(IBlockState state, EnumFacing face) {
-        return state.getValue(propertyFor(face));
+    private static boolean canSpreadFromAnyFace(IBlockAccess world, BlockPos pos,
+                                                IBlockState state) {
+        for (EnumFacing sourceFace : presentFaces(state)) {
+            for (EnumFacing direction : EnumFacing.values()) {
+                if (direction.getAxis() != sourceFace.getAxis()
+                        && trySpread(world, pos, sourceFace, direction, false)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
-    private IBlockState setFace(IBlockState state, EnumFacing face, boolean value) {
-        return state.withProperty(propertyFor(face), value);
+    private static boolean trySpread(IBlockAccess world, BlockPos pos, EnumFacing sourceFace,
+                                     EnumFacing direction, boolean place) {
+        IBlockState sourceState = world.getBlockState(pos);
+        if (direction.getAxis() == sourceFace.getAxis() || hasFace(sourceState, direction)) {
+            return false;
+        }
+        if (tryPlaceFace(world, pos, direction, place)) {
+            return true;
+        }
+        if (tryPlaceFace(world, pos.offset(direction), sourceFace, place)) {
+            return true;
+        }
+        return tryPlaceFace(world, pos.offset(direction).offset(sourceFace),
+                direction.getOpposite(), place);
     }
 
-    private PropertyBool propertyFor(EnumFacing face) {
-        switch (face) {
-            case UP:
-                return UP;
-            case DOWN:
-                return DOWN;
-            case EAST:
-                return EAST;
-            case SOUTH:
-                return SOUTH;
-            case WEST:
-                return WEST;
-            case NORTH:
+    private static boolean tryPlaceFace(IBlockAccess world, BlockPos pos, EnumFacing face,
+                                        boolean place) {
+        IBlockState oldState = world.getBlockState(pos);
+        if (!canOccupy(world, pos) || hasFace(oldState, face) || !canAttachTo(world, pos, face)) {
+            return false;
+        }
+        if (place && world instanceof World) {
+            boolean waterlogged = isGlowLichen(oldState)
+                    ? isWaterlogged(oldState) : RetroWaterlogging.isWater(world, pos);
+            ((World) world).setBlockState(pos,
+                    stateFor(getFaceMask(oldState) | faceBit(face), waterlogged), 2);
+        }
+        return true;
+    }
+
+    private static List<EnumFacing> presentFaces(IBlockState state) {
+        List<EnumFacing> faces = new ArrayList<>();
+        for (EnumFacing face : EnumFacing.values()) {
+            if (hasFace(state, face)) {
+                faces.add(face);
+            }
+        }
+        return faces;
+    }
+
+    private static List<EnumFacing> allFaces() {
+        List<EnumFacing> faces = new ArrayList<>();
+        Collections.addAll(faces, EnumFacing.values());
+        return faces;
+    }
+
+    @Override
+    public IBlockState withRotation(IBlockState state, Rotation rotation) {
+        int rotatedMask = 0;
+        for (EnumFacing face : EnumFacing.values()) {
+            if (hasFace(state, face)) {
+                rotatedMask |= faceBit(rotate(face, rotation));
+            }
+        }
+        return stateFor(rotatedMask, isWaterlogged(state));
+    }
+
+    @Override
+    public IBlockState withMirror(IBlockState state, Mirror mirror) {
+        int mirroredMask = 0;
+        for (EnumFacing face : EnumFacing.values()) {
+            if (hasFace(state, face)) {
+                mirroredMask |= faceBit(mirror(face, mirror));
+            }
+        }
+        return stateFor(mirroredMask, isWaterlogged(state));
+    }
+
+    private static EnumFacing rotate(EnumFacing face, Rotation rotation) {
+        if (!face.getAxis().isHorizontal()) {
+            return face;
+        }
+        switch (rotation) {
+            case CLOCKWISE_90:
+                return face.rotateY();
+            case CLOCKWISE_180:
+                return face.getOpposite();
+            case COUNTERCLOCKWISE_90:
+                return face.rotateYCCW();
             default:
-                return NORTH;
+                return face;
         }
     }
 
-    private void restoreFluidOrAir(World world, BlockPos pos, IBlockState state, int flags) {
-        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, flags);
+    private static EnumFacing mirror(EnumFacing face, Mirror mirror) {
+        if (mirror == Mirror.LEFT_RIGHT && face.getAxis() == EnumFacing.Axis.Z
+                || mirror == Mirror.FRONT_BACK && face.getAxis() == EnumFacing.Axis.X) {
+            return face.getOpposite();
+        }
+        return face;
     }
 
-    private void scheduleContainedFluidTick(World world, BlockPos pos, IBlockState state) {
-        RetroWaterlogging.scheduleContainedFluidTick(world, pos, state);
+    @Override
+    public Vec3d modifyAcceleration(World world, BlockPos pos, Entity entity, Vec3d motion) {
+        return isWaterlogged(world.getBlockState(pos))
+                ? Blocks.WATER.modifyAcceleration(world, pos, entity, motion) : motion;
     }
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-        return FULL_AABB;
+        AxisAlignedBB result = null;
+        for (EnumFacing face : EnumFacing.values()) {
+            if (hasFace(state, face)) {
+                AxisAlignedBB box = boxFor(face);
+                result = result == null ? box : result.union(box);
+            }
+        }
+        return result == null ? FULL_BLOCK_AABB : result;
+    }
+
+    private static AxisAlignedBB boxFor(EnumFacing face) {
+        switch (face) {
+            case DOWN:
+                return DOWN_AABB;
+            case UP:
+                return UP_AABB;
+            case NORTH:
+                return NORTH_AABB;
+            case SOUTH:
+                return SOUTH_AABB;
+            case WEST:
+                return WEST_AABB;
+            default:
+                return EAST_AABB;
+        }
     }
 
     @Override
-    public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos) {
+    public AxisAlignedBB getCollisionBoundingBox(IBlockState state, IBlockAccess world,
+                                                  BlockPos pos) {
         return NULL_AABB;
+    }
+
+    @Override
+    public boolean isReplaceable(IBlockAccess world, BlockPos pos) {
+        return true;
     }
 
     @Override
@@ -211,42 +516,50 @@ public class GlowLichenBlock extends Block implements RetroWaterloggedBlock {
         return false;
     }
 
-    @Override
-    public BlockFaceShape getBlockFaceShape(IBlockAccess worldIn, IBlockState state, BlockPos pos, EnumFacing face) {
-        return BlockFaceShape.UNDEFINED;
-    }
-
-    @SideOnly(Side.CLIENT)
-    @Override
-    public BlockRenderLayer getRenderLayer() {
+    public BlockRenderLayer getBlockLayer() {
         return BlockRenderLayer.CUTOUT;
     }
 
     @Override
-    protected BlockStateContainer createBlockState() {
-        return RetroWaterlogging.createWaterMaterialStateContainer(this,
-                UP, DOWN, NORTH, EAST, SOUTH, WEST, WATERLOGGED);
+    public boolean canRenderInLayer(IBlockState state, BlockRenderLayer layer) {
+        return layer == BlockRenderLayer.CUTOUT
+                || isWaterlogged(state) && layer == BlockRenderLayer.TRANSLUCENT;
     }
 
     @Override
-    public int getMetaFromState(IBlockState state) {
-        for (EnumFacing face : EnumFacing.values()) {
-            if (hasFace(state, face)) {
-                return face.getIndex() | (state.getValue(WATERLOGGED) ? 8 : 0);
-            }
+    public boolean shouldSideBeRendered(IBlockState state, IBlockAccess world, BlockPos pos,
+                                        EnumFacing side) {
+        if (isWaterlogged(state)
+                && world.getBlockState(pos.offset(side)).getMaterial() == Material.WATER) {
+            return false;
         }
-        return EnumFacing.NORTH.getIndex();
+        return super.shouldSideBeRendered(state, world, pos, side);
     }
 
     @Override
-    public IBlockState getStateFromMeta(int meta) {
-        return getStateForFace(EnumFacing.byIndex(meta & 7))
-                .withProperty(WATERLOGGED, (meta & 8) != 0);
+    public int getFlammability(IBlockAccess world, BlockPos pos, EnumFacing face) {
+        return 100;
     }
 
     @Override
-    public Material getMaterial(IBlockState state) {
-        return getWaterloggedMaterial(state, super.getMaterial(state));
+    public int getFireSpreadSpeed(IBlockAccess world, BlockPos pos, EnumFacing face) {
+        return 15;
+    }
+
+    @Override
+    public boolean canCreatureSpawn(IBlockState state, IBlockAccess world, BlockPos pos,
+                                    EntityLiving.SpawnPlacementType type) {
+        return false;
+    }
+
+    @Override
+    public BlockFaceShape getBlockFaceShape(IBlockAccess world, IBlockState state,
+                                            BlockPos pos, EnumFacing face) {
+        return BlockFaceShape.UNDEFINED;
+    }
+
+    public EnumPushReaction getMobilityFlag(IBlockState state) {
+        return EnumPushReaction.DESTROY;
     }
 
     @Override

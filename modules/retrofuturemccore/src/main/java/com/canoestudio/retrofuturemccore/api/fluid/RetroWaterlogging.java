@@ -37,6 +37,10 @@ public final class RetroWaterlogging {
         return RetroFluidCompat.isWater(fluidState);
     }
 
+    public static boolean isFluidloggedAvailable() {
+        return RetroFluidCompat.isFluidloggedAvailable();
+    }
+
     public static boolean isVanillaWater(IBlockState state) {
         return RetroFluidCompat.isVanillaWater(state);
     }

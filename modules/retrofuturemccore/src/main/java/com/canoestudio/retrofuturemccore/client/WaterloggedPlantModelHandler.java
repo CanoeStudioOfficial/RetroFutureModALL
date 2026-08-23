@@ -15,6 +15,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public final class WaterloggedPlantModelHandler {
     private static final Set<String> MODEL_PATHS = new HashSet<>(Arrays.asList(
             "kelp", "seagrass", "sea_pickle", "small_dripleaf", "big_dripleaf",
+            "big_dripleaf_waterlogged",
             "big_dripleaf_stem", "hanging_roots", "glow_lichen", "glow_lichen_1",
             "glow_lichen_2", "glow_lichen_3", "glow_lichen_4", "glow_lichen_5",
             "glow_lichen_6", "glow_lichen_7", "small_amethyst_bud", "medium_amethyst_bud",
