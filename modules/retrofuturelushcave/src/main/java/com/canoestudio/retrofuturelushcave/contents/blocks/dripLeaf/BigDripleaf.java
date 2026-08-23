@@ -8,13 +8,16 @@ import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidState;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.*;
+import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
+import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -404,7 +407,14 @@ public class BigDripleaf extends Block implements IGrowable, RetroWaterloggedBlo
 
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer)
     {
-        return getWaterloggedState(this.getDefaultState().withProperty(FACING, placer.getHorizontalFacing()),
+        EnumFacing plantFacing = placer.getHorizontalFacing().getOpposite();
+        IBlockState below = worldIn.getBlockState(pos.down());
+        if (isBigDripleafBlock(below.getBlock())) {
+            plantFacing = below.getValue(FACING);
+        } else if (below.getBlock() == ModBlocks.DRIPLEAF_STEM) {
+            plantFacing = below.getValue(DripleafStem.FACING);
+        }
+        return getWaterloggedState(this.getDefaultState().withProperty(FACING, plantFacing),
                 RetroWaterlogging.isWater(worldIn, pos));
     }
 
@@ -421,13 +431,14 @@ public class BigDripleaf extends Block implements IGrowable, RetroWaterloggedBlo
     public IBlockState getStateFromMeta(int meta)
     {
         return this.getDefaultState()
-                .withProperty(FACING, EnumFacing.byHorizontalIndex((meta >> 2) & 3))
-                .withProperty(TILT, EnumTilt.byMetadata(meta & 3));
+                .withProperty(FACING, EnumFacing.byHorizontalIndex(meta & 3))
+                .withProperty(TILT, EnumTilt.byMetadata((meta >> 2) & 3));
     }
 
     public int getMetaFromState(IBlockState state)
     {
-        return state.getValue(TILT).getMetadata() + state.getValue(FACING).getHorizontalIndex() * 4;
+        return state.getValue(FACING).getHorizontalIndex()
+                | (state.getValue(TILT).getMetadata() << 2);
     }
 
     protected BlockStateContainer createBlockState()
@@ -499,6 +510,36 @@ public class BigDripleaf extends Block implements IGrowable, RetroWaterloggedBlo
     public boolean canRenderInLayer(IBlockState state, BlockRenderLayer layer) {
         return layer == BlockRenderLayer.CUTOUT
                 || isWaterlogged(state) && layer == BlockRenderLayer.TRANSLUCENT;
+    }
+
+    @Override
+    public boolean isOpaqueCube(IBlockState state) {
+        return false;
+    }
+
+    @Override
+    public boolean isFullCube(IBlockState state) {
+        return false;
+    }
+
+    @Override
+    public boolean canCreatureSpawn(IBlockState state, IBlockAccess world, BlockPos pos,
+            EntityLiving.SpawnPlacementType type) {
+        return false;
+    }
+
+    @Override
+    public BlockFaceShape getBlockFaceShape(IBlockAccess world, IBlockState state,
+            BlockPos pos, EnumFacing face) {
+        return BlockFaceShape.UNDEFINED;
+    }
+
+    public EnumPushReaction getMobilityFlag(IBlockState state) {
+        return EnumPushReaction.DESTROY;
+    }
+
+    public BlockRenderLayer getBlockLayer() {
+        return BlockRenderLayer.CUTOUT;
     }
 
     @Override

@@ -4,6 +4,5 @@ repositories {
 
 dependencies {
     implementation project(':retrofuturemccore')
-    compileOnly rfg.deobf('curse.maven:fluidlogged-api-485654:8445863')
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 }
