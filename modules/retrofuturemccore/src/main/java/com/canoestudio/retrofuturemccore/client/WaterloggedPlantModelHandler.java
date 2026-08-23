@@ -11,7 +11,7 @@ import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-/** Installs FFD's variable-height water model only for the local fallback path. */
+/** Installs the variable-height water model only for the local fallback path. */
 public final class WaterloggedPlantModelHandler {
     private static final Set<String> MODEL_PATHS = new HashSet<>(Arrays.asList(
             "kelp", "seagrass", "sea_pickle", "small_dripleaf", "big_dripleaf",

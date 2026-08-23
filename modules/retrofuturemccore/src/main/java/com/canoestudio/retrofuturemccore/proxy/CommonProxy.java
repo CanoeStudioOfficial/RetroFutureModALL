@@ -38,7 +38,7 @@ public class CommonProxy {
     private void registerFluidIntegration() {
         if (!RetroFluidCompat.isFluidloggedAvailable()) {
             MinecraftForge.EVENT_BUS.register(new WaterloggedPlantFluidFallbackHandler());
-            RetroFutureMCCore.LOGGER.info("Fluidlogged API not found; using Farmers-Future-Delight water states.");
+            RetroFutureMCCore.LOGGER.info("Fluidlogged API not found; using custom water states.");
             return;
         }
 

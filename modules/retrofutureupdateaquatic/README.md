@@ -2,8 +2,8 @@
 
 The 1.13 aquatic-content module for the RetroFuture series, backported to
 Minecraft 1.12.2 Forge. Fluidlogged API is optional: the shared core uses it
-when installed, and otherwise uses the Farmers-Future-Delight waterlogged
-state, variable water-height model and flowing-water implementation.
+when installed, and otherwise uses the local waterlogged state, variable
+water-height model and flowing-water implementation.
 
 ## Wiki coverage
 

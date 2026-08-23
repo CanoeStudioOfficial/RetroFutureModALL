@@ -16,15 +16,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
 
-/**
- * The no-Fluidlogged-API water implementation used by Farmers-Future-Delight.
- *
- * <p>This is intentionally kept as the FFD implementation: waterlogged blocks
- * are source-water states, water height is sampled from the four corners, and
- * flowing water uses the same downward-first/shortest-slope algorithm. The
- * only adaptation is that the FFD block-specific list is replaced by
- * RetroFuture's waterlogged block contract.</p>
- */
+/** Local water implementation used when Fluidlogged API is unavailable. */
 public final class WaterloggedPlantFluid {
     private static final int WATER_TICK_RATE = 5;
 
@@ -46,11 +38,7 @@ public final class WaterloggedPlantFluid {
         return isSourceWater(world.getBlockState(pos));
     }
 
-    /**
-     * FFD's source-water test. RetroFuture's aquatic plants and waterlogged
-     * blocks expose Material.WATER plus BlockLiquid.LEVEL in fallback mode,
-     * so the same test covers both vanilla water and those states.
-     */
+    /** Tests source-water states used by vanilla water and local water blocks. */
     public static boolean isSourceWater(IBlockState state) {
         if (RetroFluidCompat.isFluidloggedAvailable()
                 || state == null || state.getMaterial() != Material.WATER
@@ -178,10 +166,7 @@ public final class WaterloggedPlantFluid {
         }
     }
 
-    /**
-     * Changes the block's own waterlogged property when it has one. This is
-     * the FFD block-state operation used by its fluid interaction hooks.
-     */
+    /** Changes the block's own waterlogged property when it has one. */
     public static IBlockState withWaterlogged(IBlockState state, boolean waterlogged) {
         if (state == null) {
             return null;
@@ -254,10 +239,8 @@ public final class WaterloggedPlantFluid {
         if (material == Material.WATER || material == Material.LAVA) {
             return false;
         }
-        // FFD's liquid hook waterlogs these targets when flowing water tries to
-        // enter them. The copied liquid algorithm itself only replaces air (or
-        // another replaceable non-water block), so it must not place a second
-        // water layer into a waterloggable block here.
+        // The liquid algorithm replaces air and other replaceable non-water
+        // blocks, but must not place a second water layer into a waterloggable block.
         return withWaterlogged(state, true) == null && !isFlowBlocked(world, pos);
     }
 

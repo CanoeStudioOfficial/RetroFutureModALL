@@ -28,7 +28,7 @@ import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.client.model.pipeline.UnpackedBakedQuad;
 import net.minecraftforge.common.property.IExtendedBlockState;
 
-/** FFD's water volume model, adapted to RetroFuture's shared water properties. */
+/** Water volume model adapted to RetroFuture's shared water properties. */
 public final class WaterloggedPlantBakedModel implements IBakedModel {
     private static final float SOURCE_WATER_SURFACE = 8.0F / 9.0F - 0.001F;
     private static final float FULL_WATER_SURFACE = 1.0F - 0.001F;

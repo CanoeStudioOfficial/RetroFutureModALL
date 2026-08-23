@@ -11,11 +11,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-/**
- * Supplies the two vanilla entry points that FFD's core transformer supplies
- * for its copied water implementation: a newly changed neighbor and a newly
- * placed block both wake nearby source-water states.
- */
+/** Supplies the vanilla entry points needed by the local water fallback. */
 public final class WaterloggedPlantFluidFallbackHandler {
 
     @SubscribeEvent
@@ -46,7 +42,7 @@ public final class WaterloggedPlantFluidFallbackHandler {
         }
     }
 
-    /** Equivalent of FFDGameplayHooks.blocksFlowingWater + its fill event. */
+    /** Allows flowing water to fill a compatible adjacent state. */
     private static void allowFlowingWaterToWaterlog(World world, BlockPos flowingPos) {
         IBlockState flowing = world.getBlockState(flowingPos);
         if (flowing.getBlock() != Blocks.FLOWING_WATER) {

@@ -97,8 +97,8 @@ Register zoom handlers only on the client side if they reference client-only cla
 
 Fluidlogged API is an optional runtime dependency of this core module. When it is
 installed, the shared compatibility layer uses its capability-backed fluid state
-first. When it is absent, the module uses the Farmers-Future-Delight waterlogged
-block-state implementation, including `Material.WATER`, `BlockLiquid.LEVEL`, the
+first. When it is absent, the module uses the local waterlogged block-state
+implementation, including `Material.WATER`, `BlockLiquid.LEVEL`, the
 `WATERLOGGED` property, variable water height and flowing-water updates.
 
 Blocks that participate in both paths should implement the shared contract:
@@ -126,7 +126,7 @@ fluid, `FluidloggedSupport.setFluidloggableBlock(...)` when replacing a block
 while preserving its contained fluid, and
 `FluidloggedSupport.restoreContainedFluidOrAir(...)` when a fluidloggable block
 is removed. These calls select Fluidlogged API automatically when it is present;
-otherwise they use the copied Farmers-Future-Delight water state and flow logic.
+otherwise they use the local water state and flow logic.
 
 ## Interactions
 

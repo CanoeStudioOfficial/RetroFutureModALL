@@ -13,8 +13,7 @@ import net.minecraftforge.fluids.Fluid;
  * Compatibility facade for contained water.
  *
  * <p>Fluidlogged API is optional. Calls are routed to it when it is installed;
- * otherwise the Farmers-Future-Delight waterlogged block-state implementation
- * is used.</p>
+ * otherwise the local waterlogged block-state implementation is used.</p>
  */
 public final class FluidloggedSupport {
 
