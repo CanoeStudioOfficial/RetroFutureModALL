@@ -73,7 +73,11 @@ public final class RetroWaterlogging {
     public static Material materialForWaterlogged(IBlockState state, Material fallback, PropertyBool property) {
         // 1.12 reads BlockLiquid.LEVEL from every state that reports Material.WATER.
         // Only expose a water material when the compatibility state can satisfy that vanilla assumption.
-        return state.getValue(property) && !RetroFluidCompat.isFluidloggedAvailable() && hasStillWaterLevel(state)
+        boolean waterlogged = state.getPropertyKeys().contains(property) && state.getValue(property);
+        if (!waterlogged && state.getBlock() instanceof RetroWaterloggedBlock) {
+            waterlogged = ((RetroWaterloggedBlock) state.getBlock()).isWaterloggedState(state);
+        }
+        return waterlogged && !RetroFluidCompat.isFluidloggedAvailable() && hasStillWaterLevel(state)
             ? Material.WATER : fallback;
     }
 

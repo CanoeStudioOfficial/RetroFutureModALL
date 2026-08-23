@@ -50,8 +50,6 @@ public class GlowLichenBlock extends Block implements IGrowable, RetroWaterlogge
     public static final PropertyBool UP = PropertyBool.create("up");
     public static final PropertyBool NORTH = PropertyBool.create("north");
     public static final PropertyBool SOUTH = PropertyBool.create("south");
-    public static final PropertyBool WEST = PropertyBool.create("west");
-    public static final PropertyBool EAST = PropertyBool.create("east");
     public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
 
     private static final int FACE_MASK = 0x3F;
@@ -89,10 +87,7 @@ public class GlowLichenBlock extends Block implements IGrowable, RetroWaterlogge
                 .withProperty(DOWN, false)
                 .withProperty(UP, false)
                 .withProperty(NORTH, false)
-                .withProperty(SOUTH, false)
-                .withProperty(WEST, false)
-                .withProperty(EAST, false)
-                .withProperty(WATERLOGGED, (variantIndex & 4) != 0));
+                .withProperty(SOUTH, false));
 
         ModBlocks.BLOCKS.add(this);
         if (variantIndex == 0) {
@@ -103,7 +98,7 @@ public class GlowLichenBlock extends Block implements IGrowable, RetroWaterlogge
     @Override
     protected BlockStateContainer createBlockState() {
         return RetroWaterlogging.createWaterMaterialStateContainer(this,
-                DOWN, UP, NORTH, SOUTH, WEST, EAST, WATERLOGGED);
+                DOWN, UP, NORTH, SOUTH);
     }
 
     @Override
@@ -113,7 +108,8 @@ public class GlowLichenBlock extends Block implements IGrowable, RetroWaterlogge
 
     @Override
     public Material getMaterial(IBlockState state) {
-        return getWaterloggedMaterial(state, super.getMaterial(state));
+        return isWaterlogged(state) && !RetroWaterlogging.isFluidloggedAvailable()
+                ? Material.WATER : super.getMaterial(state);
     }
 
     @Override
@@ -126,8 +122,12 @@ public class GlowLichenBlock extends Block implements IGrowable, RetroWaterlogge
     }
 
     public static boolean isWaterlogged(IBlockState state) {
-        return isGlowLichen(state) && ((((GlowLichenBlock) state.getBlock()).variantIndex & 4) != 0
-                || state.getValue(WATERLOGGED));
+        return isGlowLichen(state) && ((((GlowLichenBlock) state.getBlock()).variantIndex & 4) != 0);
+    }
+
+    @Override
+    public boolean isWaterloggedState(IBlockState state) {
+        return isWaterlogged(state);
     }
 
     public static int faceBit(EnumFacing face) {
@@ -171,8 +171,35 @@ public class GlowLichenBlock extends Block implements IGrowable, RetroWaterlogge
                 .withProperty(DOWN, (normalizedMask & faceBit(EnumFacing.DOWN)) != 0)
                 .withProperty(UP, (normalizedMask & faceBit(EnumFacing.UP)) != 0)
                 .withProperty(NORTH, (normalizedMask & faceBit(EnumFacing.NORTH)) != 0)
-                .withProperty(SOUTH, (normalizedMask & faceBit(EnumFacing.SOUTH)) != 0)
-                .withProperty(WATERLOGGED, waterlogged);
+                .withProperty(SOUTH, (normalizedMask & faceBit(EnumFacing.SOUTH)) != 0);
+    }
+
+    @Override
+    public int getMetaFromState(IBlockState state) {
+        int meta = 0;
+        if (state.getValue(DOWN)) {
+            meta |= faceBit(EnumFacing.DOWN);
+        }
+        if (state.getValue(UP)) {
+            meta |= faceBit(EnumFacing.UP);
+        }
+        if (state.getValue(NORTH)) {
+            meta |= faceBit(EnumFacing.NORTH);
+        }
+        if (state.getValue(SOUTH)) {
+            meta |= faceBit(EnumFacing.SOUTH);
+        }
+        return meta;
+    }
+
+    @Override
+    public IBlockState getStateFromMeta(int meta) {
+        return getDefaultState()
+                .withProperty(BlockLiquid.LEVEL, 0)
+                .withProperty(DOWN, (meta & faceBit(EnumFacing.DOWN)) != 0)
+                .withProperty(UP, (meta & faceBit(EnumFacing.UP)) != 0)
+                .withProperty(NORTH, (meta & faceBit(EnumFacing.NORTH)) != 0)
+                .withProperty(SOUTH, (meta & faceBit(EnumFacing.SOUTH)) != 0);
     }
 
     public IBlockState getStateForFace(EnumFacing face) {

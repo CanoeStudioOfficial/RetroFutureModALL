@@ -97,8 +97,7 @@ public final class RetroFluidCompat {
         }
 
         if (state.getBlock() instanceof RetroWaterloggedBlock) {
-            PropertyBool property = ((RetroWaterloggedBlock) state.getBlock()).getWaterloggedProperty();
-            if (state.getValue(property)) {
+            if (((RetroWaterloggedBlock) state.getBlock()).isWaterloggedState(state)) {
                 return RetroFluidState.ofWater(Blocks.WATER.getDefaultState());
             }
         }
@@ -134,24 +133,35 @@ public final class RetroFluidCompat {
 
     public static void ensureWaterlogged(World world, BlockPos pos, IBlockState state, PropertyBool property,
             int flags) {
-        if (!world.isRemote && state.getValue(property) && !world.provider.doesWaterVaporize()
+        boolean waterlogged = state.getPropertyKeys().contains(property) && state.getValue(property);
+        if (!waterlogged && state.getBlock() instanceof RetroWaterloggedBlock) {
+            waterlogged = ((RetroWaterloggedBlock) state.getBlock()).isWaterloggedState(state);
+        }
+        if (!world.isRemote && waterlogged
+                && !world.provider.doesWaterVaporize()
                 && !getFluidState(world, pos, state).isWater()) {
             setFluidState(world, pos, state, RetroFluidState.ofWater(Blocks.WATER.getDefaultState()), flags);
         }
     }
 
     public static boolean isWaterlogged(IBlockState state, IBlockAccess world, BlockPos pos, PropertyBool property) {
-        return state.getValue(property) || getFluidState(world, pos, state).isWater();
+        boolean waterlogged = state.getPropertyKeys().contains(property) && state.getValue(property);
+        if (!waterlogged && state.getBlock() instanceof RetroWaterloggedBlock) {
+            waterlogged = ((RetroWaterloggedBlock) state.getBlock()).isWaterloggedState(state);
+        }
+        return waterlogged
+                || getFluidState(world, pos, state).isWater();
     }
 
     public static IBlockState withActualWaterlogged(IBlockState state, IBlockAccess world, BlockPos pos,
             PropertyBool property) {
-        return state.withProperty(property, isWaterlogged(state, world, pos, property));
+        return state.getPropertyKeys().contains(property)
+                ? state.withProperty(property, isWaterlogged(state, world, pos, property)) : state;
     }
 
     public static void setWaterloggedProperty(World world, BlockPos pos, IBlockState state, PropertyBool property,
             boolean waterlogged, int flags) {
-        if (state.getValue(property) != waterlogged) {
+        if (state.getPropertyKeys().contains(property) && state.getValue(property) != waterlogged) {
             world.setBlockState(pos, state.withProperty(property, waterlogged), flags);
         }
     }

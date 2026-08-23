@@ -12,6 +12,12 @@ public interface RetroWaterloggedBlock extends RetroFluidloggableBlock {
 
     PropertyBool getWaterloggedProperty();
 
+    default boolean isWaterloggedState(IBlockState state) {
+        PropertyBool property = getWaterloggedProperty();
+        return state != null && state.getPropertyKeys().contains(property)
+                && state.getValue(property);
+    }
+
     default IBlockState getWaterloggedState(IBlockState state, boolean waterlogged) {
         return state.withProperty(getWaterloggedProperty(), waterlogged);
     }
