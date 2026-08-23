@@ -3,12 +3,13 @@ package com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf;
 import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
-import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
-import git.jbredwards.fluidlogged_api.api.util.FluidState;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidState;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.*;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
+import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
@@ -26,22 +27,17 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IShearable;
-import net.minecraftforge.fluids.Fluid;
 
 import java.util.Random;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
-public class SmallDripleaf extends BlockBush implements IGrowable, IShearable, IFluidloggable {
-
-    @Override
-    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, Fluid fluid) {
-        return FluidloggedSupport.isWater(fluid);
-    }
+public class SmallDripleaf extends BlockBush implements IGrowable, IShearable, RetroWaterloggedBlock {
     public static final String name = "Small_Dripleaf";
 
     public static final PropertyEnum<BlockDoublePlant.EnumBlockHalf> HALF = BlockDoublePlant.HALF;
     public static final PropertyEnum<EnumFacing> FACING = BlockHorizontal.FACING;
+    public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
 
     public SmallDripleaf()
     {
@@ -54,13 +50,21 @@ public class SmallDripleaf extends BlockBush implements IGrowable, IShearable, I
         setCreativeTab(CREATIVE_TABS);
         setSoundType(BigDripleaf.DRIPLEAF);
 
-        this.setDefaultState(this.blockState.getBaseState().withProperty(HALF, BlockDoublePlant.EnumBlockHalf.LOWER).withProperty(FACING, EnumFacing.SOUTH));
+        this.setDefaultState(RetroWaterlogging.withStillWaterLevel(this.blockState.getBaseState()
+                .withProperty(HALF, BlockDoublePlant.EnumBlockHalf.LOWER)
+                .withProperty(FACING, EnumFacing.SOUTH)
+                .withProperty(WATERLOGGED, false)));
 
         ModBlocks.BLOCKS.add(this);
         ModItems.ITEMS.add(new ItemBlock(this).setRegistryName(this.getRegistryName()));
     }
 
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) { return FULL_BLOCK_AABB; }
+
+    @Override
+    public IBlockState getExtendedState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
+        return RetroWaterlogging.extendedState(state, worldIn, pos);
+    }
 
     public boolean canPlaceBlockAt(World worldIn, BlockPos pos)
     {
@@ -78,8 +82,24 @@ public class SmallDripleaf extends BlockBush implements IGrowable, IShearable, I
 
     public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos)
     {
+        RetroWaterlogging.onNeighborChanged(worldIn, pos, state);
         scheduleContainedFluidTick(worldIn, pos, state);
         super.neighborChanged(state, worldIn, pos, blockIn, fromPos);
+    }
+
+    @Override
+    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
+        super.onBlockAdded(worldIn, pos, state);
+        RetroWaterlogging.onBlockAdded(worldIn, pos, state, WATERLOGGED);
+    }
+
+    @Override
+    public void updateTick(World worldIn, BlockPos pos, IBlockState state, Random rand) {
+        if (worldIn.getBlockState(pos).getBlock() == this
+                && RetroWaterlogging.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
+            com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid.updateTick(
+                    worldIn, pos, worldIn.getBlockState(pos));
+        }
     }
 
     protected void checkAndDropBlock(World worldIn, BlockPos pos, IBlockState state)
@@ -156,7 +176,7 @@ public class SmallDripleaf extends BlockBush implements IGrowable, IShearable, I
                     }
                     else
                     {
-                        FluidState lowerFluid = FluidloggedSupport.getFluidState(worldIn, lowerPos, lowerState);
+                        RetroFluidState lowerFluid = RetroWaterlogging.getFluidState(worldIn, lowerPos, lowerState);
                         worldIn.destroyBlock(lowerPos, true);
                         restoreFluidOrAir(worldIn, lowerPos, lowerFluid, 3);
                     }
@@ -213,53 +233,54 @@ public class SmallDripleaf extends BlockBush implements IGrowable, IShearable, I
 
     private boolean canPlaceDripleafPartAt(World world, BlockPos pos)
     {
-        return FluidloggedSupport.canPlaceIntoAirOrWater(world, pos);
+        return RetroWaterlogging.canPlaceIntoAirOrWater(world, pos);
     }
 
     private boolean canGrowThrough(World world, BlockPos pos)
     {
         IBlockState state = world.getBlockState(pos);
-        return state.getBlock() == ModBlocks.SMALL_DRIPLEAF || FluidloggedSupport.canPlaceIntoAirOrWater(world, pos);
+        return state.getBlock() == ModBlocks.SMALL_DRIPLEAF || RetroWaterlogging.canPlaceIntoAirOrWater(world, pos);
     }
 
     private void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState, int flags)
     {
-        FluidloggedSupport.setFluidloggableBlock(world, pos, newState, flags);
+        RetroWaterlogging.setFluidloggableBlock(world, pos, newState, flags);
     }
 
     private boolean hasWaterFluid(World world, BlockPos pos)
     {
-        return FluidloggedSupport.isWater(world, pos);
+        return RetroWaterlogging.hasWaterFluid(world, pos);
     }
 
-    private FluidState getWaterFluidState(World world, BlockPos pos)
+    private RetroFluidState getWaterFluidState(World world, BlockPos pos)
     {
-        return FluidloggedSupport.getFluidState(world, pos);
+        return RetroWaterlogging.getWaterFluidState(world, pos);
     }
 
     private void restoreContainedFluidOrAir(World world, BlockPos pos, IBlockState state, int flags)
     {
-        FluidloggedSupport.restoreContainedFluidOrAir(world, pos, state, flags);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, flags);
     }
 
-    private void restoreFluidOrAir(World world, BlockPos pos, FluidState fluidState, int flags)
+    private void restoreFluidOrAir(World world, BlockPos pos, RetroFluidState fluidState, int flags)
     {
-        FluidloggedSupport.restoreFluidOrAir(world, pos, fluidState, flags);
+        RetroWaterlogging.restoreFluidOrAir(world, pos, fluidState, flags);
     }
 
     private void scheduleContainedFluidTick(World world, BlockPos pos, IBlockState state)
     {
-        FluidloggedSupport.scheduleFluidTick(world, pos, state);
+        RetroWaterlogging.scheduleContainedFluidTick(world, pos, state);
     }
 
-    private void scheduleFluidTick(World world, BlockPos pos, FluidState fluidState)
+    private void scheduleFluidTick(World world, BlockPos pos, RetroFluidState fluidState)
     {
-        FluidloggedSupport.scheduleFluidTick(world, pos, fluidState);
+        RetroWaterlogging.scheduleFluidTick(world, pos, fluidState);
     }
 
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer)
     {
-        return this.getDefaultState().withProperty(FACING, placer.getHorizontalFacing());
+        return this.getDefaultState().withProperty(FACING, placer.getHorizontalFacing())
+                .withProperty(WATERLOGGED, RetroWaterlogging.isWater(worldIn, pos));
     }
 
     public IBlockState withRotation(IBlockState state, Rotation rot)
@@ -274,24 +295,33 @@ public class SmallDripleaf extends BlockBush implements IGrowable, IShearable, I
 
     public IBlockState getStateFromMeta(int meta)
     {
-        if(meta > 3)
-        {
-            return this.getDefaultState().withProperty(HALF, BlockDoublePlant.EnumBlockHalf.UPPER).withProperty(FACING, EnumFacing.byHorizontalIndex(meta));
-        }
-        else {
-            return this.getDefaultState().withProperty(HALF, BlockDoublePlant.EnumBlockHalf.LOWER).withProperty(FACING, EnumFacing.byHorizontalIndex(meta));
-        }
+        return this.getDefaultState()
+                .withProperty(HALF, (meta & 4) == 0
+                        ? BlockDoublePlant.EnumBlockHalf.LOWER : BlockDoublePlant.EnumBlockHalf.UPPER)
+                .withProperty(FACING, EnumFacing.byHorizontalIndex(meta & 3))
+                .withProperty(WATERLOGGED, (meta & 8) != 0);
     }
 
     public int getMetaFromState(IBlockState state)
     {
         int i = state.getValue(HALF) == BlockDoublePlant.EnumBlockHalf.LOWER ? 0 : 4;
-        return state.getValue(FACING).getHorizontalIndex() + i;
+        int meta = state.getValue(FACING).getHorizontalIndex() + i;
+        return state.getValue(WATERLOGGED) ? meta | 8 : meta;
     }
 
     protected BlockStateContainer createBlockState()
     {
-        return new BlockStateContainer(this, new IProperty[] {HALF, FACING});
+        return RetroWaterlogging.createWaterMaterialStateContainer(this, HALF, FACING, WATERLOGGED);
+    }
+
+    @Override
+    public Material getMaterial(IBlockState state) {
+        return getWaterloggedMaterial(state, super.getMaterial(state));
+    }
+
+    @Override
+    public PropertyBool getWaterloggedProperty() {
+        return WATERLOGGED;
     }
 
     @Override

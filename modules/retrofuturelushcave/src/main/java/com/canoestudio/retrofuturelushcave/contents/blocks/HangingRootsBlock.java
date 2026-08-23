@@ -1,13 +1,21 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
+import com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.PropertyBool;
+import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
@@ -19,7 +27,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
-public class HangingRootsBlock extends Block {
+public class HangingRootsBlock extends Block implements RetroWaterloggedBlock {
+    public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
     private static final AxisAlignedBB ROOTS_AABB = new AxisAlignedBB(0.125D, 0.0D, 0.125D, 0.875D, 1.0D, 0.875D);
 
     public HangingRootsBlock() {
@@ -30,6 +39,8 @@ public class HangingRootsBlock extends Block {
         setSoundType(SoundType.PLANT);
         setCreativeTab(CREATIVE_TABS);
         setLightOpacity(0);
+        setDefaultState(RetroWaterlogging.withStillWaterLevel(blockState.getBaseState()
+                .withProperty(WATERLOGGED, false)));
 
         ModBlocks.BLOCKS.add(this);
         ModBlocks.BLOCKITEMS.add(new ItemBlock(this).setRegistryName("hanging_roots"));
@@ -41,16 +52,61 @@ public class HangingRootsBlock extends Block {
     }
 
     @Override
+    public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing,
+            float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer, EnumHand hand) {
+        return getDefaultState().withProperty(WATERLOGGED,
+                RetroWaterlogging.isWater(worldIn, pos));
+    }
+
+    @Override
+    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
+        super.onBlockAdded(worldIn, pos, state);
+        RetroWaterlogging.onBlockAdded(worldIn, pos, state, WATERLOGGED);
+    }
+
+    @Override
     public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
         if (!canPlaceBlockAt(worldIn, pos)) {
             dropBlockAsItem(worldIn, pos, state, 0);
-            worldIn.setBlockState(pos, Blocks.AIR.getDefaultState(), 3);
+            RetroWaterlogging.restoreWater(worldIn, pos, state);
+            return;
         }
+        RetroWaterlogging.onNeighborChanged(worldIn, pos, state);
+    }
+
+    @Override
+    public void updateTick(World worldIn, BlockPos pos, IBlockState state, java.util.Random random) {
+        if (RetroWaterlogging.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
+            WaterloggedPlantFluid.updateTick(worldIn, pos, worldIn.getBlockState(pos));
+        }
+    }
+
+    @Override
+    public boolean removedByPlayer(IBlockState state, World world, BlockPos pos,
+            net.minecraft.entity.player.EntityPlayer player, boolean willHarvest) {
+        onBlockHarvested(world, pos, state, player);
+        return world.setBlockState(pos,
+                RetroWaterlogging.isWaterlogged(state, world, pos, WATERLOGGED)
+                        ? Blocks.WATER.getDefaultState() : Blocks.AIR.getDefaultState(),
+                world.isRemote ? 11 : 3);
+    }
+
+    @Override
+    public void onBlockExploded(World world, BlockPos pos, net.minecraft.world.Explosion explosion) {
+        IBlockState state = world.getBlockState(pos);
+        world.setBlockState(pos,
+                RetroWaterlogging.isWaterlogged(state, world, pos, WATERLOGGED)
+                        ? Blocks.WATER.getDefaultState() : Blocks.AIR.getDefaultState(), 3);
     }
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
         return ROOTS_AABB;
+    }
+
+    @Override
+    public IBlockState getExtendedState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
+        return RetroWaterlogging.extendedState(state, worldIn, pos);
     }
 
     @Override
@@ -77,5 +133,31 @@ public class HangingRootsBlock extends Block {
     @Override
     public BlockFaceShape getBlockFaceShape(IBlockAccess worldIn, IBlockState state, BlockPos pos, EnumFacing face) {
         return BlockFaceShape.UNDEFINED;
+    }
+
+    @Override
+    public Material getMaterial(IBlockState state) {
+        return getWaterloggedMaterial(state, super.getMaterial(state));
+    }
+
+    @Override
+    public int getMetaFromState(IBlockState state) {
+        return state.getValue(WATERLOGGED) ? 1 : 0;
+    }
+
+    @Override
+    public IBlockState getStateFromMeta(int meta) {
+        return getDefaultState().withProperty(BlockLiquid.LEVEL, 0)
+                .withProperty(WATERLOGGED, (meta & 1) != 0);
+    }
+
+    @Override
+    protected BlockStateContainer createBlockState() {
+        return RetroWaterlogging.createWaterMaterialStateContainer(this, WATERLOGGED);
+    }
+
+    @Override
+    public PropertyBool getWaterloggedProperty() {
+        return WATERLOGGED;
     }
 }

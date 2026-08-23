@@ -1,48 +1,47 @@
 package com.canoestudio.retrofuturemccore.api.fluid;
 
-import git.jbredwards.fluidlogged_api.api.util.FluidState;
-import git.jbredwards.fluidlogged_api.api.util.FluidloggedUtils;
-import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
-import net.minecraft.init.Blocks;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
 
 /**
- * Shared accessors for the required Fluidlogged API integration.
+ * Compatibility facade for contained water.
  *
- * <p>The actual fluid is always stored in Fluidlogged API's capability and
- * never in a synthetic block-state property.</p>
+ * <p>Fluidlogged API is optional. Calls are routed to it when it is installed;
+ * otherwise the Farmers-Future-Delight waterlogged block-state implementation
+ * is used.</p>
  */
 public final class FluidloggedSupport {
 
     private FluidloggedSupport() {
     }
 
-    public static FluidState getFluidState(IBlockAccess world, BlockPos pos) {
-        return FluidloggedUtils.getFluidState(world, pos);
+    public static RetroFluidState getFluidState(IBlockAccess world, BlockPos pos) {
+        return RetroFluidCompat.getFluidState(world, pos);
     }
 
-    public static FluidState getFluidState(IBlockAccess world, BlockPos pos, IBlockState state) {
-        return FluidloggedUtils.getFluidState(world, pos, state);
+    public static RetroFluidState getFluidState(IBlockAccess world, BlockPos pos, IBlockState state) {
+        return RetroFluidCompat.getFluidState(world, pos, state);
     }
 
     public static boolean isWater(IBlockAccess world, BlockPos pos) {
-        IBlockState state = world.getBlockState(pos);
-        return isWater(getFluidState(world, pos, state)) || isVanillaWater(state);
+        return RetroFluidCompat.isWater(world, pos);
     }
 
-    /**
-     * Fluidlogged-compatible equivalent of Entity#isInWater().  The vanilla
-     * method only sees the block material, while Fluidlogged API stores the
-     * fluid separately from the block occupying the position.
-     */
+    public static boolean isWater(RetroFluidState fluidState) {
+        return RetroFluidCompat.isWater(fluidState);
+    }
+
+    public static boolean isWater(Fluid fluid) {
+        return RetroFluidCompat.isWater(fluid);
+    }
+
+    /** Equivalent of Entity#isInWater() that also checks fluidlogged blocks. */
     public static boolean isEntityInWater(Entity entity) {
         if (entity == null || entity.world == null) {
             return false;
@@ -67,89 +66,48 @@ public final class FluidloggedSupport {
         return false;
     }
 
-    public static boolean isWater(FluidState fluidState) {
-        return fluidState != null && !fluidState.isEmpty() && isWater(fluidState.getFluid());
-    }
-
-    public static boolean isWater(Fluid fluid) {
-        return FluidloggedUtils.isCompatibleFluid(FluidRegistry.WATER, fluid);
-    }
-
     public static boolean isVanillaWater(IBlockState state) {
-        return state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.FLOWING_WATER;
+        return RetroFluidCompat.isVanillaWater(state);
     }
 
     public static boolean isWaterBlock(IBlockState state) {
-        return isVanillaWater(state);
+        return RetroFluidCompat.isWaterBlock(state);
     }
 
     public static boolean canReplaceWater(World world, BlockPos pos) {
-        IBlockState state = world.getBlockState(pos);
-        return isWater(world, pos) || state.getBlock().isReplaceable(world, pos);
+        return RetroWaterlogging.canReplaceWater(world, pos);
     }
 
     public static boolean canPlaceIntoAirOrWater(World world, BlockPos pos) {
-        IBlockState state = world.getBlockState(pos);
-        return state.getBlock().isReplaceable(world, pos)
-            || state.getBlock() == Blocks.AIR
-            || isWater(world, pos);
+        return RetroWaterlogging.canPlaceIntoAirOrWater(world, pos);
     }
 
     public static void restoreWater(World world, BlockPos pos) {
-        restoreFluidOrAir(world, pos, world.getBlockState(pos), 3);
+        RetroWaterlogging.restoreWater(world, pos);
     }
 
     public static void restoreWater(World world, BlockPos pos, IBlockState replacedState) {
-        restoreFluidOrAir(world, pos, replacedState, 3);
+        RetroWaterlogging.restoreWater(world, pos, replacedState);
     }
 
     public static void restoreFluidOrAir(World world, BlockPos pos, IBlockState replacedState, int flags) {
-        FluidState fluidState = getFluidState(world, pos, replacedState);
-        if (fluidState.isEmpty() || world.provider.doesWaterVaporize()) {
-            world.setBlockToAir(pos);
-            return;
-        }
-
-        world.setBlockState(pos, fluidState.getState(), flags);
-        scheduleFluidTick(world, pos, fluidState);
-    }
-
-    public static void restoreFluidOrAir(World world, BlockPos pos, FluidState fluidState, int flags) {
-        if (fluidState == null || fluidState.isEmpty() || world.provider.doesWaterVaporize()) {
-            world.setBlockToAir(pos);
-            return;
-        }
-        world.setBlockState(pos, fluidState.getState(), flags);
-        scheduleFluidTick(world, pos, fluidState);
+        RetroWaterlogging.restoreFluidOrAir(world, pos, replacedState, flags);
     }
 
     public static void restoreContainedFluidOrAir(World world, BlockPos pos, IBlockState state, int flags) {
-        restoreFluidOrAir(world, pos, getFluidState(world, pos, state), flags);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, flags);
     }
 
     public static void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState, int flags) {
-        FluidState fluidState = getFluidState(world, pos);
-        world.setBlockState(pos, newState, flags);
-        if (!fluidState.isEmpty()) {
-            FluidloggedUtils.setFluidState(world, pos, world.getBlockState(pos), fluidState, false, flags);
-            scheduleFluidTick(world, pos, fluidState);
-        }
+        RetroWaterlogging.setFluidloggableBlock(world, pos, newState, flags);
     }
 
     public static boolean setFluidState(World world, BlockPos pos, IBlockState here,
-            FluidState fluidState, int flags) {
-        return FluidloggedUtils.setFluidState(world, pos, here, fluidState, false, flags);
+            RetroFluidState fluidState, int flags) {
+        return RetroWaterlogging.setFluidState(world, pos, here, fluidState, flags);
     }
 
     public static void scheduleFluidTick(World world, BlockPos pos, IBlockState state) {
-        scheduleFluidTick(world, pos, getFluidState(world, pos, state));
+        RetroWaterlogging.scheduleFluidTick(world, pos, state);
     }
-
-    public static void scheduleFluidTick(World world, BlockPos pos, FluidState fluidState) {
-        if (fluidState != null && !fluidState.isEmpty()) {
-            Block fluidBlock = fluidState.getBlock();
-            world.scheduleUpdate(pos, fluidBlock, fluidBlock.tickRate(world));
-        }
-    }
-
 }

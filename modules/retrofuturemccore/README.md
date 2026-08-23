@@ -95,19 +95,28 @@ Register zoom handlers only on the client side if they reference client-only cla
 
 ## Fluid And Water-Compatible Blocks
 
-Fluidlogged API is a required runtime dependency of this core module. Fluidlogged
-blocks must use its capability-backed fluid state rather than adding a synthetic
-`waterlogged` or `BlockLiquid.LEVEL` property to the block state:
+Fluidlogged API is an optional runtime dependency of this core module. When it is
+installed, the shared compatibility layer uses its capability-backed fluid state
+first. When it is absent, the module uses the Farmers-Future-Delight waterlogged
+block-state implementation, including `Material.WATER`, `BlockLiquid.LEVEL`, the
+`WATERLOGGED` property, variable water height and flowing-water updates.
+
+Blocks that participate in both paths should implement the shared contract:
 
 ```java
-public class MyWaterPlantBlock extends Block implements IFluidloggable {
+public class MyWaterPlantBlock extends Block implements RetroWaterloggedBlock {
     public MyWaterPlantBlock() {
         super(Material.PLANTS);
     }
 
     @Override
-    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, Fluid fluid) {
-        return FluidloggedSupport.isWater(fluid);
+    public PropertyBool getWaterloggedProperty() {
+        return WATERLOGGED;
+    }
+
+    @Override
+    public Material getMaterial(IBlockState state) {
+        return RetroWaterlogging.materialForWaterlogged(state, Material.PLANTS, WATERLOGGED);
     }
 }
 ```
@@ -116,8 +125,8 @@ Use `FluidloggedSupport.getFluidState(world, pos)` to inspect the contained
 fluid, `FluidloggedSupport.setFluidloggableBlock(...)` when replacing a block
 while preserving its contained fluid, and
 `FluidloggedSupport.restoreContainedFluidOrAir(...)` when a fluidloggable block
-is removed. The actual fluid is stored by Fluidlogged API and survives block
-state changes independently of the block's model properties.
+is removed. These calls select Fluidlogged API automatically when it is present;
+otherwise they use the copied Farmers-Future-Delight water state and flow logic.
 
 ## Interactions
 

@@ -92,7 +92,7 @@ public class EntityAquaticFish extends EntityAnimal {
         ItemStack held = player.getHeldItem(hand);
         if (held.getItem() == Items.WATER_BUCKET && this.isEntityAlive()) {
             if (!this.world.isRemote) {
-                ItemStack bucket = ItemFishBucket.create(this);
+                ItemStack bucket = ItemFishBucket.create(this.fishType);
                 if (!player.capabilities.isCreativeMode) {
                     held.shrink(1);
                     if (held.isEmpty()) {

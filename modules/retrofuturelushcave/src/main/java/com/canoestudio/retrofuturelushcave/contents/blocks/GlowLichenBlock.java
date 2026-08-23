@@ -1,8 +1,8 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
-import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -21,22 +21,17 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraftforge.fluids.Fluid;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
-public class GlowLichenBlock extends Block implements IFluidloggable {
-
-    @Override
-    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, Fluid fluid) {
-        return FluidloggedSupport.isWater(fluid);
-    }
+public class GlowLichenBlock extends Block implements RetroWaterloggedBlock {
     public static final PropertyBool UP = PropertyBool.create("up");
     public static final PropertyBool DOWN = PropertyBool.create("down");
     public static final PropertyBool NORTH = PropertyBool.create("north");
     public static final PropertyBool EAST = PropertyBool.create("east");
     public static final PropertyBool SOUTH = PropertyBool.create("south");
     public static final PropertyBool WEST = PropertyBool.create("west");
+    public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
 
     private static final AxisAlignedBB FULL_AABB = new AxisAlignedBB(0.0D, 0.0D, 0.0D, 1.0D, 1.0D, 1.0D);
 
@@ -55,7 +50,8 @@ public class GlowLichenBlock extends Block implements IFluidloggable {
                 .withProperty(NORTH, true)
                 .withProperty(EAST, false)
                 .withProperty(SOUTH, false)
-                .withProperty(WEST, false));
+                .withProperty(WEST, false)
+                .withProperty(WATERLOGGED, false));
 
         ModBlocks.BLOCKS.add(this);
         ModBlocks.BLOCKITEMS.add(new ItemBlock(this).setRegistryName("glow_lichen"));
@@ -65,12 +61,14 @@ public class GlowLichenBlock extends Block implements IFluidloggable {
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
         EnumFacing attachment = facing.getOpposite();
         if (canAttach(worldIn, pos, attachment)) {
-            return getStateForFace(attachment);
+            return getStateForFace(attachment)
+                    .withProperty(WATERLOGGED, RetroWaterlogging.isWater(worldIn, pos));
         }
 
         for (EnumFacing fallback : EnumFacing.values()) {
             if (canAttach(worldIn, pos, fallback)) {
-                return getStateForFace(fallback);
+                return getStateForFace(fallback)
+                        .withProperty(WATERLOGGED, RetroWaterlogging.isWater(worldIn, pos));
             }
         }
 
@@ -85,6 +83,11 @@ public class GlowLichenBlock extends Block implements IFluidloggable {
                 .withProperty(EAST, face == EnumFacing.EAST)
                 .withProperty(SOUTH, face == EnumFacing.SOUTH)
                 .withProperty(WEST, face == EnumFacing.WEST);
+    }
+
+    @Override
+    public IBlockState getExtendedState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
+        return RetroWaterlogging.extendedState(state, worldIn, pos);
     }
 
     @Override
@@ -119,6 +122,20 @@ public class GlowLichenBlock extends Block implements IFluidloggable {
             worldIn.setBlockState(pos, updated, 2);
         }
         scheduleContainedFluidTick(worldIn, pos, updated);
+    }
+
+    @Override
+    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
+        super.onBlockAdded(worldIn, pos, state);
+        RetroWaterlogging.onBlockAdded(worldIn, pos, state, WATERLOGGED);
+    }
+
+    @Override
+    public void updateTick(World worldIn, BlockPos pos, IBlockState state, java.util.Random random) {
+        if (RetroWaterlogging.isWaterlogged(state, worldIn, pos, WATERLOGGED)) {
+            com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid.updateTick(
+                    worldIn, pos, worldIn.getBlockState(pos));
+        }
     }
 
     private IBlockState removeUnsupportedFaces(World world, BlockPos pos, IBlockState state) {
@@ -167,11 +184,11 @@ public class GlowLichenBlock extends Block implements IFluidloggable {
     }
 
     private void restoreFluidOrAir(World world, BlockPos pos, IBlockState state, int flags) {
-        FluidloggedSupport.restoreContainedFluidOrAir(world, pos, state, flags);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, flags);
     }
 
     private void scheduleContainedFluidTick(World world, BlockPos pos, IBlockState state) {
-        FluidloggedSupport.scheduleFluidTick(world, pos, state);
+        RetroWaterlogging.scheduleContainedFluidTick(world, pos, state);
     }
 
     @Override
@@ -207,14 +224,15 @@ public class GlowLichenBlock extends Block implements IFluidloggable {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, new IProperty[] {UP, DOWN, NORTH, EAST, SOUTH, WEST});
+        return RetroWaterlogging.createWaterMaterialStateContainer(this,
+                UP, DOWN, NORTH, EAST, SOUTH, WEST, WATERLOGGED);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
         for (EnumFacing face : EnumFacing.values()) {
             if (hasFace(state, face)) {
-                return face.getIndex();
+                return face.getIndex() | (state.getValue(WATERLOGGED) ? 8 : 0);
             }
         }
         return EnumFacing.NORTH.getIndex();
@@ -222,6 +240,17 @@ public class GlowLichenBlock extends Block implements IFluidloggable {
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return getStateForFace(EnumFacing.byIndex(meta & 7));
+        return getStateForFace(EnumFacing.byIndex(meta & 7))
+                .withProperty(WATERLOGGED, (meta & 8) != 0);
+    }
+
+    @Override
+    public Material getMaterial(IBlockState state) {
+        return getWaterloggedMaterial(state, super.getMaterial(state));
+    }
+
+    @Override
+    public PropertyBool getWaterloggedProperty() {
+        return WATERLOGGED;
     }
 }

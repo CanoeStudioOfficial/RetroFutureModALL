@@ -1,9 +1,9 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
-import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
-import git.jbredwards.fluidlogged_api.api.util.FluidState;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidState;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidloggableBlock;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -32,16 +32,10 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraftforge.fluids.Fluid;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
-public class CandleBlock extends Block implements IFluidloggable {
-
-    @Override
-    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, Fluid fluid) {
-        return FluidloggedSupport.isWater(fluid);
-    }
+public class CandleBlock extends Block implements RetroFluidloggableBlock {
     public static final PropertyBool LIT = PropertyBool.create("lit");
     public static final PropertyInteger CANDLES = PropertyInteger.create("candles", 1, 4);
     public static final int LIGHT_PER_CANDLE = 3;
@@ -163,7 +157,7 @@ public class CandleBlock extends Block implements IFluidloggable {
     public static boolean canLight(World world, BlockPos pos, IBlockState state) {
         return state.getBlock() instanceof CandleBlock
                 && !state.getValue(LIT)
-                && !FluidloggedSupport.isWater(FluidloggedSupport.getFluidState(world, pos, state));
+                && !RetroWaterlogging.getFluidState(world, pos, state).isWater();
     }
 
     public static void light(World world, BlockPos pos, IBlockState state, EntityPlayer player, ItemStack stack, int flags) {
@@ -203,11 +197,11 @@ public class CandleBlock extends Block implements IFluidloggable {
     }
 
     private void restoreFluidOrAir(World world, BlockPos pos, IBlockState state, int flags) {
-        FluidloggedSupport.restoreContainedFluidOrAir(world, pos, state, flags);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, flags);
     }
 
     private void scheduleContainedFluidTick(World world, BlockPos pos, IBlockState state) {
-        FluidloggedSupport.scheduleFluidTick(world, pos, state);
+        RetroWaterlogging.scheduleContainedFluidTick(world, pos, state);
     }
 
     @SideOnly(Side.CLIENT)
@@ -222,8 +216,8 @@ public class CandleBlock extends Block implements IFluidloggable {
     }
 
     @Override
-    public EnumActionResult onFluidFill(World world, BlockPos pos, IBlockState here,
-            FluidState newFluidState, int blockFlags) {
+    public EnumActionResult onRetroFluidFill(World world, BlockPos pos, IBlockState here,
+            RetroFluidState newFluidState, int blockFlags) {
         if (here.getValue(LIT)) {
             extinguish(null, world, pos, here, blockFlags);
         }

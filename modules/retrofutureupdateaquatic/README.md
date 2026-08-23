@@ -1,8 +1,9 @@
 # RetroFuture Update Aquatic
 
 The 1.13 aquatic-content module for the RetroFuture series, backported to
-Minecraft 1.12.2 Forge. The module keeps the 1.12 block and fluid model and
-uses Fluidlogged API through the shared core instead of bundling that API.
+Minecraft 1.12.2 Forge. Fluidlogged API is optional: the shared core uses it
+when installed, and otherwise uses the Farmers-Future-Delight waterlogged
+state, variable water-height model and flowing-water implementation.
 
 ## Wiki coverage
 
@@ -56,8 +57,9 @@ copied implementation.
 
 ## Build
 
-Place a compatible Fluidlogged API jar in this module's `libs/` directory for
-local compile/run integration, then run:
+Place a compatible Fluidlogged API jar in this module's `libs/` directory only
+if you want to test the optional API path; the fallback path needs no extra jar.
+Then run:
 
 ```text
 gradlew.bat :retrofutureupdateaquatic:compileJava

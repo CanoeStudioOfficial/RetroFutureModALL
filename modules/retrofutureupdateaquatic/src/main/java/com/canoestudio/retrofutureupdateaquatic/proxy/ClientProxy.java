@@ -4,6 +4,10 @@ import com.canoestudio.retrofuturemccore.api.client.model.RetroModelRegistry;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
 import com.canoestudio.retrofutureupdateaquatic.block.ModBlocks;
+import com.canoestudio.retrofutureupdateaquatic.block.BlockCoralFan;
+import com.canoestudio.retrofutureupdateaquatic.block.BlockCoralPlant;
+import com.canoestudio.retrofutureupdateaquatic.block.BlockSeaPickle;
+import com.canoestudio.retrofutureupdateaquatic.block.BlockConduit;
 import com.canoestudio.retrofutureupdateaquatic.client.render.RenderAquaticFish;
 import com.canoestudio.retrofutureupdateaquatic.client.render.RenderDolphin;
 import com.canoestudio.retrofutureupdateaquatic.client.render.RenderDrowned;
@@ -19,6 +23,7 @@ import com.canoestudio.retrofutureupdateaquatic.entity.EntityTurtle;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
 import com.canoestudio.retrofutureupdateaquatic.world.biome.AquaticBiomes;
 import net.minecraft.client.Minecraft;
+import net.minecraft.block.BlockLiquid;
 import net.minecraft.client.renderer.entity.RenderSnowball;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -59,6 +64,7 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void preInit() {
         super.preInit();
+        registerWaterStateMappers();
         RetroModelRegistry.registerEntityRenderer(EntityAquaticFish.Cod.class,
             manager -> new RenderAquaticFish<EntityAquaticFish.Cod>(manager, AquaticFishType.COD));
         RetroModelRegistry.registerEntityRenderer(EntityAquaticFish.Salmon.class,
@@ -74,6 +80,25 @@ public class ClientProxy extends CommonProxy {
         RetroModelRegistry.registerEntityRenderer(EntityThrownTrident.class,
             manager -> new RenderSnowball<EntityThrownTrident>(manager, ModItems.TRIDENT,
                 Minecraft.getMinecraft().getRenderItem()));
+    }
+
+    private static void registerWaterStateMappers() {
+        RetroModelRegistry.ignoreStateProperties(ModBlocks.SEAGRASS, BlockLiquid.LEVEL);
+        RetroModelRegistry.ignoreStateProperties(ModBlocks.KELP, BlockLiquid.LEVEL);
+        RetroModelRegistry.ignoreStateProperties(ModBlocks.SEA_PICKLE,
+            BlockLiquid.LEVEL, BlockSeaPickle.WATERLOGGED);
+        RetroModelRegistry.ignoreStateProperties(ModBlocks.CONDUIT,
+            BlockLiquid.LEVEL, BlockConduit.WATERLOGGED);
+        for (ModBlocks.CoralSet coral : ModBlocks.corals()) {
+            RetroModelRegistry.ignoreStateProperties(coral.deadPlant,
+                BlockLiquid.LEVEL, BlockCoralPlant.WATERLOGGED);
+            RetroModelRegistry.ignoreStateProperties(coral.livePlant,
+                BlockLiquid.LEVEL, BlockCoralPlant.WATERLOGGED);
+            RetroModelRegistry.ignoreStateProperties(coral.deadFan,
+                BlockLiquid.LEVEL, BlockCoralFan.WATERLOGGED);
+            RetroModelRegistry.ignoreStateProperties(coral.liveFan,
+                BlockLiquid.LEVEL, BlockCoralFan.WATERLOGGED);
+        }
     }
 
     @SubscribeEvent

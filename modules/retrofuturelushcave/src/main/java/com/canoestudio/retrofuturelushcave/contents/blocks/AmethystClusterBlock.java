@@ -2,11 +2,13 @@ package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
+import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
@@ -28,7 +30,8 @@ import java.util.Random;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
-public class AmethystClusterBlock extends FluidloggableDirectionalBlock {
+public class AmethystClusterBlock extends FluidloggableDirectionalBlock implements RetroWaterloggedBlock {
+    public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
     private final int height;
     private final int offset;
     private final boolean dropsShard;
@@ -46,7 +49,9 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock {
         setSoundType(SoundType.GLASS);
         setCreativeTab(CREATIVE_TABS);
         setLightLevel(dropsShard ? 5.0F / 15.0F : 1.0F / 15.0F);
-        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.UP));
+        setDefaultState(RetroWaterlogging.withStillWaterLevel(blockState.getBaseState()
+                .withProperty(FACING, EnumFacing.UP)
+                .withProperty(WATERLOGGED, false)));
 
         ModBlocks.BLOCKS.add(this);
         ModBlocks.BLOCKITEMS.add(new ItemBlock(this).setRegistryName(name.toLowerCase()));
@@ -64,7 +69,19 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock {
 
     @Override
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
-        return getDefaultState().withProperty(FACING, facing);
+        return getDefaultState().withProperty(FACING, facing)
+                .withProperty(WATERLOGGED, RetroWaterlogging.isWater(worldIn, pos));
+    }
+
+    @Override
+    public IBlockState getExtendedState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
+        return RetroWaterlogging.extendedState(state, worldIn, pos);
+    }
+
+    @Override
+    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
+        super.onBlockAdded(worldIn, pos, state);
+        RetroWaterlogging.onBlockAdded(worldIn, pos, state, WATERLOGGED);
     }
 
     @Override
@@ -88,7 +105,7 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock {
     }
 
     private void restoreFluidOrAir(World world, BlockPos pos, IBlockState state, int flags) {
-        FluidloggedSupport.restoreContainedFluidOrAir(world, pos, state, flags);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, flags);
     }
 
     @Override
@@ -166,16 +183,28 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock {
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(FACING, EnumFacing.byIndex(meta & 7));
+        return getDefaultState().withProperty(FACING, EnumFacing.byIndex(meta & 7))
+                .withProperty(WATERLOGGED, (meta & 8) != 0);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
-        return state.getValue(FACING).getIndex();
+        int meta = state.getValue(FACING).getIndex();
+        return state.getValue(WATERLOGGED) ? meta | 8 : meta;
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, new IProperty[] {FACING});
+        return RetroWaterlogging.createWaterMaterialStateContainer(this, FACING, WATERLOGGED);
+    }
+
+    @Override
+    public Material getMaterial(IBlockState state) {
+        return getWaterloggedMaterial(state, super.getMaterial(state));
+    }
+
+    @Override
+    public PropertyBool getWaterloggedProperty() {
+        return WATERLOGGED;
     }
 }
