@@ -5,7 +5,6 @@ import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
@@ -160,7 +159,7 @@ public class HangingRootsBlock extends Block implements RetroWaterloggedBlock {
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(BlockLiquid.LEVEL, 0)
+        return RetroWaterlogging.withStillWaterLevel(getDefaultState())
                 .withProperty(WATERLOGGED, (meta & 1) != 0);
     }
 

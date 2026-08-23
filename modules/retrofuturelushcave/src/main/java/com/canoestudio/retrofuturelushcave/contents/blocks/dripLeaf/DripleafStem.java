@@ -9,7 +9,6 @@ import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockHorizontal;
-import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.block.material.Material;
@@ -89,7 +88,6 @@ public class DripleafStem extends Block implements IGrowable, RetroWaterloggedBl
     @Override
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState()
-                .withProperty(BlockLiquid.LEVEL, 0)
                 .withProperty(FACING, EnumFacing.byHorizontalIndex(meta & 3))
                 .withProperty(WATERLOGGED, (meta & 4) != 0);
     }

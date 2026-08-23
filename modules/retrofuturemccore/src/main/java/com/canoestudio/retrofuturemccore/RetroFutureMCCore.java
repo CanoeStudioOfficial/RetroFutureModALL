@@ -9,7 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 @Mod(modid = Tags.MOD_ID, name = Tags.MOD_NAME, version = Tags.VERSION,
-    acceptedMinecraftVersions = "[1.12.2]", dependencies = "after:fluidlogged_api@[3.3.2,)")
+    acceptedMinecraftVersions = "[1.12.2]", dependencies = "after:fluidlogged_api@[3.3.3,)")
 public class RetroFutureMCCore {
 
     public static final Logger LOGGER = LogManager.getLogger(Tags.MOD_NAME);

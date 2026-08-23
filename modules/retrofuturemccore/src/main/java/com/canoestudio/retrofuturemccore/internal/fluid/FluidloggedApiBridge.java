@@ -35,6 +35,7 @@ public final class FluidloggedApiBridge {
     public static boolean setFluidState(World world, BlockPos pos, IBlockState here, RetroFluidState fluidState,
             int flags) {
         Object nativeState = fluidState.hasNativeState() ? fluidState.getNativeState()
+            : fluidState.isEmpty() ? FluidState.EMPTY
             : fluidState.isWater() ? FluidState.of(FluidRegistry.WATER) : null;
         return nativeState instanceof FluidState
             && FluidloggedUtils.setFluidState(world, pos, here, (FluidState) nativeState, false, flags);

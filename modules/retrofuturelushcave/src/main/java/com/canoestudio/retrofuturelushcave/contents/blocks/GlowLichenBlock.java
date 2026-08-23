@@ -13,7 +13,6 @@ import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid;
 import net.minecraft.block.Block;
-import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.EnumPushReaction;
@@ -82,8 +81,7 @@ public class GlowLichenBlock extends Block implements IGrowable, RetroWaterlogge
         setSoundType(SoundType.PLANT);
         setLightOpacity(0);
         setLightLevel(7.0F / 15.0F);
-        setDefaultState(blockState.getBaseState()
-                .withProperty(BlockLiquid.LEVEL, 0)
+        setDefaultState(RetroWaterlogging.withStillWaterLevel(blockState.getBaseState())
                 .withProperty(DOWN, false)
                 .withProperty(UP, false)
                 .withProperty(NORTH, false)
@@ -167,7 +165,6 @@ public class GlowLichenBlock extends Block implements IGrowable, RetroWaterlogge
         int packed = normalizedMask | (waterlogged ? WATER_BIT : 0);
         GlowLichenBlock block = ModBlocks.GLOW_LICHEN_VARIANTS[packed >>> 4];
         return block.getDefaultState()
-                .withProperty(BlockLiquid.LEVEL, 0)
                 .withProperty(DOWN, (normalizedMask & faceBit(EnumFacing.DOWN)) != 0)
                 .withProperty(UP, (normalizedMask & faceBit(EnumFacing.UP)) != 0)
                 .withProperty(NORTH, (normalizedMask & faceBit(EnumFacing.NORTH)) != 0)
@@ -195,7 +192,6 @@ public class GlowLichenBlock extends Block implements IGrowable, RetroWaterlogge
     @Override
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState()
-                .withProperty(BlockLiquid.LEVEL, 0)
                 .withProperty(DOWN, (meta & faceBit(EnumFacing.DOWN)) != 0)
                 .withProperty(UP, (meta & faceBit(EnumFacing.UP)) != 0)
                 .withProperty(NORTH, (meta & faceBit(EnumFacing.NORTH)) != 0)

@@ -11,7 +11,6 @@ import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoublePlant;
-import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SoundType;
@@ -104,7 +103,6 @@ public class SmallDripleaf extends Block implements IGrowable, RetroWaterloggedB
     @Override
     public IBlockState getStateFromMeta(int meta) {
         return getDefaultState()
-                .withProperty(BlockLiquid.LEVEL, 0)
                 .withProperty(FACING, EnumFacing.byHorizontalIndex(meta & 3))
                 .withProperty(HALF, (meta & 4) == 0
                         ? BlockDoublePlant.EnumBlockHalf.LOWER

@@ -20,23 +20,32 @@ import com.canoestudio.retrofuturelushcave.contents.mobs.glowsquid.RenderGlowSqu
 import com.canoestudio.retrofuturelushcave.utils.PowderSnowHudHandler;
 import com.canoestudio.retrofuturelushcave.utils.RetroFutureClientCoreIntegration;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.relauncher.Side;
 import net.minecraft.block.BlockLiquid;
 
+@Mod.EventBusSubscriber(value = {Side.CLIENT}, modid = com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags.MOD_ID)
 public class ClientProxy extends CommonProxy {
     @Override
     public void preInit(FMLPreInitializationEvent event) {
         super.preInit(event);
-        registerWaterStateMappers();
         RenderingRegistry.registerEntityRenderingHandler(EntityBrownMooshroom.class, RenderBrownMooshroom::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityAxolotl.class, RenderAxolotl::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityGoat.class, RenderGoat::new);
         RenderingRegistry.registerEntityRenderingHandler(EntityGlowSquid.class, RenderGlowSquid::new);
         MinecraftForge.EVENT_BUS.register(SpyglassHandler.class);
         MinecraftForge.EVENT_BUS.register(PowderSnowHudHandler.class);
+    }
+
+    @SubscribeEvent
+    public static void registerModels(ModelRegistryEvent event) {
+        registerWaterStateMappers();
     }
 
     private static void registerWaterStateMappers() {

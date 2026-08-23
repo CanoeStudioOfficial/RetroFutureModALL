@@ -75,6 +75,7 @@ public final class RetroFluidCompat {
                 return Boolean.TRUE.equals(apiIsCompatibleWater.invoke(null, fluid));
             } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
                 RetroFutureMCCore.LOGGER.debug("Failed to query Fluidlogged API fluid compatibility.", e);
+                return false;
             }
         }
         return fluid == FluidRegistry.WATER;
@@ -86,10 +87,7 @@ public final class RetroFluidCompat {
 
     public static RetroFluidState getFluidState(IBlockAccess world, BlockPos pos, IBlockState state) {
         if (isFluidloggedAvailable()) {
-            RetroFluidState fluidState = queryFluidloggedState(world, pos, state);
-            if (fluidState != null) {
-                return fluidState;
-            }
+            return queryFluidloggedState(world, pos, state);
         }
 
         if (isWaterBlock(state)) {
@@ -111,15 +109,16 @@ public final class RetroFluidCompat {
 
     public static boolean setFluidState(World world, BlockPos pos, IBlockState here, RetroFluidState fluidState,
             int flags) {
-        if (fluidState == null || fluidState.isEmpty()) {
+        if (fluidState == null) {
             return false;
         }
 
         if (isFluidloggedAvailable()) {
-            Boolean result = setFluidloggedState(world, pos, here, fluidState, flags);
-            if (result != null) {
-                return result;
-            }
+            return setFluidloggedState(world, pos, here, fluidState, flags);
+        }
+
+        if (fluidState.isEmpty()) {
+            return false;
         }
 
         IBlockState current = world.getBlockState(pos);
@@ -145,6 +144,10 @@ public final class RetroFluidCompat {
     }
 
     public static boolean isWaterlogged(IBlockState state, IBlockAccess world, BlockPos pos, PropertyBool property) {
+        if (isFluidloggedAvailable()) {
+            return getFluidState(world, pos, state).isWater();
+        }
+
         boolean waterlogged = state.getPropertyKeys().contains(property) && state.getValue(property);
         if (!waterlogged && state.getBlock() instanceof RetroWaterloggedBlock) {
             waterlogged = ((RetroWaterloggedBlock) state.getBlock()).isWaterloggedState(state);
@@ -174,17 +177,27 @@ public final class RetroFluidCompat {
 
         if (isFluidloggedAvailable()) {
             RetroFluidState fluidState = getFluidState(world, pos, replacedState);
-            world.setBlockState(pos, fluidState.isWater()
-                ? fluidState.getState() : Blocks.AIR.getDefaultState(), flags);
+            IBlockState restored = restoredFluidState(replacedState, fluidState);
+            world.setBlockState(pos, restored, flags);
             if (fluidState.isWater()) {
-                world.scheduleUpdate(pos, fluidState.getState().getBlock(),
-                    fluidState.getState().getBlock().tickRate(world));
+                world.scheduleUpdate(pos, restored.getBlock(), restored.getBlock().tickRate(world));
             }
             return;
         }
 
         world.setBlockState(pos, WaterloggedPlantFluid.isWaterlogged(replacedState)
             ? Blocks.WATER.getDefaultState() : Blocks.AIR.getDefaultState(), flags);
+    }
+
+    public static IBlockState restoredFluidState(IBlockState replacedState, RetroFluidState fluidState) {
+        if (fluidState == null || !fluidState.isWater()) {
+            return Blocks.AIR.getDefaultState();
+        }
+        if (!isFluidloggedAvailable()) {
+            return Blocks.WATER.getDefaultState();
+        }
+        return replacedState != null && replacedState.getMaterial() == Material.WATER
+            && !isWaterBlock(replacedState) ? Blocks.WATER.getDefaultState() : fluidState.getState();
     }
 
     public static void scheduleFluidTick(World world, BlockPos pos, IBlockState state) {
@@ -211,10 +224,10 @@ public final class RetroFluidCompat {
             IBlockState state) {
         try {
             Object result = apiGetFluidState.invoke(null, world, pos, state);
-            return result instanceof RetroFluidState ? (RetroFluidState) result : null;
+            return result instanceof RetroFluidState ? (RetroFluidState) result : RetroFluidState.EMPTY;
         } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
             RetroFutureMCCore.LOGGER.debug("Failed to query Fluidlogged API state at {}", pos, e);
-            return null;
+            return RetroFluidState.EMPTY;
         }
     }
 
@@ -222,10 +235,10 @@ public final class RetroFluidCompat {
             RetroFluidState fluidState, int flags) {
         try {
             Object result = apiSetFluidState.invoke(null, world, pos, here, fluidState, flags);
-            return result instanceof Boolean ? (Boolean) result : Boolean.FALSE;
+            return result instanceof Boolean && (Boolean) result;
         } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
             RetroFutureMCCore.LOGGER.debug("Failed to set Fluidlogged API state at {}", pos, e);
-            return null;
+            return false;
         }
     }
 

@@ -15,6 +15,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.property.ExtendedBlockState;
+import net.minecraftforge.common.property.IUnlistedProperty;
 
 public final class RetroWaterlogging {
 
@@ -54,7 +55,8 @@ public final class RetroWaterlogging {
     }
 
     public static IBlockState withStillWaterLevel(IBlockState state) {
-        return state.withProperty(BlockLiquid.LEVEL, 0);
+        return state.getPropertyKeys().contains(BlockLiquid.LEVEL)
+            ? state.withProperty(BlockLiquid.LEVEL, 0) : state;
     }
 
     public static boolean hasStillWaterLevel(IBlockState state) {
@@ -62,8 +64,10 @@ public final class RetroWaterlogging {
     }
 
     public static BlockStateContainer createWaterMaterialStateContainer(Block block, IProperty<?>... properties) {
+        IUnlistedProperty<?>[] extendedProperties = RetroFluidCompat.isFluidloggedAvailable()
+            ? new IUnlistedProperty<?>[0] : WaterloggedPlantFluid.extendedProperties();
         return new ExtendedBlockState(block, appendStillWaterLevel(properties),
-            WaterloggedPlantFluid.extendedProperties());
+            extendedProperties);
     }
 
     public static IBlockState extendedState(IBlockState state, IBlockAccess world, BlockPos pos) {
@@ -158,10 +162,7 @@ public final class RetroWaterlogging {
         }
 
         RetroFluidState fluidState = getFluidState(world, pos, replacedState);
-        IBlockState replacement = fluidState.isWater()
-            ? RetroFluidCompat.isFluidloggedAvailable()
-                ? fluidState.getState() : Blocks.WATER.getDefaultState()
-            : Blocks.AIR.getDefaultState();
+        IBlockState replacement = RetroFluidCompat.restoredFluidState(replacedState, fluidState);
         world.setBlockState(pos, replacement, flags);
         scheduleFluidTick(world, pos, fluidState);
     }
@@ -172,11 +173,7 @@ public final class RetroWaterlogging {
             return;
         }
 
-        boolean water = fluidState != null && fluidState.isWater();
-        IBlockState replacement = water
-            ? RetroFluidCompat.isFluidloggedAvailable()
-                ? fluidState.getState() : Blocks.WATER.getDefaultState()
-            : Blocks.AIR.getDefaultState();
+        IBlockState replacement = RetroFluidCompat.restoredFluidState(null, fluidState);
         world.setBlockState(pos, replacement, flags);
         scheduleFluidTick(world, pos, fluidState);
     }
