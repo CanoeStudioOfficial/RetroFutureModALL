@@ -14,7 +14,10 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 /** Installs the variable-height water model only for the local fallback path. */
 public final class WaterloggedPlantModelHandler {
     private static final Set<String> MODEL_PATHS = new HashSet<>(Arrays.asList(
-            "kelp", "seagrass", "sea_pickle", "small_dripleaf", "big_dripleaf",
+            "kelp", "kelp_plant", "kelp_top", "seagrass", "tall_seagrass_bottom",
+            "tall_seagrass_top", "sea_pickle", "two_sea_pickles", "three_sea_pickles",
+            "four_sea_pickles", "dead_sea_pickle", "two_dead_sea_pickles",
+            "three_dead_sea_pickles", "four_dead_sea_pickles", "small_dripleaf", "big_dripleaf",
             "big_dripleaf_waterlogged",
             "big_dripleaf_stem", "hanging_roots", "glow_lichen", "glow_lichen_1",
             "glow_lichen_2", "glow_lichen_3", "glow_lichen_4", "glow_lichen_5",

@@ -1,1 +1,6 @@
-﻿{"parent":"item/generated","textures":{"layer0":"retrofutureupdateaquatic:items/phantom_membrane"}}
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "retrofutureupdateaquatic:items/phantom_membrane"
+  }
+}

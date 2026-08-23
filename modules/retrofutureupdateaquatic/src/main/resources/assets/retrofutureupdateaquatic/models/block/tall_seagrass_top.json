@@ -1,1 +1,6 @@
-{"parent":"retrofutureupdateaquatic:block/template_seagrass","textures":{"texture":"retrofutureupdateaquatic:blocks/tall_seagrass_top"}}
+{
+  "parent": "retrofutureupdateaquatic:block/template_seagrass",
+  "textures": {
+    "texture": "retrofutureupdateaquatic:blocks/tall_seagrass_top"
+  }
+}

@@ -6,7 +6,6 @@ import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
 import com.canoestudio.retrofutureupdateaquatic.block.ModBlocks;
 import com.canoestudio.retrofutureupdateaquatic.block.BlockCoralFan;
 import com.canoestudio.retrofutureupdateaquatic.block.BlockCoralPlant;
-import com.canoestudio.retrofutureupdateaquatic.block.BlockSeaPickle;
 import com.canoestudio.retrofutureupdateaquatic.block.BlockConduit;
 import com.canoestudio.retrofutureupdateaquatic.client.render.RenderAquaticFish;
 import com.canoestudio.retrofutureupdateaquatic.client.render.RenderDolphin;
@@ -64,7 +63,6 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void preInit() {
         super.preInit();
-        registerWaterStateMappers();
         RetroModelRegistry.registerEntityRenderer(EntityAquaticFish.Cod.class,
             manager -> new RenderAquaticFish<EntityAquaticFish.Cod>(manager, AquaticFishType.COD));
         RetroModelRegistry.registerEntityRenderer(EntityAquaticFish.Salmon.class,
@@ -86,7 +84,7 @@ public class ClientProxy extends CommonProxy {
         RetroModelRegistry.ignoreStateProperties(ModBlocks.SEAGRASS, BlockLiquid.LEVEL);
         RetroModelRegistry.ignoreStateProperties(ModBlocks.KELP, BlockLiquid.LEVEL);
         RetroModelRegistry.ignoreStateProperties(ModBlocks.SEA_PICKLE,
-            BlockLiquid.LEVEL, BlockSeaPickle.WATERLOGGED);
+            BlockLiquid.LEVEL);
         RetroModelRegistry.ignoreStateProperties(ModBlocks.CONDUIT,
             BlockLiquid.LEVEL, BlockConduit.WATERLOGGED);
         for (ModBlocks.CoralSet coral : ModBlocks.corals()) {
@@ -103,6 +101,7 @@ public class ClientProxy extends CommonProxy {
 
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
+        registerWaterStateMappers();
         RetroModelRegistry.registerItems(
             ModItems.DRIED_KELP,
             ModItems.NAUTILUS_SHELL,
