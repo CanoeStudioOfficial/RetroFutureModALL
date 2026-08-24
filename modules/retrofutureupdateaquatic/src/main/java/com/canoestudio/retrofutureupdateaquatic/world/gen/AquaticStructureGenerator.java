@@ -37,7 +37,6 @@ import javax.annotation.Nullable;
 public class AquaticStructureGenerator implements IWorldGenerator {
 
     private static final ResourceLocation[] SHIPWRECKS = new ResourceLocation[] {
-        id("shipwreck_full"),
         id("shipwreck_up1"),
         id("shipwreck_up2"),
         id("shipwreck_upft1"),
@@ -107,7 +106,7 @@ public class AquaticStructureGenerator implements IWorldGenerator {
             return;
         }
 
-        BlockPos origin = new BlockPos(x, floor.getY(), z).down(random.nextInt(5));
+        BlockPos origin = new BlockPos(x, floor.getY(), z).down(random.nextInt(6));
         template.addBlocksToWorld(world, origin, settings);
         // Keep the target treasure in the already-generating chunk.  Looking
         // up terrain in neighbouring chunks from IWorldGenerator causes
@@ -278,8 +277,8 @@ public class AquaticStructureGenerator implements IWorldGenerator {
     }
 
     private BlockPos findSeaFloor(World world, int x, int z) {
-        BlockPos pos = new BlockPos(x, Math.max(world.getSeaLevel() - 1, 1), z);
-        while (pos.getY() > 1) {
+        BlockPos pos = new BlockPos(x, Math.max(world.getSeaLevel() - 2, 1), z);
+        while (pos.getY() > 0) {
             IBlockState state = world.getBlockState(pos);
             Block block = state.getBlock();
             if (!block.isReplaceable(world, pos) && state.getMaterial() != Material.LEAVES
