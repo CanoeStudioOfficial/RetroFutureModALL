@@ -1,5 +1,8 @@
 package com.canoestudio.retrofuturethewildupdate.entity;
 
+import java.util.Arrays;
+
+import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
 import com.canoestudio.retrofuturethewildupdate.RTWU;
 import com.canoestudio.retrofuturethewildupdate.sounds.ModSounds;
 import com.canoestudio.retrofuturethewildupdate.potion.ModPotions;
@@ -120,11 +123,12 @@ public class Warden extends EntityMob {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(MAX_HEALTH);
-        this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.28);
-        this.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(ATTACK_DAMAGE);
-        this.getEntityAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE).setBaseValue(1.0);
-        this.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(48.0);
+        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
+            RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, MAX_HEALTH),
+            RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 0.28D),
+            RetroEntityAttributes.value(SharedMonsterAttributes.ATTACK_DAMAGE, ATTACK_DAMAGE),
+            RetroEntityAttributes.value(SharedMonsterAttributes.KNOCKBACK_RESISTANCE, 1.0D),
+            RetroEntityAttributes.value(SharedMonsterAttributes.FOLLOW_RANGE, 48.0D)));
     }
 
     @Override

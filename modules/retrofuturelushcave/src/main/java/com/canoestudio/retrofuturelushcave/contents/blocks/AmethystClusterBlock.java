@@ -1,5 +1,7 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
+import java.util.Arrays;
+
 import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
@@ -229,7 +231,8 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock implemen
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return RetroWaterlogging.createWaterMaterialStateContainer(this, FACING, WATERLOGGED);
+        return RetroWaterlogging.createWaterMaterialStateContainer(this,
+                Arrays.<IProperty<?>>asList(FACING, WATERLOGGED));
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
+import java.util.Arrays;
+
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
@@ -7,6 +9,7 @@ import com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.BlockFaceShape;
@@ -165,7 +168,8 @@ public class HangingRootsBlock extends Block implements RetroWaterloggedBlock {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return RetroWaterlogging.createWaterMaterialStateContainer(this, WATERLOGGED);
+        return RetroWaterlogging.createWaterMaterialStateContainer(this,
+                Arrays.<IProperty<?>>asList(WATERLOGGED));
     }
 
     @Override

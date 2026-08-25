@@ -1,6 +1,7 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -17,6 +18,7 @@ import net.minecraft.block.IGrowable;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
@@ -96,7 +98,7 @@ public class GlowLichenBlock extends Block implements IGrowable, RetroWaterlogge
     @Override
     protected BlockStateContainer createBlockState() {
         return RetroWaterlogging.createWaterMaterialStateContainer(this,
-                DOWN, UP, NORTH, SOUTH);
+                Arrays.<IProperty<?>>asList(DOWN, UP, NORTH, SOUTH));
     }
 
     @Override

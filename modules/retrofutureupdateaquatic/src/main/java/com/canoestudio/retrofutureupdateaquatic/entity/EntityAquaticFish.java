@@ -1,8 +1,11 @@
 package com.canoestudio.retrofutureupdateaquatic.entity;
 
+import java.util.Arrays;
+
 import com.canoestudio.retrofutureupdateaquatic.item.ItemFishBucket;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
 import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAIWanderUnderwater;
+import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import javax.annotation.Nullable;
 import net.minecraft.entity.EntityAgeable;
@@ -74,8 +77,9 @@ public class EntityAquaticFish extends EntityAnimal {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(this.fishType.getHealth());
-        this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(1.0D);
+        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
+            RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, this.fishType.getHealth()),
+            RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 1.0D)));
     }
 
     @Override

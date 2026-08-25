@@ -1,6 +1,9 @@
 package com.canoestudio.retrofutureupdateaquatic.entity;
 
+import java.util.Arrays;
+
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
+import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -47,7 +50,8 @@ public class EntityDrowned extends EntityZombie {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.23D);
+        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
+            RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 0.23D)));
     }
 
     @Override

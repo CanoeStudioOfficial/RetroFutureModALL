@@ -1,5 +1,7 @@
 package com.canoestudio.retrofutureupdateaquatic.entity;
 
+import java.util.Arrays;
+
 import com.canoestudio.retrofutureupdateaquatic.block.BlockTurtleEgg;
 import com.canoestudio.retrofutureupdateaquatic.block.ModBlocks;
 import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAITurtleGoHome;
@@ -8,6 +10,7 @@ import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAITurtleTempt;
 import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAITurtleWanderLand;
 import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAIWanderUnderwater;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
+import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import javax.annotation.Nullable;
 import net.minecraft.entity.EntityAgeable;
@@ -69,8 +72,9 @@ public class EntityTurtle extends EntityAnimal {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(30.0D);
-        this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.16D);
+        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
+            RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, 30.0D),
+            RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 0.16D)));
     }
 
     @Override

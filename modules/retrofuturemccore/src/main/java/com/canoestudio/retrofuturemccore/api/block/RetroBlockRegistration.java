@@ -1,6 +1,7 @@
 package com.canoestudio.retrofuturemccore.api.block;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import net.minecraft.block.Block;
@@ -21,6 +22,44 @@ public final class RetroBlockRegistration {
         registerBlock(registry, family.getBaseBlock(), registered);
         for (Block block : family.getVariants().values()) {
             registerBlock(registry, block, registered);
+        }
+    }
+
+    /**
+     * Registers a prepared list of blocks. This is useful for modules that
+     * collect their blocks while constructing content instead of using a
+     * {@link RetroBlockFamily}.
+     */
+    public static void registerBlocks(IForgeRegistry<Block> registry, List<Block> blocks) {
+        if (registry == null || blocks == null) {
+            return;
+        }
+        Set<Block> registered = new HashSet<Block>();
+        for (Block block : blocks) {
+            registerBlock(registry, block, registered);
+        }
+    }
+
+    public static void registerItems(IForgeRegistry<Item> registry, List<Item> items) {
+        if (registry == null || items == null) {
+            return;
+        }
+        Set<Item> registered = new HashSet<Item>();
+        for (Item item : items) {
+            registerItem(registry, item, registered);
+        }
+    }
+
+    public static void registerBlockItems(IForgeRegistry<Item> registry, List<Item> items) {
+        registerItems(registry, items);
+    }
+
+    private static void registerItem(IForgeRegistry<Item> registry, Item item, Set<Item> registered) {
+        if (registry == null || item == null || registered == null) {
+            return;
+        }
+        if (item.getRegistryName() != null && registered.add(item)) {
+            registry.register(item);
         }
     }
 

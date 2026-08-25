@@ -1,5 +1,7 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf;
 
+import java.util.Arrays;
+
 import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
@@ -443,7 +445,8 @@ public class BigDripleaf extends Block implements IGrowable, RetroWaterloggedBlo
 
     protected BlockStateContainer createBlockState()
     {
-        return RetroWaterlogging.createWaterMaterialStateContainer(this, FACING, TILT, WATERLOGGED);
+        return RetroWaterlogging.createWaterMaterialStateContainer(this,
+                Arrays.<IProperty<?>>asList(FACING, TILT, WATERLOGGED));
     }
 
     @Override

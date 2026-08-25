@@ -1,8 +1,11 @@
 package com.canoestudio.retrofuturelushcave.contents.mobs.goat;
 
+import java.util.Arrays;
+
 import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.contents.items.ItemGoatHorn;
 import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
+import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.SharedMonsterAttributes;
@@ -78,9 +81,10 @@ public class EntityGoat extends EntityAnimal {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(10.0D);
-        getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.20000000298023224D);
-        getEntityAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE).setBaseValue(0.25D);
+        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
+                RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, 10.0D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 0.20000000298023224D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.KNOCKBACK_RESISTANCE, 0.25D)));
     }
 
     @Override

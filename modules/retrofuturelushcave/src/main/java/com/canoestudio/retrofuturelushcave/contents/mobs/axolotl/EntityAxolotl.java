@@ -1,6 +1,9 @@
 package com.canoestudio.retrofuturelushcave.contents.mobs.axolotl;
 
+import java.util.Arrays;
+
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
 import net.minecraft.block.material.Material;
 import com.canoestudio.retrofuturemccore.api.tag.RetroTagRegistry;
 import com.canoestudio.retrofuturemccore.api.tag.RetroTags;
@@ -9,7 +12,6 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.IEntityLivingData;
 import net.minecraft.entity.MoverType;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.passive.EntityWaterMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -82,15 +84,11 @@ public class EntityAxolotl extends EntityWaterMob {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(14.0D);
-        getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(1.0D);
-        getAttackDamageAttribute().setBaseValue(2.0D);
-        getEntityAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE).setBaseValue(0.35D);
-    }
-
-    private IAttributeInstance getAttackDamageAttribute() {
-        IAttributeInstance attribute = getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
-        return attribute != null ? attribute : getAttributeMap().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
+        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
+                RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, 14.0D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 1.0D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.ATTACK_DAMAGE, 2.0D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.KNOCKBACK_RESISTANCE, 0.35D)));
     }
 
     @Override
@@ -551,7 +549,9 @@ public class EntityAxolotl extends EntityWaterMob {
 
     @Override
     public boolean attackEntityAsMob(Entity entityIn) {
-        boolean attacked = entityIn.attackEntityFrom(DamageSource.causeMobDamage(this), (float)getAttackDamageAttribute().getAttributeValue());
+        boolean attacked = entityIn.attackEntityFrom(DamageSource.causeMobDamage(this),
+                (float)RetroEntityAttributes.getOrRegister(this, SharedMonsterAttributes.ATTACK_DAMAGE)
+                        .getAttributeValue());
         if (attacked) {
             playSound(ModSoundHandler.ENTITY_AXOLOTL_ATTACK, 1.0F, 1.0F);
         }
