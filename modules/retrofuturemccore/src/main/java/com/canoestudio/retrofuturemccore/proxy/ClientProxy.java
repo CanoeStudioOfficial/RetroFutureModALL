@@ -2,6 +2,7 @@ package com.canoestudio.retrofuturemccore.proxy;
 
 import com.canoestudio.retrofuturemccore.api.component.IRetroEntityComponents;
 import com.canoestudio.retrofuturemccore.client.RetroZoomClientHandler;
+import com.canoestudio.retrofuturemccore.client.WaterloggedPlantModelHandler;
 import com.canoestudio.retrofuturemccore.internal.component.RetroEntityComponentsCapability;
 import com.canoestudio.retrofuturemccore.network.message.MessageSyncEntityComponent;
 import net.minecraft.client.Minecraft;
@@ -17,6 +18,7 @@ public class ClientProxy extends CommonProxy {
     public void preInit(FMLPreInitializationEvent event) {
         super.preInit(event);
         MinecraftForge.EVENT_BUS.register(new RetroZoomClientHandler());
+        MinecraftForge.EVENT_BUS.register(new WaterloggedPlantModelHandler());
     }
 
     @Override

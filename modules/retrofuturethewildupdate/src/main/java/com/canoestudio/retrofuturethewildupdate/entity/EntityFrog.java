@@ -1,5 +1,7 @@
 package com.canoestudio.retrofuturethewildupdate.entity;
 
+import java.util.Arrays;
+
 import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import com.canoestudio.retrofuturethewildupdate.block.ModBlocks;
@@ -82,10 +84,11 @@ public class EntityFrog extends EntityAnimal {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MAX_HEALTH, 10.0D);
-        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MOVEMENT_SPEED, 0.95D);
-        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.ATTACK_DAMAGE, 2.0D);
-        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.FOLLOW_RANGE, 16.0D);
+        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
+                RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, 10.0D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 0.95D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.ATTACK_DAMAGE, 2.0D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.FOLLOW_RANGE, 16.0D)));
     }
 
     @Override

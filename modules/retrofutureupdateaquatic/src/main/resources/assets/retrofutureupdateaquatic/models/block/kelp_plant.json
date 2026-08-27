@@ -1,0 +1,6 @@
+{
+  "parent": "block/cross",
+  "textures": {
+    "cross": "retrofutureupdateaquatic:blocks/kelp_plant"
+  }
+}

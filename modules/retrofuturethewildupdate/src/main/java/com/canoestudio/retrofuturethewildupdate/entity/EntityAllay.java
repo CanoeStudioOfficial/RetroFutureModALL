@@ -2,6 +2,7 @@ package com.canoestudio.retrofuturethewildupdate.entity;
 
 import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
 import com.canoestudio.retrofuturethewildupdate.sounds.ModSounds;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import javax.annotation.Nullable;
@@ -64,9 +65,10 @@ public class EntityAllay extends EntityLiving implements EntityFlying {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MAX_HEALTH, 20.0D);
-        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MOVEMENT_SPEED, 0.35D);
-        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.FOLLOW_RANGE, 32.0D);
+        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
+                RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, 20.0D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 0.35D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.FOLLOW_RANGE, 32.0D)));
     }
 
     @Override

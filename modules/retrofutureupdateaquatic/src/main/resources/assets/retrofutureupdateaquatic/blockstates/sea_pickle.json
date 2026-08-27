@@ -1,1 +1,52 @@
-{"variants":{"pickles=1":{"model":"retrofutureupdateaquatic:sea_pickle"},"pickles=2":{"model":"retrofutureupdateaquatic:two_sea_pickles"},"pickles=3":{"model":"retrofutureupdateaquatic:three_sea_pickles"},"pickles=4":{"model":"retrofutureupdateaquatic:four_sea_pickles"}}}
+{
+  "variants": {
+    "pickles=1,waterlogged=false": [
+      { "model": "retrofutureupdateaquatic:dead_sea_pickle" },
+      { "model": "retrofutureupdateaquatic:dead_sea_pickle", "y": 90 },
+      { "model": "retrofutureupdateaquatic:dead_sea_pickle", "y": 180 },
+      { "model": "retrofutureupdateaquatic:dead_sea_pickle", "y": 270 }
+    ],
+    "pickles=1,waterlogged=true": [
+      { "model": "retrofutureupdateaquatic:sea_pickle" },
+      { "model": "retrofutureupdateaquatic:sea_pickle", "y": 90 },
+      { "model": "retrofutureupdateaquatic:sea_pickle", "y": 180 },
+      { "model": "retrofutureupdateaquatic:sea_pickle", "y": 270 }
+    ],
+    "pickles=2,waterlogged=false": [
+      { "model": "retrofutureupdateaquatic:two_dead_sea_pickles" },
+      { "model": "retrofutureupdateaquatic:two_dead_sea_pickles", "y": 90 },
+      { "model": "retrofutureupdateaquatic:two_dead_sea_pickles", "y": 180 },
+      { "model": "retrofutureupdateaquatic:two_dead_sea_pickles", "y": 270 }
+    ],
+    "pickles=2,waterlogged=true": [
+      { "model": "retrofutureupdateaquatic:two_sea_pickles" },
+      { "model": "retrofutureupdateaquatic:two_sea_pickles", "y": 90 },
+      { "model": "retrofutureupdateaquatic:two_sea_pickles", "y": 180 },
+      { "model": "retrofutureupdateaquatic:two_sea_pickles", "y": 270 }
+    ],
+    "pickles=3,waterlogged=false": [
+      { "model": "retrofutureupdateaquatic:three_dead_sea_pickles" },
+      { "model": "retrofutureupdateaquatic:three_dead_sea_pickles", "y": 90 },
+      { "model": "retrofutureupdateaquatic:three_dead_sea_pickles", "y": 180 },
+      { "model": "retrofutureupdateaquatic:three_dead_sea_pickles", "y": 270 }
+    ],
+    "pickles=3,waterlogged=true": [
+      { "model": "retrofutureupdateaquatic:three_sea_pickles" },
+      { "model": "retrofutureupdateaquatic:three_sea_pickles", "y": 90 },
+      { "model": "retrofutureupdateaquatic:three_sea_pickles", "y": 180 },
+      { "model": "retrofutureupdateaquatic:three_sea_pickles", "y": 270 }
+    ],
+    "pickles=4,waterlogged=false": [
+      { "model": "retrofutureupdateaquatic:four_dead_sea_pickles" },
+      { "model": "retrofutureupdateaquatic:four_dead_sea_pickles", "y": 90 },
+      { "model": "retrofutureupdateaquatic:four_dead_sea_pickles", "y": 180 },
+      { "model": "retrofutureupdateaquatic:four_dead_sea_pickles", "y": 270 }
+    ],
+    "pickles=4,waterlogged=true": [
+      { "model": "retrofutureupdateaquatic:four_sea_pickles" },
+      { "model": "retrofutureupdateaquatic:four_sea_pickles", "y": 90 },
+      { "model": "retrofutureupdateaquatic:four_sea_pickles", "y": 180 },
+      { "model": "retrofutureupdateaquatic:four_sea_pickles", "y": 270 }
+    ]
+  }
+}

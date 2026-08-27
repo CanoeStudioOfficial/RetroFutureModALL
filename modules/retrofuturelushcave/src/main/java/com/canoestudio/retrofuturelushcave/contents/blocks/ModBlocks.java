@@ -114,12 +114,23 @@ public class ModBlocks {
     public static final Block SMALL_AMETHYST_BUD = new AmethystClusterBlock("Small_Amethyst_Bud", 3, 4, false);
 
     public static final Block TINTED_GLASS = new GlassCreator("Tinted_Glass", 0.3F);
-    public static final Block GLOW_LICHEN = new GlowLichenBlock();
+    public static final GlowLichenBlock GLOW_LICHEN = new GlowLichenBlock("Glow_Lichen", 0);
+    public static final GlowLichenBlock[] GLOW_LICHEN_VARIANTS = new GlowLichenBlock[] {
+            GLOW_LICHEN,
+            new GlowLichenBlock("Glow_Lichen_1", 1),
+            new GlowLichenBlock("Glow_Lichen_2", 2),
+            new GlowLichenBlock("Glow_Lichen_3", 3),
+            new GlowLichenBlock("Glow_Lichen_4", 4),
+            new GlowLichenBlock("Glow_Lichen_5", 5),
+            new GlowLichenBlock("Glow_Lichen_6", 6),
+            new GlowLichenBlock("Glow_Lichen_7", 7)
+    };
     public static final Block POWDER_SNOW = new PowderSnowBlock();
     public static final Block LIGHTNING_ROD = new LightningRodBlock("Lightning_Rod");
 
     public static final Block SMALL_DRIPLEAF = new SmallDripleaf();
-    public static final Block BIG_DRIPLEAF = new BigDripleaf();
+    public static final BigDripleaf BIG_DRIPLEAF = new BigDripleaf();
+    public static final BigDripleaf BIG_DRIPLEAF_WATERLOGGED = new BigDripleaf(true);
     public static final Block DRIPLEAF_STEM = new DripleafStem();
 
     public static final Block CAVE_VINE_PLANT = new CaveVinePlant("Cave_Vines_Plant");

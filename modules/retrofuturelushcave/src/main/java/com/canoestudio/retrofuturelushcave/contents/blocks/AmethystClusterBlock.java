@@ -1,15 +1,21 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
+import java.util.Arrays;
+
 import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
+import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -26,7 +32,8 @@ import java.util.Random;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
-public class AmethystClusterBlock extends FluidloggableDirectionalBlock {
+public class AmethystClusterBlock extends FluidloggableDirectionalBlock implements RetroWaterloggedBlock {
+    public static final PropertyBool WATERLOGGED = PropertyBool.create("waterlogged");
     private final int height;
     private final int offset;
     private final boolean dropsShard;
@@ -44,7 +51,9 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock {
         setSoundType(SoundType.GLASS);
         setCreativeTab(CREATIVE_TABS);
         setLightLevel(dropsShard ? 5.0F / 15.0F : 1.0F / 15.0F);
-        setDefaultState(blockState.getBaseState().withProperty(FACING, EnumFacing.UP));
+        setDefaultState(RetroWaterlogging.withStillWaterLevel(blockState.getBaseState()
+                .withProperty(FACING, EnumFacing.UP)
+                .withProperty(WATERLOGGED, false)));
 
         ModBlocks.BLOCKS.add(this);
         ModBlocks.BLOCKITEMS.add(new ItemBlock(this).setRegistryName(name.toLowerCase()));
@@ -62,16 +71,63 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock {
 
     @Override
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer) {
-        return getDefaultState().withProperty(FACING, facing);
+        return getDefaultState().withProperty(FACING, facing)
+                .withProperty(WATERLOGGED, RetroWaterlogging.isWater(worldIn, pos));
+    }
+
+    @Override
+    public IBlockState getExtendedState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
+        return RetroWaterlogging.extendedState(state, worldIn, pos);
+    }
+
+    public static boolean isWaterlogged(IBlockState state) {
+        return state.getBlock() instanceof AmethystClusterBlock && state.getValue(WATERLOGGED);
+    }
+
+    @Override
+    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
+        super.onBlockAdded(worldIn, pos, state);
+        RetroWaterlogging.onBlockAdded(worldIn, pos, state, WATERLOGGED);
     }
 
     @Override
     public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
         if (!canBlockStay(worldIn, pos, state)) {
             dropBlockAsItem(worldIn, pos, state, 0);
+            restoreFluidOrAir(worldIn, pos, state, 3);
             return;
         }
         super.neighborChanged(state, worldIn, pos, blockIn, fromPos);
+    }
+
+    @Override
+    public void updateTick(World world, BlockPos pos, IBlockState state, Random random) {
+        if (!world.isRemote && isWaterlogged(state)) {
+            com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid.updateTick(
+                    world, pos, state);
+        }
+    }
+
+    @Override
+    public boolean removedByPlayer(IBlockState state, World world, BlockPos pos,
+                                   net.minecraft.entity.player.EntityPlayer player,
+                                   boolean willHarvest) {
+        onBlockHarvested(world, pos, state, player);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, world.isRemote ? 11 : 3);
+        if (!RetroWaterlogging.isWaterlogged(state, world, pos, WATERLOGGED)) {
+            world.setBlockToAir(pos);
+        }
+        return true;
+    }
+
+    @Override
+    public void onBlockExploded(World world, BlockPos pos, net.minecraft.world.Explosion explosion) {
+        IBlockState state = world.getBlockState(pos);
+        boolean waterlogged = RetroWaterlogging.isWaterlogged(state, world, pos, WATERLOGGED);
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, 3);
+        if (!waterlogged) {
+            world.setBlockToAir(pos);
+        }
     }
 
     private boolean canBlockStay(World world, BlockPos pos, IBlockState state) {
@@ -82,6 +138,10 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock {
         BlockPos supportPos = pos.offset(facing.getOpposite());
         IBlockState support = world.getBlockState(supportPos);
         return support.isSideSolid(world, supportPos, facing);
+    }
+
+    private void restoreFluidOrAir(World world, BlockPos pos, IBlockState state, int flags) {
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, state, flags);
     }
 
     @Override
@@ -110,7 +170,7 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock {
 
     @Override
     public AxisAlignedBB getCollisionBoundingBox(IBlockState blockState, IBlockAccess worldIn, BlockPos pos) {
-        return NULL_AABB;
+        return getBoundingBox(blockState, worldIn, pos);
     }
 
     @Override
@@ -159,16 +219,54 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock {
 
     @Override
     public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(FACING, EnumFacing.byIndex(meta & 7));
+        return getDefaultState().withProperty(FACING, EnumFacing.byIndex(meta & 7))
+                .withProperty(WATERLOGGED, (meta & 8) != 0);
     }
 
     @Override
     public int getMetaFromState(IBlockState state) {
-        return state.getValue(FACING).getIndex();
+        int meta = state.getValue(FACING).getIndex();
+        return state.getValue(WATERLOGGED) ? meta | 8 : meta;
     }
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, new IProperty[] {FACING});
+        return RetroWaterlogging.createWaterMaterialStateContainer(this,
+                Arrays.<IProperty<?>>asList(FACING, WATERLOGGED));
+    }
+
+    @Override
+    public Material getMaterial(IBlockState state) {
+        return getWaterloggedMaterial(state, super.getMaterial(state));
+    }
+
+    @Override
+    public PropertyBool getWaterloggedProperty() {
+        return WATERLOGGED;
+    }
+
+    @Override
+    public net.minecraft.util.math.Vec3d modifyAcceleration(World world, BlockPos pos,
+                                                               net.minecraft.entity.Entity entity,
+                                                               net.minecraft.util.math.Vec3d motion) {
+        return isWaterlogged(world.getBlockState(pos))
+                ? net.minecraft.init.Blocks.WATER.modifyAcceleration(world, pos, entity, motion)
+                : motion;
+    }
+
+    @Override
+    public boolean canRenderInLayer(IBlockState state, BlockRenderLayer layer) {
+        return layer == BlockRenderLayer.CUTOUT
+                || isWaterlogged(state) && layer == BlockRenderLayer.TRANSLUCENT;
+    }
+
+    @Override
+    public boolean shouldSideBeRendered(IBlockState state, IBlockAccess world, BlockPos pos,
+                                        EnumFacing side) {
+        if (isWaterlogged(state)
+                && world.getBlockState(pos.offset(side)).getMaterial() == Material.WATER) {
+            return false;
+        }
+        return super.shouldSideBeRendered(state, world, pos, side);
     }
 }

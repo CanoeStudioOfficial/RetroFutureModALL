@@ -4,6 +4,9 @@ import com.canoestudio.retrofuturemccore.api.client.model.RetroModelRegistry;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
 import com.canoestudio.retrofutureupdateaquatic.block.ModBlocks;
+import com.canoestudio.retrofutureupdateaquatic.block.BlockCoralFan;
+import com.canoestudio.retrofutureupdateaquatic.block.BlockCoralPlant;
+import com.canoestudio.retrofutureupdateaquatic.block.BlockConduit;
 import com.canoestudio.retrofutureupdateaquatic.client.render.RenderAquaticFish;
 import com.canoestudio.retrofutureupdateaquatic.client.render.RenderDolphin;
 import com.canoestudio.retrofutureupdateaquatic.client.render.RenderDrowned;
@@ -19,6 +22,7 @@ import com.canoestudio.retrofutureupdateaquatic.entity.EntityTurtle;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
 import com.canoestudio.retrofutureupdateaquatic.world.biome.AquaticBiomes;
 import net.minecraft.client.Minecraft;
+import net.minecraft.block.BlockLiquid;
 import net.minecraft.client.renderer.entity.RenderSnowball;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -51,8 +55,7 @@ public class ClientProxy extends CommonProxy {
         }
 
         Biome biome = entity.world.getBiome(eyePos);
-        float density = AquaticBiomes.isWarm(biome) ? 0.045F
-            : AquaticBiomes.isFrozen(biome) ? 0.075F : 0.06F;
+        float density = AquaticBiomes.isFrozen(biome) ? 0.075F : 0.06F;
         event.setDensity(density);
         event.setCanceled(true);
     }
@@ -77,8 +80,28 @@ public class ClientProxy extends CommonProxy {
                 Minecraft.getMinecraft().getRenderItem()));
     }
 
+    private static void registerWaterStateMappers() {
+        RetroModelRegistry.ignoreStateProperties(ModBlocks.SEAGRASS, BlockLiquid.LEVEL);
+        RetroModelRegistry.ignoreStateProperties(ModBlocks.KELP, BlockLiquid.LEVEL);
+        RetroModelRegistry.ignoreStateProperties(ModBlocks.SEA_PICKLE,
+            BlockLiquid.LEVEL);
+        RetroModelRegistry.ignoreStateProperties(ModBlocks.CONDUIT,
+            BlockLiquid.LEVEL, BlockConduit.WATERLOGGED);
+        for (ModBlocks.CoralSet coral : ModBlocks.corals()) {
+            RetroModelRegistry.ignoreStateProperties(coral.deadPlant,
+                BlockLiquid.LEVEL, BlockCoralPlant.WATERLOGGED);
+            RetroModelRegistry.ignoreStateProperties(coral.livePlant,
+                BlockLiquid.LEVEL, BlockCoralPlant.WATERLOGGED);
+            RetroModelRegistry.ignoreStateProperties(coral.deadFan,
+                BlockLiquid.LEVEL, BlockCoralFan.WATERLOGGED);
+            RetroModelRegistry.ignoreStateProperties(coral.liveFan,
+                BlockLiquid.LEVEL, BlockCoralFan.WATERLOGGED);
+        }
+    }
+
     @SubscribeEvent
     public static void registerModels(ModelRegistryEvent event) {
+        registerWaterStateMappers();
         RetroModelRegistry.registerItems(
             ModItems.DRIED_KELP,
             ModItems.NAUTILUS_SHELL,

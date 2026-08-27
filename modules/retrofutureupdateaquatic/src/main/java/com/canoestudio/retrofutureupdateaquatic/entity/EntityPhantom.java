@@ -1,10 +1,13 @@
 package com.canoestudio.retrofutureupdateaquatic.entity;
 
+import java.util.Arrays;
+
 import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAIPhantomCircle;
 import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAIPhantomSwoop;
 import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAIPhantomTarget;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
 import com.canoestudio.retrofutureupdateaquatic.sounds.ModSounds;
+import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
 import javax.annotation.Nullable;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityFlying;
@@ -75,11 +78,11 @@ public class EntityPhantom extends EntityFlying implements IMob {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        this.getAttributeMap().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
-        this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(20.0D);
-        this.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).setBaseValue(6.0D);
-        this.getEntityAttribute(SharedMonsterAttributes.FOLLOW_RANGE).setBaseValue(64.0D);
-        this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.35D);
+        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
+                RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, 20.0D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.ATTACK_DAMAGE, 6.0D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.FOLLOW_RANGE, 64.0D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 0.35D)));
         this.setPhantomSize(0);
     }
 

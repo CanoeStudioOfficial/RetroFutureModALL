@@ -33,7 +33,7 @@ public class BuffetWorldType extends WorldType {
             name = name.substring("biome=".length()).trim();
         }
         if (name.isEmpty()) {
-            return AquaticBiomes.WARM_OCEAN;
+            return Biomes.OCEAN;
         }
         try {
             Biome biome = Biome.REGISTRY.getObject(new ResourceLocation(name));

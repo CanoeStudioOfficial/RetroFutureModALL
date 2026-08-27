@@ -77,12 +77,6 @@ public class EntityThrownTrident extends EntityArrow {
             }
         }
 
-        if (!this.world.isRemote && !this.returning && (this.dealtDamage || this.inGround)
-                && this.ticksExisted > 10 && getLoyaltyLevel() <= 0) {
-            dropTrident();
-            return;
-        }
-
         if (this.tridentStack.isEmpty() || this.tridentStack.getItemDamage() >= this.tridentStack.getMaxDamage()) {
             this.setDead();
             return;

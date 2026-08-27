@@ -17,6 +17,7 @@ import net.minecraft.item.EnumAction;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.entity.projectile.EntityArrow;
 import net.minecraft.stats.StatList;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.DamageSource;
@@ -88,6 +89,9 @@ public class ItemTrident extends Item {
             }
             EntityThrownTrident trident = new EntityThrownTrident(worldIn, player, thrownStack);
             trident.shoot(player, player.rotationPitch, player.rotationYaw, 0.0F, 2.5F, 1.0F);
+            if (player.capabilities.isCreativeMode) {
+                trident.pickupStatus = EntityArrow.PickupStatus.CREATIVE_ONLY;
+            }
             worldIn.spawnEntity(trident);
             if (!player.capabilities.isCreativeMode) {
                 stack.shrink(1);

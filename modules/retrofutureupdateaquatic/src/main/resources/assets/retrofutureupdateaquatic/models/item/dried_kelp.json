@@ -1,1 +1,6 @@
-{"parent":"item/generated","textures":{"layer0":"retrofutureupdateaquatic:items/dried_kelp"}}
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "retrofutureupdateaquatic:items/dried_kelp"
+  }
+}

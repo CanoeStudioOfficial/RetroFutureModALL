@@ -1,1 +1,6 @@
-{"parent":"item/generated","textures":{"layer0":"retrofutureupdateaquatic:items/sea_pickle"}}
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "retrofutureupdateaquatic:items/sea_pickle"
+  }
+}

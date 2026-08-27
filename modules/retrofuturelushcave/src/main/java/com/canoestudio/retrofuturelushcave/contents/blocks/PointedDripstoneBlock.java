@@ -1,10 +1,10 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import com.canoestudio.retrofuturelushcave.utils.FluidloggedCompat;
-import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidState;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidloggableBlock;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import com.google.common.base.Predicate;
-import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -19,14 +19,15 @@ import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
-import net.minecraft.util.*;
+import net.minecraft.util.BlockRenderLayer;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.IStringSerializable;
+import net.minecraft.util.Mirror;
+import net.minecraft.util.Rotation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -36,13 +37,7 @@ import java.util.Random;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
-@Optional.Interface(iface = "git.jbredwards.fluidlogged_api.api.block.IFluidloggable", modid = "fluidlogged_api")
-public class PointedDripstoneBlock extends Block implements IFluidloggable {
-
-    @Override
-    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, Fluid fluid) {
-        return FluidloggedSupport.isWater(fluid);
-    }
+public class PointedDripstoneBlock extends Block implements RetroFluidloggableBlock {
     public static final PropertyDirection VERTICAL_DIRECTION = PropertyDirection.create("vertical_direction", new Predicate<EnumFacing>() {
         @Override
         public boolean apply(EnumFacing input) {
@@ -382,24 +377,27 @@ public class PointedDripstoneBlock extends Block implements IFluidloggable {
     }
 
     private boolean isAirOrWater(World world, BlockPos pos) {
-        IBlockState state = world.getBlockState(pos);
-        if (!Loader.isModLoaded("fluidlogged_api")) {
-            return state.getBlock().isReplaceable(world, pos) || state.getBlock() == Blocks.AIR;
-        }
-        return FluidloggedCompat.isWater(world, pos) || state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.FLOWING_WATER;
+        return RetroWaterlogging.canPlaceIntoAirOrWater(world, pos);
     }
 
     private void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState, int flags) {
-        world.setBlockState(pos, newState, flags);
-        if (Loader.isModLoaded("fluidlogged_api")) {
-            FluidloggedCompat.setFluidloggableBlock(world, pos, newState, flags);
-        }
+        RetroWaterlogging.setFluidloggableBlock(world, pos, newState, flags);
     }
 
     private void setBlockStateKeepingFluid(World world, BlockPos pos, int flags) {
-        if (Loader.isModLoaded("fluidlogged_api")) {
-            FluidloggedCompat.restoreFluidOrAir(world, pos, world.getBlockState(pos), flags);
-        }
+        RetroWaterlogging.restoreContainedFluidOrAir(world, pos, world.getBlockState(pos), flags);
+    }
+
+    private boolean hasWaterFluid(World world, BlockPos pos) {
+        return RetroWaterlogging.hasWaterFluid(world, pos);
+    }
+
+    private RetroFluidState getWaterFluidState(World world, BlockPos pos) {
+        return RetroWaterlogging.getWaterFluidState(world, pos);
+    }
+
+    private void scheduleFluidTick(World world, BlockPos pos, RetroFluidState fluidState) {
+        RetroWaterlogging.scheduleFluidTick(world, pos, fluidState);
     }
 
     @Override

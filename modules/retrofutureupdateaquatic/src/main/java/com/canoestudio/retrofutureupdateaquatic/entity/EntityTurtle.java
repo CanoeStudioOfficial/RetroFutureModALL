@@ -1,16 +1,27 @@
 package com.canoestudio.retrofutureupdateaquatic.entity;
 
+import java.util.Arrays;
+
 import com.canoestudio.retrofutureupdateaquatic.block.BlockTurtleEgg;
 import com.canoestudio.retrofutureupdateaquatic.block.ModBlocks;
+import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAITurtleGoHome;
+import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAITurtleMate;
+import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAITurtleTempt;
+import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAITurtleWanderLand;
+import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAIWanderUnderwater;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
+import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import javax.annotation.Nullable;
 import net.minecraft.entity.EntityAgeable;
 import net.minecraft.entity.IEntityLivingData;
-import net.minecraft.entity.MoverType;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.passive.EntityAnimal;
+import net.minecraft.entity.ai.EntityAIFollowParent;
+import net.minecraft.entity.ai.EntityAILookIdle;
+import net.minecraft.entity.ai.EntityAIPanic;
+import net.minecraft.entity.ai.EntityAIWatchClosest;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Item;
@@ -23,6 +34,9 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.pathfinding.PathNavigateGround;
+import net.minecraft.pathfinding.PathNavigateSwimmer;
+import net.minecraft.pathfinding.PathNodeType;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
 
@@ -33,15 +47,19 @@ public class EntityTurtle extends EntityAnimal {
     private static final DataParameter<Boolean> HAS_EGG =
         EntityDataManager.createKey(EntityTurtle.class, DataSerializers.BOOLEAN);
 
-    @Nullable
-    private BlockPos swimTarget;
-    private int targetCooldown;
     private int layEggCooldown;
+    private final PathNavigateSwimmer waterNavigator;
+    private final PathNavigateGround groundNavigator;
 
     public EntityTurtle(World worldIn) {
         super(worldIn);
-        this.setSize(1.2F, 0.4F);
+        this.setSize(1.4F, 0.55F);
         this.stepHeight = 1.0F;
+        this.setPathPriority(PathNodeType.WALKABLE, 1.0F);
+        this.setPathPriority(PathNodeType.WATER, 0.0F);
+        this.waterNavigator = new PathNavigateSwimmer(this, worldIn);
+        this.groundNavigator = new PathNavigateGround(this, worldIn);
+        this.navigator = this.groundNavigator;
     }
 
     @Override
@@ -54,14 +72,29 @@ public class EntityTurtle extends EntityAnimal {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        this.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(30.0D);
-        this.getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(0.16D);
+        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
+            RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, 30.0D),
+            RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 0.16D)));
     }
 
     @Override
     public IEntityLivingData onInitialSpawn(DifficultyInstance difficulty, @Nullable IEntityLivingData livingdata) {
         this.setHomePos(new BlockPos(this));
         return super.onInitialSpawn(difficulty, livingdata);
+    }
+
+    @Override
+    protected void initEntityAI() {
+        this.tasks.addTask(1, new EntityAITurtleMate(this));
+        this.tasks.addTask(2, new EntityAITurtleGoHome(this, 1.0D));
+        this.tasks.addTask(3, new EntityAIPanic(this, 1.1D));
+        this.tasks.addTask(3, new EntityAIFollowParent(this, 1.1D));
+        this.tasks.addTask(3, new EntityAITurtleTempt(this, 1.1D,
+            Item.getItemFromBlock(ModBlocks.SEAGRASS)));
+        this.tasks.addTask(5, new EntityAITurtleWanderLand(this, 1.0D, 40));
+        this.tasks.addTask(5, new EntityAIWanderUnderwater(this, 1.0D, 80, true));
+        this.tasks.addTask(6, new EntityAIWatchClosest(this, EntityPlayer.class, 6.0F));
+        this.tasks.addTask(6, new EntityAILookIdle(this));
     }
 
     public BlockPos getHomePos() {
@@ -80,6 +113,10 @@ public class EntityTurtle extends EntityAnimal {
         this.dataManager.set(HAS_EGG, hasEgg);
     }
 
+    public void setLayEggCooldown(int ticks) {
+        this.layEggCooldown = Math.max(0, ticks);
+    }
+
     @Override
     public boolean isBreedingItem(ItemStack stack) {
         return stack.getItem() == net.minecraft.item.Item.getItemFromBlock(ModBlocks.SEAGRASS);
@@ -92,50 +129,15 @@ public class EntityTurtle extends EntityAnimal {
 
     @Override
     public void onLivingUpdate() {
-        super.onLivingUpdate();
-        if (FluidloggedSupport.isEntityInWater(this)) {
-            updateWaterMovement();
-        } else {
-            updateLandMovement();
+        if (!this.world.isRemote) {
+            this.navigator = FluidloggedSupport.isEntityInWater(this)
+                ? this.waterNavigator : this.groundNavigator;
         }
+        super.onLivingUpdate();
         if (!this.world.isRemote && this.hasEgg()) {
             updateEggLaying();
-        } else if (!this.world.isRemote && !this.isChild() && !this.hasEgg() && this.isInLove()) {
-            tryMateAndCarryEgg();
         }
         updateRotation();
-    }
-
-    private void updateWaterMovement() {
-        if (this.targetCooldown > 0) {
-            this.targetCooldown--;
-        }
-        BlockPos target = this.hasEgg() ? this.getHomePos() : this.swimTarget;
-        if (!this.hasEgg() && (target == null || this.targetCooldown <= 0 || !isWater(target)
-                || distanceSqToCenter(target) < 1.4D)) {
-            this.swimTarget = findWaterTarget();
-            this.targetCooldown = 40 + this.rand.nextInt(80);
-            target = this.swimTarget;
-        }
-        if (target != null) {
-            moveToward(target.getX() + 0.5D, target.getY() + 0.25D, target.getZ() + 0.5D,
-                this.hasEgg() ? 0.065D : 0.045D, 0.16D);
-        }
-        this.motionX *= 0.9D;
-        this.motionY *= 0.9D;
-        this.motionZ *= 0.9D;
-    }
-
-    private void updateLandMovement() {
-        if (this.hasEgg()) {
-            BlockPos home = this.getHomePos();
-            moveToward(home.getX() + 0.5D, home.getY(), home.getZ() + 0.5D, 0.025D, 0.08D);
-        } else if (this.onGround && this.rand.nextInt(80) == 0) {
-            this.motionX += (this.rand.nextDouble() - 0.5D) * 0.06D;
-            this.motionZ += (this.rand.nextDouble() - 0.5D) * 0.06D;
-        }
-        this.motionX *= 0.65D;
-        this.motionZ *= 0.65D;
     }
 
     private void updateEggLaying() {
@@ -153,61 +155,11 @@ public class EntityTurtle extends EntityAnimal {
         }
     }
 
-    /**
-     * Turtles do not create a baby entity when bred.  The first adult in love
-     * that finds a compatible partner becomes the egg carrier and returns to
-     * its home beach, matching the 1.13 turtle breeding flow.
-     */
-    private void tryMateAndCarryEgg() {
-        for (EntityTurtle other : this.world.getEntitiesWithinAABB(EntityTurtle.class,
-                this.getEntityBoundingBox().grow(8.0D))) {
-            if (other == this || other.isChild() || other.hasEgg() || !other.isInLove()
-                    || !this.canMateWith(other)) {
-                continue;
-            }
-            this.resetInLove();
-            other.resetInLove();
-            this.setGrowingAge(6000);
-            other.setGrowingAge(6000);
-            this.setHasEgg(true);
-            this.layEggCooldown = 100;
-            return;
-        }
-    }
-
-    @Nullable
-    private BlockPos findWaterTarget() {
-        BlockPos origin = new BlockPos(this);
-        for (int i = 0; i < 18; i++) {
-            BlockPos candidate = origin.add(this.rand.nextInt(15) - 7, this.rand.nextInt(5) - 2,
-                this.rand.nextInt(15) - 7);
-            if (isWater(candidate)) {
-                return candidate;
-            }
-        }
-        return isWater(origin) ? origin : null;
-    }
-
-    private boolean isWater(BlockPos pos) {
-        return this.world.isBlockLoaded(pos) && FluidloggedSupport.isWater(this.world, pos);
-    }
-
-    private void moveToward(double x, double y, double z, double speed, double inertia) {
-        double dx = x - this.posX;
-        double dy = y - this.posY;
-        double dz = z - this.posZ;
-        double distance = MathHelper.sqrt(dx * dx + dy * dy + dz * dz);
-        if (distance > 0.0001D) {
-            this.motionX += (dx / distance * speed - this.motionX) * inertia;
-            this.motionY += (dy / distance * speed - this.motionY) * inertia;
-            this.motionZ += (dz / distance * speed - this.motionZ) * inertia;
-        }
-    }
-
-    private double distanceSqToCenter(BlockPos pos) {
-        double dx = pos.getX() + 0.5D - this.posX;
-        double dy = pos.getY() + 0.5D - this.posY;
-        double dz = pos.getZ() + 0.5D - this.posZ;
+    public double getDistanceSqToHome() {
+        BlockPos home = this.getHomePos();
+        double dx = home.getX() + 0.5D - this.posX;
+        double dy = home.getY() + 0.5D - this.posY;
+        double dz = home.getZ() + 0.5D - this.posZ;
         return dx * dx + dy * dy + dz * dz;
     }
 
@@ -222,11 +174,14 @@ public class EntityTurtle extends EntityAnimal {
 
     @Override
     public void travel(float strafe, float vertical, float forward) {
-        this.move(MoverType.SELF, this.motionX, this.motionY, this.motionZ);
         if (FluidloggedSupport.isEntityInWater(this)) {
-            this.motionX *= 0.9D;
+            this.moveRelative(strafe, vertical, forward, 0.1F);
+            this.move(net.minecraft.entity.MoverType.SELF, this.motionX, this.motionY, this.motionZ);
+            this.motionX *= 0.8D;
             this.motionY *= 0.9D;
-            this.motionZ *= 0.9D;
+            this.motionZ *= 0.8D;
+        } else {
+            super.travel(strafe, vertical, forward);
         }
     }
 

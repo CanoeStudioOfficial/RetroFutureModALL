@@ -1,7 +1,8 @@
 package com.canoestudio.retrofutureupdateaquatic.block;
 
-import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
-import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
+import com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidloggableBlock;
 import com.canoestudio.retrofutureupdateaquatic.RetroFutureUpdateAquatic;
 import java.util.Random;
 import javax.annotation.Nullable;
@@ -26,9 +27,8 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraftforge.fluids.Fluid;
 
-public class BlockKelp extends BlockBush implements IGrowable, IFluidloggable {
+public class BlockKelp extends BlockBush implements IGrowable, RetroFluidloggableBlock {
 
     public static final PropertyInteger AGE = PropertyInteger.create("age", 0, 15);
     public static final PropertyBool TOP = PropertyBool.create("top");
@@ -38,14 +38,15 @@ public class BlockKelp extends BlockBush implements IGrowable, IFluidloggable {
         new AxisAlignedBB(0.125D, 0.0D, 0.125D, 0.875D, 0.5625D, 0.875D);
 
     public BlockKelp() {
-        super(Material.PLANTS);
+        super(Material.WATER);
         this.setRegistryName(RetroFutureUpdateAquatic.ID, "kelp");
         this.setTranslationKey(RetroFutureUpdateAquatic.ID + ".kelp");
         this.setSoundType(SoundType.PLANT);
         this.setTickRandomly(true);
         this.setCreativeTab(net.minecraft.creativetab.CreativeTabs.DECORATIONS);
-        this.setDefaultState(this.blockState.getBaseState()
-            .withProperty(AGE, 0).withProperty(TOP, true));
+        this.setDefaultState(RetroWaterlogging.withStillWaterLevel(this.blockState.getBaseState()
+            .withProperty(AGE, 0)
+            .withProperty(TOP, true)));
     }
 
     @Override
@@ -57,6 +58,11 @@ public class BlockKelp extends BlockBush implements IGrowable, IFluidloggable {
     @Override
     public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
         return state.withProperty(TOP, isTop(worldIn, pos));
+    }
+
+    @Override
+    public IBlockState getExtendedState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
+        return RetroWaterlogging.extendedState(state, worldIn, pos);
     }
 
     @Override
@@ -100,6 +106,25 @@ public class BlockKelp extends BlockBush implements IGrowable, IFluidloggable {
             return;
         }
         grow(worldIn, rand, pos, state);
+    }
+
+    @Override
+    public void onBlockAdded(World worldIn, BlockPos pos, IBlockState state) {
+        super.onBlockAdded(worldIn, pos, state);
+        WaterloggedPlantFluid.onBlockAdded(worldIn, pos, this);
+    }
+
+    @Override
+    public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn,
+            BlockPos fromPos) {
+        super.neighborChanged(state, worldIn, pos, blockIn, fromPos);
+        WaterloggedPlantFluid.onNeighborChanged(worldIn, pos, this);
+    }
+
+    @Override
+    public void updateTick(World worldIn, BlockPos pos, IBlockState state, Random rand) {
+        super.updateTick(worldIn, pos, state, rand);
+        WaterloggedPlantFluid.updateTick(worldIn, pos, state);
     }
 
     @Override
@@ -166,24 +191,12 @@ public class BlockKelp extends BlockBush implements IGrowable, IFluidloggable {
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, AGE, TOP);
+        return RetroWaterlogging.createWaterMaterialStateContainer(this, AGE, TOP);
     }
 
     @Override
     public boolean isReplaceable(IBlockAccess worldIn, BlockPos pos) {
         return false;
-    }
-
-    @Override
-    public boolean isFluidValid(IBlockState state, World world, BlockPos pos, Fluid fluid) {
-        return FluidloggedSupport.isWater(fluid);
-    }
-
-    @Override
-    public net.minecraft.util.EnumActionResult onFluidDrain(World world, BlockPos pos, IBlockState state, int flags) {
-        dropBlockAsItem(world, pos, state, 0);
-        world.setBlockState(pos, Blocks.AIR.getDefaultState(), flags);
-        return net.minecraft.util.EnumActionResult.SUCCESS;
     }
 
     @Override

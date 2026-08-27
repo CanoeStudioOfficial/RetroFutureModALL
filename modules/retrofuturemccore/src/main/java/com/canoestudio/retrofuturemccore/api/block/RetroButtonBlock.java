@@ -1,7 +1,6 @@
 package com.canoestudio.retrofuturemccore.api.block;
 
-import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
-import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidloggableBlock;
 import javax.annotation.Nullable;
 import net.minecraft.block.BlockButton;
 import net.minecraft.block.SoundType;
@@ -12,9 +11,8 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fluids.Fluid;
 
-public class RetroButtonBlock extends BlockButton implements IFluidloggable {
+public class RetroButtonBlock extends BlockButton implements RetroFluidloggableBlock {
 
     private final boolean wooden;
 
@@ -45,11 +43,5 @@ public class RetroButtonBlock extends BlockButton implements IFluidloggable {
     protected void playReleaseSound(World worldIn, BlockPos pos) {
         worldIn.playSound(null, pos, this.wooden ? SoundEvents.BLOCK_WOOD_BUTTON_CLICK_OFF
             : SoundEvents.BLOCK_STONE_BUTTON_CLICK_OFF, SoundCategory.BLOCKS, 0.3F, this.wooden ? 0.5F : 0.5F);
-    }
-
-    @Override
-    public boolean isFluidValid(net.minecraft.block.state.IBlockState state, World world, BlockPos pos,
-            Fluid fluid) {
-        return FluidloggedSupport.isWater(fluid);
     }
 }

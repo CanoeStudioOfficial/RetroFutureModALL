@@ -1,20 +1,22 @@
 package com.canoestudio.retrofuturelushcave.contents.mobs.axolotl;
 
-import com.canoestudio.retrofuturelushcave.contents.items.ItemAxolotlBucket;
-import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
-import com.canoestudio.retrofuturelushcave.utils.FluidloggedCompat;
+import java.util.Arrays;
+
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.*;
-import net.minecraft.entity.ai.attributes.IAttributeInstance;
-import net.minecraft.entity.monster.EntityGuardian;
-import net.minecraft.entity.passive.EntitySquid;
+import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
+import net.minecraft.block.material.Material;
+import com.canoestudio.retrofuturemccore.api.tag.RetroTagRegistry;
+import com.canoestudio.retrofuturemccore.api.tag.RetroTags;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.IEntityLivingData;
+import net.minecraft.entity.MoverType;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.passive.EntityWaterMob;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemStack;
+import net.minecraft.init.MobEffects;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
@@ -28,7 +30,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.Loader;
+import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
+import com.canoestudio.retrofuturelushcave.contents.items.ItemAxolotlBucket;
 
 import javax.annotation.Nullable;
 
@@ -81,15 +84,11 @@ public class EntityAxolotl extends EntityWaterMob {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(14.0D);
-        getEntityAttribute(SharedMonsterAttributes.MOVEMENT_SPEED).setBaseValue(1.0D);
-        getAttackDamageAttribute().setBaseValue(2.0D);
-        getEntityAttribute(SharedMonsterAttributes.KNOCKBACK_RESISTANCE).setBaseValue(0.35D);
-    }
-
-    private IAttributeInstance getAttackDamageAttribute() {
-        IAttributeInstance attribute = getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
-        return attribute != null ? attribute : getAttributeMap().registerAttribute(SharedMonsterAttributes.ATTACK_DAMAGE);
+        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
+                RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, 14.0D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 1.0D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.ATTACK_DAMAGE, 2.0D),
+                RetroEntityAttributes.value(SharedMonsterAttributes.KNOCKBACK_RESISTANCE, 0.35D)));
     }
 
     @Override
@@ -340,10 +339,11 @@ public class EntityAxolotl extends EntityWaterMob {
     }
 
     private boolean isValidAttackTarget(EntityLivingBase target) {
-        if (target != this && target.isEntityAlive() && target.isInWater() && getDistanceSq(target) <= HOSTILE_TARGET_RANGE_SQ) {
-            return target instanceof EntityGuardian || target instanceof EntitySquid;
-        }
-        return false;
+        return target != this
+                && RetroTagRegistry.containsEntity(RetroTags.AXOLOTL_HUNT_TARGETS, target)
+                && target.isEntityAlive()
+                && target.isInWater()
+                && getDistanceSq(target) <= HOSTILE_TARGET_RANGE_SQ;
     }
 
     private void tryAttackTarget() {
@@ -450,11 +450,7 @@ public class EntityAxolotl extends EntityWaterMob {
     }
 
     private boolean isWater(BlockPos pos) {
-        if (!Loader.isModLoaded("fluidlogged_api")) {
-            IBlockState state = world.getBlockState(pos);
-            return state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.FLOWING_WATER;
-        }
-        return FluidloggedCompat.isWater(world, pos);
+        return world.isBlockLoaded(pos) && FluidloggedSupport.isWater(world, pos);
     }
 
     private void moveToward(double targetX, double targetY, double targetZ, double speed, double inertia) {
@@ -553,7 +549,9 @@ public class EntityAxolotl extends EntityWaterMob {
 
     @Override
     public boolean attackEntityAsMob(Entity entityIn) {
-        boolean attacked = entityIn.attackEntityFrom(DamageSource.causeMobDamage(this), (float)getAttackDamageAttribute().getAttributeValue());
+        boolean attacked = entityIn.attackEntityFrom(DamageSource.causeMobDamage(this),
+                (float)RetroEntityAttributes.getOrRegister(this, SharedMonsterAttributes.ATTACK_DAMAGE)
+                        .getAttributeValue());
         if (attacked) {
             playSound(ModSoundHandler.ENTITY_AXOLOTL_ATTACK, 1.0F, 1.0F);
         }

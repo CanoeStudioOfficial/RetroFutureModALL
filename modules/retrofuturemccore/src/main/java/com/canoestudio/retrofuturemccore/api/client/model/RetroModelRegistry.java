@@ -20,6 +20,7 @@ import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -65,6 +66,15 @@ public final class RetroModelRegistry {
         }
     }
 
+    public static void registerItems(Iterable<? extends Item> items) {
+        if (items == null) {
+            return;
+        }
+        for (Item item : items) {
+            registerItem(item);
+        }
+    }
+
     public static void registerBlockItem(Block block) {
         registerBlockItem(block, 0);
     }
@@ -98,11 +108,27 @@ public final class RetroModelRegistry {
         }
     }
 
+    public static void registerBlockItems(Iterable<? extends Block> blocks) {
+        if (blocks == null) {
+            return;
+        }
+        for (Block block : blocks) {
+            registerBlockItem(block);
+        }
+    }
+
     public static void ignoreStateProperties(Block block, IProperty<?>... properties) {
         if (block == null || properties == null || properties.length == 0) {
             return;
         }
         ModelLoader.setCustomStateMapper(block, new StateMap.Builder().ignore(properties).build());
+    }
+
+    public static void ignoreStateProperties(Block block, List<? extends IProperty<?>> properties) {
+        if (properties == null || properties.isEmpty()) {
+            return;
+        }
+        ignoreStateProperties(block, properties.toArray(new IProperty<?>[properties.size()]));
     }
 
     public static void ignoreStateProperties(IProperty<?>[] properties, Block... blocks) {
@@ -111,6 +137,17 @@ public final class RetroModelRegistry {
         }
         for (Block block : blocks) {
             ignoreStateProperties(block, properties);
+        }
+    }
+
+    public static void ignoreStateProperties(List<? extends IProperty<?>> properties,
+            Iterable<? extends Block> blocks) {
+        if (properties == null || properties.isEmpty() || blocks == null) {
+            return;
+        }
+        IProperty<?>[] propertyArray = properties.toArray(new IProperty<?>[properties.size()]);
+        for (Block block : blocks) {
+            ignoreStateProperties(block, propertyArray);
         }
     }
 

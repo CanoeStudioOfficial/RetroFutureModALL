@@ -1,1 +1,208 @@
-﻿{"variants":{"eggs=1,hatch=0":{"model":"retrofutureupdateaquatic:turtle_egg"},"eggs=1,hatch=1":{"model":"retrofutureupdateaquatic:slightly_cracked_turtle_egg"},"eggs=1,hatch=2":{"model":"retrofutureupdateaquatic:very_cracked_turtle_egg"},"eggs=2,hatch=0":{"model":"retrofutureupdateaquatic:two_turtle_eggs"},"eggs=2,hatch=1":{"model":"retrofutureupdateaquatic:two_slightly_cracked_turtle_eggs"},"eggs=2,hatch=2":{"model":"retrofutureupdateaquatic:two_very_cracked_turtle_eggs"},"eggs=3,hatch=0":{"model":"retrofutureupdateaquatic:three_turtle_eggs"},"eggs=3,hatch=1":{"model":"retrofutureupdateaquatic:three_slightly_cracked_turtle_eggs"},"eggs=3,hatch=2":{"model":"retrofutureupdateaquatic:three_very_cracked_turtle_eggs"},"eggs=4,hatch=0":{"model":"retrofutureupdateaquatic:four_turtle_eggs"},"eggs=4,hatch=1":{"model":"retrofutureupdateaquatic:four_slightly_cracked_turtle_eggs"},"eggs=4,hatch=2":{"model":"retrofutureupdateaquatic:four_very_cracked_turtle_eggs"}}}
+{
+  "variants": {
+    "eggs=1,hatch=0": [
+      {
+        "model": "retrofutureupdateaquatic:turtle_egg"
+      },
+      {
+        "model": "retrofutureupdateaquatic:turtle_egg",
+        "y": 90
+      },
+      {
+        "model": "retrofutureupdateaquatic:turtle_egg",
+        "y": 180
+      },
+      {
+        "model": "retrofutureupdateaquatic:turtle_egg",
+        "y": 270
+      }
+    ],
+    "eggs=1,hatch=1": [
+      {
+        "model": "retrofutureupdateaquatic:slightly_cracked_turtle_egg"
+      },
+      {
+        "model": "retrofutureupdateaquatic:slightly_cracked_turtle_egg",
+        "y": 90
+      },
+      {
+        "model": "retrofutureupdateaquatic:slightly_cracked_turtle_egg",
+        "y": 180
+      },
+      {
+        "model": "retrofutureupdateaquatic:slightly_cracked_turtle_egg",
+        "y": 270
+      }
+    ],
+    "eggs=1,hatch=2": [
+      {
+        "model": "retrofutureupdateaquatic:very_cracked_turtle_egg"
+      },
+      {
+        "model": "retrofutureupdateaquatic:very_cracked_turtle_egg",
+        "y": 90
+      },
+      {
+        "model": "retrofutureupdateaquatic:very_cracked_turtle_egg",
+        "y": 180
+      },
+      {
+        "model": "retrofutureupdateaquatic:very_cracked_turtle_egg",
+        "y": 270
+      }
+    ],
+    "eggs=2,hatch=0": [
+      {
+        "model": "retrofutureupdateaquatic:two_turtle_eggs"
+      },
+      {
+        "model": "retrofutureupdateaquatic:two_turtle_eggs",
+        "y": 90
+      },
+      {
+        "model": "retrofutureupdateaquatic:two_turtle_eggs",
+        "y": 180
+      },
+      {
+        "model": "retrofutureupdateaquatic:two_turtle_eggs",
+        "y": 270
+      }
+    ],
+    "eggs=2,hatch=1": [
+      {
+        "model": "retrofutureupdateaquatic:two_slightly_cracked_turtle_eggs"
+      },
+      {
+        "model": "retrofutureupdateaquatic:two_slightly_cracked_turtle_eggs",
+        "y": 90
+      },
+      {
+        "model": "retrofutureupdateaquatic:two_slightly_cracked_turtle_eggs",
+        "y": 180
+      },
+      {
+        "model": "retrofutureupdateaquatic:two_slightly_cracked_turtle_eggs",
+        "y": 270
+      }
+    ],
+    "eggs=2,hatch=2": [
+      {
+        "model": "retrofutureupdateaquatic:two_very_cracked_turtle_eggs"
+      },
+      {
+        "model": "retrofutureupdateaquatic:two_very_cracked_turtle_eggs",
+        "y": 90
+      },
+      {
+        "model": "retrofutureupdateaquatic:two_very_cracked_turtle_eggs",
+        "y": 180
+      },
+      {
+        "model": "retrofutureupdateaquatic:two_very_cracked_turtle_eggs",
+        "y": 270
+      }
+    ],
+    "eggs=3,hatch=0": [
+      {
+        "model": "retrofutureupdateaquatic:three_turtle_eggs"
+      },
+      {
+        "model": "retrofutureupdateaquatic:three_turtle_eggs",
+        "y": 90
+      },
+      {
+        "model": "retrofutureupdateaquatic:three_turtle_eggs",
+        "y": 180
+      },
+      {
+        "model": "retrofutureupdateaquatic:three_turtle_eggs",
+        "y": 270
+      }
+    ],
+    "eggs=3,hatch=1": [
+      {
+        "model": "retrofutureupdateaquatic:three_slightly_cracked_turtle_eggs"
+      },
+      {
+        "model": "retrofutureupdateaquatic:three_slightly_cracked_turtle_eggs",
+        "y": 90
+      },
+      {
+        "model": "retrofutureupdateaquatic:three_slightly_cracked_turtle_eggs",
+        "y": 180
+      },
+      {
+        "model": "retrofutureupdateaquatic:three_slightly_cracked_turtle_eggs",
+        "y": 270
+      }
+    ],
+    "eggs=3,hatch=2": [
+      {
+        "model": "retrofutureupdateaquatic:three_very_cracked_turtle_eggs"
+      },
+      {
+        "model": "retrofutureupdateaquatic:three_very_cracked_turtle_eggs",
+        "y": 90
+      },
+      {
+        "model": "retrofutureupdateaquatic:three_very_cracked_turtle_eggs",
+        "y": 180
+      },
+      {
+        "model": "retrofutureupdateaquatic:three_very_cracked_turtle_eggs",
+        "y": 270
+      }
+    ],
+    "eggs=4,hatch=0": [
+      {
+        "model": "retrofutureupdateaquatic:four_turtle_eggs"
+      },
+      {
+        "model": "retrofutureupdateaquatic:four_turtle_eggs",
+        "y": 90
+      },
+      {
+        "model": "retrofutureupdateaquatic:four_turtle_eggs",
+        "y": 180
+      },
+      {
+        "model": "retrofutureupdateaquatic:four_turtle_eggs",
+        "y": 270
+      }
+    ],
+    "eggs=4,hatch=1": [
+      {
+        "model": "retrofutureupdateaquatic:four_slightly_cracked_turtle_eggs"
+      },
+      {
+        "model": "retrofutureupdateaquatic:four_slightly_cracked_turtle_eggs",
+        "y": 90
+      },
+      {
+        "model": "retrofutureupdateaquatic:four_slightly_cracked_turtle_eggs",
+        "y": 180
+      },
+      {
+        "model": "retrofutureupdateaquatic:four_slightly_cracked_turtle_eggs",
+        "y": 270
+      }
+    ],
+    "eggs=4,hatch=2": [
+      {
+        "model": "retrofutureupdateaquatic:four_very_cracked_turtle_eggs"
+      },
+      {
+        "model": "retrofutureupdateaquatic:four_very_cracked_turtle_eggs",
+        "y": 90
+      },
+      {
+        "model": "retrofutureupdateaquatic:four_very_cracked_turtle_eggs",
+        "y": 180
+      },
+      {
+        "model": "retrofutureupdateaquatic:four_very_cracked_turtle_eggs",
+        "y": 270
+      }
+    ]
+  }
+}

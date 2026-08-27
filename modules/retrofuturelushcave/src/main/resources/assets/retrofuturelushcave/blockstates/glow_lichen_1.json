@@ -1,0 +1,39 @@
+{
+  "multipart": [
+    {
+      "when": { "north": "true" },
+      "apply": { "model": "retrofuturelushcave:glow_lichen" }
+    },
+    {
+      "when": { "south": "true" },
+      "apply": {
+        "model": "retrofuturelushcave:glow_lichen",
+        "y": 180,
+        "uvlock": true
+      }
+    },
+    {
+      "when": { "up": "true" },
+      "apply": {
+        "model": "retrofuturelushcave:glow_lichen",
+        "x": 270,
+        "uvlock": true
+      }
+    },
+    {
+      "when": { "down": "true" },
+      "apply": {
+        "model": "retrofuturelushcave:glow_lichen",
+        "x": 90,
+        "uvlock": true
+      }
+    },
+    {
+      "apply": {
+        "model": "retrofuturelushcave:glow_lichen",
+        "y": 270,
+        "uvlock": true
+      }
+    }
+  ]
+}
