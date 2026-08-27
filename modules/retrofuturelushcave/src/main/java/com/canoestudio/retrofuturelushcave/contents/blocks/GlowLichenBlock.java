@@ -1,6 +1,7 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
+import com.canoestudio.retrofuturelushcave.utils.FluidloggedCompat;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
 import net.minecraft.block.Block;
@@ -19,12 +20,15 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraftforge.fluids.Fluid;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
+@Optional.Interface(iface = "git.jbredwards.fluidlogged_api.api.block.IFluidloggable", modid = "fluidlogged_api")
 public class GlowLichenBlock extends Block implements IFluidloggable {
 
     @Override
@@ -87,6 +91,18 @@ public class GlowLichenBlock extends Block implements IFluidloggable {
                 .withProperty(WEST, face == EnumFacing.WEST);
     }
 
+    /**
+     * 供世界生成使用：若当前位置已有本方块则在保留既有面的基础上增加一面；
+     * 若当前位置是空气或水，则创建只带该面的新状态。返回null表示该面已经存在或目标不可替换。
+     */
+    public IBlockState getStateWithFace(IBlockState current, EnumFacing face) {
+        if (current.getBlock() == this) {
+            return hasFace(current, face) ? null : setFace(current, face, true);
+        }
+        return current.getMaterial() == Material.AIR || current.getMaterial().isLiquid()
+                ? getStateForFace(face) : null;
+    }
+
     @Override
     public boolean canPlaceBlockOnSide(World worldIn, BlockPos pos, EnumFacing side) {
         return canAttach(worldIn, pos, side.getOpposite());
@@ -112,13 +128,17 @@ public class GlowLichenBlock extends Block implements IFluidloggable {
         IBlockState updated = removeUnsupportedFaces(worldIn, pos, state);
         if (!hasAnyFace(updated)) {
             dropBlockAsItem(worldIn, pos, state, 0);
-            restoreFluidOrAir(worldIn, pos, state, 3);
+            if (Loader.isModLoaded("fluidlogged_api")) {
+                FluidloggedCompat.restoreFluidOrAir(worldIn, pos, updated, 3);
+            }
             return;
         }
         if (updated != state) {
             worldIn.setBlockState(pos, updated, 2);
         }
-        scheduleContainedFluidTick(worldIn, pos, updated);
+        if (Loader.isModLoaded("fluidlogged_api")) {
+            FluidloggedCompat.scheduleFluidTick(worldIn, pos, updated);
+        }
     }
 
     private IBlockState removeUnsupportedFaces(World world, BlockPos pos, IBlockState state) {
@@ -164,14 +184,6 @@ public class GlowLichenBlock extends Block implements IFluidloggable {
             default:
                 return NORTH;
         }
-    }
-
-    private void restoreFluidOrAir(World world, BlockPos pos, IBlockState state, int flags) {
-        FluidloggedSupport.restoreContainedFluidOrAir(world, pos, state, flags);
-    }
-
-    private void scheduleContainedFluidTick(World world, BlockPos pos, IBlockState state) {
-        FluidloggedSupport.scheduleFluidTick(world, pos, state);
     }
 
     @Override

@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.MathHelper;
+import net.minecraftforge.client.event.FOVUpdateEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -28,6 +29,14 @@ public class SpyglassHandler {
     private static float scopeScale = SCOPE_RESET_SCALE;
     private static boolean sensitivityReduced;
     private static float originalMouseSensitivity;
+
+    @SubscribeEvent
+    public static void updateFov(FOVUpdateEvent event) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (isUsingSpyglass(mc, mc.player)) {
+            event.setNewfov(event.getFov() * getFovMultiplier(mc.getRenderPartialTicks()));
+        }
+    }
 
     @SubscribeEvent
     public static void onClientTick(TickEvent.ClientTickEvent event) {

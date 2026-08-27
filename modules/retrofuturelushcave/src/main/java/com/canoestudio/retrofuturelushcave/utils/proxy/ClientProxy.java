@@ -5,12 +5,11 @@ import com.canoestudio.retrofuturelushcave.contents.mobs.axolotl.EntityAxolotl;
 import com.canoestudio.retrofuturelushcave.contents.mobs.axolotl.RenderAxolotl;
 import com.canoestudio.retrofuturelushcave.contents.mobs.brownmooshrooms.EntityBrownMooshroom;
 import com.canoestudio.retrofuturelushcave.contents.mobs.brownmooshrooms.RenderBrownMooshroom;
-import com.canoestudio.retrofuturelushcave.contents.mobs.goat.EntityGoat;
-import com.canoestudio.retrofuturelushcave.contents.mobs.goat.RenderGoat;
 import com.canoestudio.retrofuturelushcave.contents.mobs.glowsquid.EntityGlowSquid;
 import com.canoestudio.retrofuturelushcave.contents.mobs.glowsquid.RenderGlowSquid;
+import com.canoestudio.retrofuturelushcave.contents.mobs.goat.EntityGoat;
+import com.canoestudio.retrofuturelushcave.contents.mobs.goat.RenderGoat;
 import com.canoestudio.retrofuturelushcave.utils.PowderSnowHudHandler;
-import com.canoestudio.retrofuturelushcave.utils.RetroFutureClientCoreIntegration;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -32,7 +31,6 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void init(FMLInitializationEvent event) {
         super.init(event);
-        RetroFutureClientCoreIntegration.register();
     }
 
     @Override

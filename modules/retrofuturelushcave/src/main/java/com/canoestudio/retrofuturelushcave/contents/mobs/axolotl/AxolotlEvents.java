@@ -1,7 +1,6 @@
 package com.canoestudio.retrofuturelushcave.contents.mobs.axolotl;
 
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;

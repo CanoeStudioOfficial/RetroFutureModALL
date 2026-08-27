@@ -1,6 +1,7 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
+import com.canoestudio.retrofuturelushcave.utils.FluidloggedCompat;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
 import git.jbredwards.fluidlogged_api.api.util.FluidState;
@@ -19,23 +20,21 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.EnumParticleTypes;
-import net.minecraft.util.SoundCategory;
+import net.minecraft.util.*;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraftforge.fluids.Fluid;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
+@Optional.Interface(iface = "git.jbredwards.fluidlogged_api.api.block.IFluidloggable", modid = "fluidlogged_api")
 public class CandleBlock extends Block implements IFluidloggable {
 
     @Override
@@ -107,10 +106,14 @@ public class CandleBlock extends Block implements IFluidloggable {
     public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
         if (!canPlaceBlockAt(worldIn, pos)) {
             dropBlockAsItem(worldIn, pos, state, 0);
-            restoreFluidOrAir(worldIn, pos, state, 3);
+            if (Loader.isModLoaded("fluidlogged_api")) {
+                FluidloggedCompat.restoreFluidOrAir(worldIn, pos, state, 3);
+            }
             return;
         }
-        scheduleContainedFluidTick(worldIn, pos, state);
+        if (Loader.isModLoaded("fluidlogged_api")) {
+            FluidloggedCompat.scheduleFluidTick(worldIn, pos, state);
+        }
     }
 
     @Override
@@ -161,9 +164,7 @@ public class CandleBlock extends Block implements IFluidloggable {
     }
 
     public static boolean canLight(World world, BlockPos pos, IBlockState state) {
-        return state.getBlock() instanceof CandleBlock
-                && !state.getValue(LIT)
-                && !FluidloggedSupport.isWater(FluidloggedSupport.getFluidState(world, pos, state));
+        return state.getBlock() instanceof CandleBlock && !state.getValue(LIT);
     }
 
     public static void light(World world, BlockPos pos, IBlockState state, EntityPlayer player, ItemStack stack, int flags) {
@@ -200,14 +201,6 @@ public class CandleBlock extends Block implements IFluidloggable {
         } else if (stack.getItem() == Items.FIRE_CHARGE) {
             stack.shrink(1);
         }
-    }
-
-    private void restoreFluidOrAir(World world, BlockPos pos, IBlockState state, int flags) {
-        FluidloggedSupport.restoreContainedFluidOrAir(world, pos, state, flags);
-    }
-
-    private void scheduleContainedFluidTick(World world, BlockPos pos, IBlockState state) {
-        FluidloggedSupport.scheduleFluidTick(world, pos, state);
     }
 
     @SideOnly(Side.CLIENT)

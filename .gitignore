@@ -25,3 +25,8 @@ eclipse
 run
 /模板/
 /参考
+retrofuturelushcave-compile.log
+modules/retrofuturelushcave/worldgen-carver-references.txt
+modules/retrofuturelushcave/cave-routing-dependency-audit.txt
+modules/retrofuturelushcave/humidity-reference-list.txt
+modules/retrofuturelushcave/randomsource-usage.txt

@@ -24,7 +24,6 @@ public final class RetroFutureCoreIntegration {
         if (registered) {
             return;
         }
-
         registered = true;
         registerTags();
         registerUseItems();

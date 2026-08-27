@@ -1,11 +1,19 @@
 {
-	"package": "",
+	"package": "com.canoestudio.retrofuturelushcave.mixins",
 	"required": true,
-	"refmap": "${mixin_refmap}",
+	"refmap": "mixins.retrofuturelushcave.refmap.json",
 	"target": "@env(DEFAULT)",
-	"minVersion": "0.8.5",
+	"minVersion": "0.8.3",
 	"compatibilityLevel": "JAVA_8",
-	"mixins": [],
+	"mixins": [
+		"MixinChunkGeneratorOverworld",
+		"MixinMonumentBuilding",
+		"MixinStartMonument",
+		"MixinWorld",
+		"MixinWorldProvider"
+	],
 	"server": [],
-	"client": []
+	"client": [
+		"MixinEntityRenderer"
+	]
 }

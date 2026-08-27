@@ -1,9 +1,9 @@
 package com.canoestudio.retrofuturelushcave.contents;
 
 import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
-import com.canoestudio.retrofuturelushcave.contents.world.gen.WorldGenBigAzaleaTree;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
 import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
+import com.canoestudio.retrofuturelushcave.worldgen.lushcave.WorldGenBigAzaleaTree;
 import net.minecraft.block.Block;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.SoundType;

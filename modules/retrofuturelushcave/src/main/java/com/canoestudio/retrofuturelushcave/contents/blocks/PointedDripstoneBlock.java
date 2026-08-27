@@ -1,10 +1,10 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
+import com.canoestudio.retrofuturelushcave.utils.FluidloggedCompat;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
-import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
-import git.jbredwards.fluidlogged_api.api.util.FluidState;
 import com.google.common.base.Predicate;
+import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -19,25 +19,24 @@ import net.minecraft.entity.item.EntityFallingBlock;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
-import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.IStringSerializable;
-import net.minecraft.util.Mirror;
-import net.minecraft.util.Rotation;
+import net.minecraft.util.*;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.minecraftforge.fluids.Fluid;
 
 import java.lang.reflect.Field;
 import java.util.Random;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
+@Optional.Interface(iface = "git.jbredwards.fluidlogged_api.api.block.IFluidloggable", modid = "fluidlogged_api")
 public class PointedDripstoneBlock extends Block implements IFluidloggable {
 
     @Override
@@ -383,27 +382,24 @@ public class PointedDripstoneBlock extends Block implements IFluidloggable {
     }
 
     private boolean isAirOrWater(World world, BlockPos pos) {
-        return FluidloggedSupport.canPlaceIntoAirOrWater(world, pos);
+        IBlockState state = world.getBlockState(pos);
+        if (!Loader.isModLoaded("fluidlogged_api")) {
+            return state.getBlock().isReplaceable(world, pos) || state.getBlock() == Blocks.AIR;
+        }
+        return FluidloggedCompat.isWater(world, pos) || state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.FLOWING_WATER;
     }
 
     private void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState, int flags) {
-        FluidloggedSupport.setFluidloggableBlock(world, pos, newState, flags);
+        world.setBlockState(pos, newState, flags);
+        if (Loader.isModLoaded("fluidlogged_api")) {
+            FluidloggedCompat.setFluidloggableBlock(world, pos, newState, flags);
+        }
     }
 
     private void setBlockStateKeepingFluid(World world, BlockPos pos, int flags) {
-        FluidloggedSupport.restoreContainedFluidOrAir(world, pos, world.getBlockState(pos), flags);
-    }
-
-    private boolean hasWaterFluid(World world, BlockPos pos) {
-        return FluidloggedSupport.isWater(world, pos);
-    }
-
-    private FluidState getWaterFluidState(World world, BlockPos pos) {
-        return FluidloggedSupport.getFluidState(world, pos);
-    }
-
-    private void scheduleFluidTick(World world, BlockPos pos, FluidState fluidState) {
-        FluidloggedSupport.scheduleFluidTick(world, pos, fluidState);
+        if (Loader.isModLoaded("fluidlogged_api")) {
+            FluidloggedCompat.restoreFluidOrAir(world, pos, world.getBlockState(pos), flags);
+        }
     }
 
     @Override

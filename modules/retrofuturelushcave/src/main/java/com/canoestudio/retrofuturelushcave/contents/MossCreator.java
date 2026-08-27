@@ -4,7 +4,7 @@ import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf.SmallDripleaf;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
 import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
-import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import com.canoestudio.retrofuturelushcave.utils.FluidloggedCompat;
 import net.minecraft.block.*;
 import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.block.material.Material;
@@ -16,6 +16,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.EnumPlantType;
+import net.minecraftforge.fml.common.Loader;
 
 import java.util.Random;
 
@@ -53,10 +54,8 @@ public class MossCreator extends Block implements IGrowable {
 
         switch(plantType) {
             case Beach:
-                boolean hasWater = (FluidloggedSupport.isWater(world, pos.east()) ||
-                        FluidloggedSupport.isWater(world, pos.west()) ||
-                        FluidloggedSupport.isWater(world, pos.north()) ||
-                        FluidloggedSupport.isWater(world, pos.south()));
+                boolean hasWater = (isWater(world, pos.east()) || isWater(world, pos.west())
+                        || isWater(world, pos.north()) || isWater(world, pos.south()));
                 return hasWater;
             case Plains:
                 return true;
@@ -168,6 +167,13 @@ public class MossCreator extends Block implements IGrowable {
     private boolean canPlantMoss(World world, BlockPos pos)
     {
         return world.isAirBlock(pos) || world.getBlockState(pos).getBlock().isReplaceable(world, pos) || world.getBlockState(pos).getBlock() instanceof BlockBush;
+    }
+    private boolean isWater(IBlockAccess world, BlockPos pos) {
+        if (!Loader.isModLoaded("fluidlogged_api")) {
+            IBlockState state = world.getBlockState(pos);
+            return state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.FLOWING_WATER;
+        }
+        return FluidloggedCompat.isWater(world, pos);
     }
 }
 

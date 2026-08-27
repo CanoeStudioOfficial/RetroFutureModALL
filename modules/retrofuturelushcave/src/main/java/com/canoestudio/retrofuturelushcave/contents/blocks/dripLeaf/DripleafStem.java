@@ -3,9 +3,9 @@ package com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf;
 
 import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
+import com.canoestudio.retrofuturelushcave.utils.FluidloggedCompat;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
-import git.jbredwards.fluidlogged_api.api.util.FluidState;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.BlockHorizontal;
@@ -19,7 +19,6 @@ import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.Mirror;
 import net.minecraft.util.Rotation;
@@ -28,11 +27,14 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.Optional;
 
 import java.util.Random;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
+@Optional.Interface(iface = "git.jbredwards.fluidlogged_api.api.block.IFluidloggable", modid = "fluidlogged_api")
 public class DripleafStem extends BlockBush implements IGrowable, IFluidloggable
 {
     @Override
@@ -67,7 +69,9 @@ public class DripleafStem extends BlockBush implements IGrowable, IFluidloggable
             if (!this.canBlockStay(worldIn, pos, state))
             {
                 this.dropBlockAsItem(worldIn, pos, state, 0);
-                restoreContainedFluidOrAir(worldIn, pos, state, 3);
+                if (Loader.isModLoaded("fluidlogged_api")) {
+                    FluidloggedCompat.restoreFluidOrAir(worldIn, pos, state, 3);
+                }
             }
             else if (!hasDripleafAbove(worldIn, pos))
             {
@@ -85,7 +89,9 @@ public class DripleafStem extends BlockBush implements IGrowable, IFluidloggable
     public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos)
     {
         super.neighborChanged(state, worldIn, pos, blockIn, fromPos);
-        scheduleContainedFluidTick(worldIn, pos, state);
+        if (Loader.isModLoaded("fluidlogged_api")) {
+            FluidloggedCompat.scheduleFluidTick(worldIn, pos, state);
+        }
         if (!worldIn.isRemote)
         {
             worldIn.scheduleUpdate(pos, this, 1);
@@ -111,13 +117,8 @@ public class DripleafStem extends BlockBush implements IGrowable, IFluidloggable
         {
             return true;
         }
-        
-        if (downBlock.canSustainPlant(downState, worldIn, pos.down(), EnumFacing.UP, this))
-        {
-            return true;
-        }
-        
-        return false;
+
+        return downBlock.canSustainPlant(downState, worldIn, pos.down(), EnumFacing.UP, this);
     }
 
     public boolean canBlockStay(World worldIn, BlockPos pos, IBlockState state)
@@ -183,39 +184,20 @@ public class DripleafStem extends BlockBush implements IGrowable, IFluidloggable
         }
     }
 
-    private boolean canGrowInto(World world, BlockPos pos)
-    {
-        return FluidloggedSupport.canPlaceIntoAirOrWater(world, pos);
+    private boolean canGrowInto(World world, BlockPos pos) {
+        if (!Loader.isModLoaded("fluidlogged_api")) {
+            IBlockState state = world.getBlockState(pos);
+            return state.getBlock().isReplaceable(world, pos) || state.getBlock() == Blocks.AIR
+                    || state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.FLOWING_WATER;
+        }
+        return FluidloggedCompat.isWater(world, pos);
     }
 
-    private void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState, int flags)
-    {
-        FluidloggedSupport.setFluidloggableBlock(world, pos, newState, flags);
-    }
-
-    private boolean hasWaterFluid(World world, BlockPos pos)
-    {
-        return FluidloggedSupport.isWater(world, pos);
-    }
-
-    private FluidState getWaterFluidState(World world, BlockPos pos)
-    {
-        return FluidloggedSupport.getFluidState(world, pos);
-    }
-
-    private void restoreContainedFluidOrAir(World world, BlockPos pos, IBlockState state, int flags)
-    {
-        FluidloggedSupport.restoreContainedFluidOrAir(world, pos, state, flags);
-    }
-
-    private void scheduleContainedFluidTick(World world, BlockPos pos, IBlockState state)
-    {
-        FluidloggedSupport.scheduleFluidTick(world, pos, state);
-    }
-
-    private void scheduleFluidTick(World world, BlockPos pos, FluidState fluidState)
-    {
-        FluidloggedSupport.scheduleFluidTick(world, pos, fluidState);
+    private void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState, int flags) {
+        world.setBlockState(pos, newState, flags);
+        if (Loader.isModLoaded("fluidlogged_api")) {
+            FluidloggedCompat.setFluidloggableBlock(world, pos, newState, flags);;
+        }
     }
 
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer)

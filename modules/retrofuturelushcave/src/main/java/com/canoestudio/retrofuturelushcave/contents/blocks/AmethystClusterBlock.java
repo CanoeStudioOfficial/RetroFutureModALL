@@ -2,7 +2,6 @@ package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -11,7 +10,6 @@ import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -71,7 +69,6 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock {
     public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
         if (!canBlockStay(worldIn, pos, state)) {
             dropBlockAsItem(worldIn, pos, state, 0);
-            restoreFluidOrAir(worldIn, pos, state, 3);
             return;
         }
         super.neighborChanged(state, worldIn, pos, blockIn, fromPos);
@@ -85,10 +82,6 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock {
         BlockPos supportPos = pos.offset(facing.getOpposite());
         IBlockState support = world.getBlockState(supportPos);
         return support.isSideSolid(world, supportPos, facing);
-    }
-
-    private void restoreFluidOrAir(World world, BlockPos pos, IBlockState state, int flags) {
-        FluidloggedSupport.restoreContainedFluidOrAir(world, pos, state, flags);
     }
 
     @Override

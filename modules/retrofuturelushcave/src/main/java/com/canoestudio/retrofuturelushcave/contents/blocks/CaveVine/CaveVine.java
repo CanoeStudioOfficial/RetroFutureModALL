@@ -7,6 +7,8 @@ import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
+import net.minecraft.init.Blocks;
+
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
@@ -16,7 +18,11 @@ import java.util.Random;
 
 public class CaveVine extends CaveVinePlant {
 
-    public static final PropertyInteger AGE = PropertyInteger.create("age", 0, 1);
+    /** 1.18 GrowingPlantHeadBlock.AGE_25。世界生成使用23..25，25为停止自然生长的成熟头部。 */
+    public static final PropertyInteger AGE = PropertyInteger.create("age", 0, 25);
+    private static final int MAX_AGE = 25;
+    private static final float GROWTH_CHANCE = 0.10F;
+    private static final float BERRY_CHANCE_ON_GROWTH = 0.11F;
 
     public CaveVine(String name) {
         super(name);
@@ -25,37 +31,31 @@ public class CaveVine extends CaveVinePlant {
         this.setDefaultState(this.getDefaultState().withProperty(BERRIES, false).withProperty(AGE, 0));
     }
 
-    public void updateTick(World worldIn, BlockPos pos, IBlockState state, Random rand)
-    {
+    /**
+     * 对应1.18 GrowingPlantHeadBlock / CaveVinesBlock：年龄未满25时以0.1概率向下延伸，
+     * 旧头部转为body，新头部年龄+1，浆果概率0.11。
+     *
+     * <p>1.12区块metadata只有4 bit，因此随机刻只在可无损持久化的兼容阶梯
+     * 0 -> 1 -> 23 -> 24 -> 25 之间推进；世界生成写入的23..25与成熟停止语义完整保留。</p>
+     */
+    @Override
+    public void updateTick(World worldIn, BlockPos pos, IBlockState state, Random rand) {
         super.updateTick(worldIn, pos, state, rand);
+        if (!worldIn.isAreaLoaded(pos, 1)) return;
 
-        if (!worldIn.isAreaLoaded(pos, 1)) return; // Forge: prevent loading unloaded chunks when checking neighbor's light
+        int age = getAge(state);
+        BlockPos below = pos.down();
+        IBlockState belowState = worldIn.getBlockState(below);
+        boolean mayGrow = age < MAX_AGE && belowState.getBlock().isAir(belowState, worldIn, below);
+        if (!mayGrow || !net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, below, belowState,
+                rand.nextFloat() < GROWTH_CHANCE)) return;
 
-        IBlockState iblockstate = worldIn.getBlockState(pos.down());
-
-        if(iblockstate.getBlock().isAir(iblockstate, worldIn, pos.down()))
-        {
-            if (this.getAge(state) > 0)
-            {
-                float f = 2.0F;
-
-                int i = checkCanGrow(worldIn, pos);
-
-                if(net.minecraftforge.common.ForgeHooks.onCropsGrowPre(worldIn, pos, state, rand.nextInt((int)(25.0F / f) + 1) == 0))
-                {
-                    worldIn.setBlockState(pos, ModBlocks.CAVE_VINE_PLANT.getDefaultState().withProperty(CaveVinePlant.BERRIES, state.getValue(BERRIES)), 2);
-
-                    if(rand.nextFloat() < 0.22F)
-                    {
-                        worldIn.setBlockState(pos.down(), this.withAge(i).withProperty(BERRIES, true), 2);
-                    } else{
-                        worldIn.setBlockState(pos.down(), this.withAge(i).withProperty(BERRIES, false), 2);
-                    }
-
-                    net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, pos, state, worldIn.getBlockState(pos));
-                }
-            }
-        }
+        worldIn.setBlockState(pos, ModBlocks.CAVE_VINE_PLANT.getDefaultState()
+                .withProperty(CaveVinePlant.BERRIES, state.getValue(BERRIES)), 2);
+        int nextAge = nextPersistableAge(age);
+        worldIn.setBlockState(below, withAge(nextAge)
+                .withProperty(BERRIES, Boolean.valueOf(rand.nextFloat() < BERRY_CHANCE_ON_GROWTH)), 2);
+        net.minecraftforge.common.ForgeHooks.onCropsGrowPost(worldIn, below, state, worldIn.getBlockState(below));
     }
 
     @Override
@@ -73,73 +73,59 @@ public class CaveVine extends CaveVinePlant {
         return this.getDefaultState().withProperty(AGE, age);
     }
 
-    protected int checkCanGrow(World world, BlockPos pos)
-    {
-        Random r = new Random();
-
-        int Max = 2 + r.nextInt(11);
-
-        int Num = 0;
-
-        for(int i = 1; i < 13; i++)
-        {
-            if(world.getBlockState(pos.add(0, i, 0)).getBlock() == ModBlocks.CAVE_VINE_PLANT)
-            {
-                Num += 1;
-            }
-            else
-                break;
-        }
-
-        if(Num < Max) { return 1; }
-
-        return 0;
+    /** 将旧版0/1生长开关映射到可持久化的1.18式成熟阶梯。 */
+    private static int nextPersistableAge(int age) {
+        if (age <= 0) return 1;
+        if (age == 1) return 23;
+        if (age == 23) return 24;
+        return MAX_AGE;
     }
 
     public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
     {
 
-        if(playerIn.getHeldItem(hand).getItem() == Items.SHEARS && state.getValue(AGE) == 1)
-        {
-            if(!worldIn.isRemote)
-            {
-                worldIn.setBlockState(pos, state.withProperty(AGE, 0));
-            }
-        }
+        /* 原版CaveVinesBlock交互只处理浆果；不再把剪刀作为年龄重置开关。 */
+        return super.onBlockActivated(worldIn, pos, state, playerIn, hand, facing, hitX, hitY, hitZ);
 
-        super.onBlockActivated(worldIn, pos, state, playerIn, hand, facing, hitX, hitX, hitZ);
-
-        return false;
     }
 
 
     /**
      * Convert the given metadata into a BlockState for this Block
      */
-    public IBlockState getStateFromMeta(int meta)
-    {
-        if(meta == 1)
-            return this.getDefaultState().withProperty(BERRIES, false).withProperty(AGE, 1);
-
-        if(meta == 2)
-            return this.getDefaultState().withProperty(BERRIES, true).withProperty(AGE, 0);
-
-        if(meta == 3)
-            return this.getDefaultState().withProperty(BERRIES, true).withProperty(AGE, 1);
-
-        return this.getDefaultState().withProperty(BERRIES, false).withProperty(AGE, 0);
+    public IBlockState getStateFromMeta(int meta) {
+        switch (meta & 15) {
+            /* 保持旧存档0..3的精确含义。 */
+            case 1: return state(false, 1);
+            case 2: return state(true, 0);
+            case 3: return state(true, 1);
+            /* 新增：保存世界生成实际使用的23..25及其浆果状态。 */
+            case 4: return state(false, 23);
+            case 5: return state(false, 24);
+            case 6: return state(false, 25);
+            case 7: return state(true, 23);
+            case 8: return state(true, 24);
+            case 9: return state(true, 25);
+            default: return state(false, 0);
+        }
     }
 
     /**
-     * Convert the BlockState into the correct metadata value
+     * 1.12 metadata为4 bit。编码保留旧0..3，同时无损保存生成器与随机刻使用的23..25状态；
+     * 理论上的2..22不在兼容生长阶梯中出现，若由外部代码写入则规范化为25。
      */
-    public int getMetaFromState(IBlockState state)
-    {
-        int i = state.getValue(AGE);
+    public int getMetaFromState(IBlockState state) {
+        int age = state.getValue(AGE);
+        boolean berries = state.getValue(BERRIES);
+        if (age <= 0) return berries ? 2 : 0;
+        if (age == 1) return berries ? 3 : 1;
+        if (age == 23) return berries ? 7 : 4;
+        if (age == 24) return berries ? 8 : 5;
+        return berries ? 9 : 6;
+    }
 
-        if(state.getValue(BERRIES))
-            return 2 + i;
-        return i;
+    private IBlockState state(boolean berries, int age) {
+        return this.getDefaultState().withProperty(BERRIES, berries).withProperty(AGE, age);
     }
 
     protected BlockStateContainer createBlockState()

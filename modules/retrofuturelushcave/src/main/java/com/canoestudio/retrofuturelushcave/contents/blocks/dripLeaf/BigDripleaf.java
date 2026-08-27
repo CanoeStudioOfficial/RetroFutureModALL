@@ -4,9 +4,9 @@ import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
 import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
+import com.canoestudio.retrofuturelushcave.utils.FluidloggedCompat;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import git.jbredwards.fluidlogged_api.api.block.IFluidloggable;
-import git.jbredwards.fluidlogged_api.api.util.FluidState;
 import net.minecraft.block.*;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.IProperty;
@@ -27,14 +27,15 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.Optional;
 
 import javax.annotation.Nullable;
 import java.util.Random;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
+@Optional.Interface(iface = "git.jbredwards.fluidlogged_api.api.block.IFluidloggable", modid = "fluidlogged_api")
 public class BigDripleaf extends BlockBush implements IGrowable, IFluidloggable {
     @Override
     public boolean isFluidValid(IBlockState state, World world, BlockPos pos, Fluid fluid) {
@@ -130,14 +131,15 @@ public class BigDripleaf extends BlockBush implements IGrowable, IFluidloggable 
         }
     }
 
-    public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos)
-    {
+    public void neighborChanged(IBlockState state, World worldIn, BlockPos pos, Block blockIn, BlockPos fromPos) {
         if (!canBlockStay(worldIn, pos, state))
         {
             if (!worldIn.isRemote)
             {
                 dropBlockAsItem(worldIn, pos, state, 0);
-                restoreContainedFluidOrAir(worldIn, pos, state, 3);
+                if (Loader.isModLoaded("fluidlogged_api")) {
+                    FluidloggedCompat.restoreFluidOrAir(worldIn, pos, state, 3);
+                }
             }
             return;
         }
@@ -149,7 +151,9 @@ public class BigDripleaf extends BlockBush implements IGrowable, IFluidloggable 
                 resetTilt(worldIn, pos, state);
             }
         }
-        scheduleContainedFluidTick(worldIn, pos, state);
+        if (Loader.isModLoaded("fluidlogged_api")) {
+            FluidloggedCompat.scheduleFluidTick(worldIn, pos, state);
+        }
         super.neighborChanged(state, worldIn, pos, blockIn, fromPos);
     }
 
@@ -394,34 +398,20 @@ public class BigDripleaf extends BlockBush implements IGrowable, IFluidloggable 
         setFluidloggableBlock(world, topPos.up(), this.getDefaultState().withProperty(FACING, facing), 3);
     }
 
-    public static boolean canGrowInto(World world, BlockPos pos)
-    {
-        return FluidloggedSupport.canPlaceIntoAirOrWater(world, pos);
+    private static boolean canGrowInto(World world, BlockPos pos) {
+        if (!Loader.isModLoaded("fluidlogged_api")) {
+            IBlockState state = world.getBlockState(pos);
+            return state.getBlock().isReplaceable(world, pos) || state.getBlock() == Blocks.AIR
+                    || state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.FLOWING_WATER;
+        }
+        return FluidloggedCompat.isWater(world, pos);
     }
 
-    private void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState, int flags)
-    {
-        FluidloggedSupport.setFluidloggableBlock(world, pos, newState, flags);
-    }
-
-    private boolean hasWaterFluid(World world, BlockPos pos)
-    {
-        return FluidloggedSupport.isWater(world, pos);
-    }
-
-    private FluidState getWaterFluidState(World world, BlockPos pos)
-    {
-        return FluidloggedSupport.getFluidState(world, pos);
-    }
-
-    private void scheduleContainedFluidTick(World world, BlockPos pos, IBlockState state)
-    {
-        FluidloggedSupport.scheduleFluidTick(world, pos, state);
-    }
-
-    private void restoreContainedFluidOrAir(World world, BlockPos pos, IBlockState state, int flags)
-    {
-        FluidloggedSupport.restoreContainedFluidOrAir(world, pos, state, flags);
+    private void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState, int flags) {
+        world.setBlockState(pos, newState, flags);
+        if (Loader.isModLoaded("fluidlogged_api")) {
+            FluidloggedCompat.setFluidloggableBlock(world, pos, newState, flags);
+        }
     }
 
     public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, EntityLivingBase placer)

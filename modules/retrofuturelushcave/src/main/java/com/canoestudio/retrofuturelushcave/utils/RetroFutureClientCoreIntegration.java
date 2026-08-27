@@ -21,7 +21,6 @@ public final class RetroFutureClientCoreIntegration {
         if (registered) {
             return;
         }
-
         registered = true;
         RetroZoomRegistry.register(ModItems.SPYGLASS, new RetroZoomHandler() {
             @Override

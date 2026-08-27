@@ -1,7 +1,8 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import com.canoestudio.retrofuturelushcave.utils.FluidloggedCompat;
+import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -12,12 +13,13 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.Loader;
 
 import java.util.Random;
 
 import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
-public class BuddingAmethystBlock extends net.minecraft.block.Block {
+public class BuddingAmethystBlock extends Block {
     private static final int GROWTH_CHANCE = 5;
 
     public BuddingAmethystBlock() {
@@ -58,12 +60,23 @@ public class BuddingAmethystBlock extends net.minecraft.block.Block {
 
         if (nextStage != null) {
             IBlockState newState = nextStage.getDefaultState().withProperty(AmethystClusterBlock.FACING, growDirection);
-            FluidloggedSupport.setFluidloggableBlock(worldIn, growPos, newState, 3);
+            setFluidloggableBlock(worldIn, growPos, newState);
         }
     }
 
     private static boolean canClusterGrowAtState(World world, BlockPos pos, IBlockState state) {
-        return state.getBlock() == Blocks.AIR || FluidloggedSupport.isWater(world, pos);
+        if (!Loader.isModLoaded("fluidlogged_api")) {
+            return state.getBlock().isReplaceable(world, pos) || state.getBlock() == Blocks.AIR
+                    || state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.FLOWING_WATER;
+        }
+        return FluidloggedCompat.isWater(world, pos);
+    }
+
+    private void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState) {
+        world.setBlockState(pos, newState, 3);
+        if (Loader.isModLoaded("fluidlogged_api")) {
+            FluidloggedCompat.setFluidloggableBlock(world, pos, newState, 3);
+        }
     }
 
     @Override

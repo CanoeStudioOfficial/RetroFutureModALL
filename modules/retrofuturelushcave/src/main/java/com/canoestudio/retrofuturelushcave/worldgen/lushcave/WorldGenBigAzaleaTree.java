@@ -1,4 +1,4 @@
-package com.canoestudio.retrofuturelushcave.contents.world.gen;
+package com.canoestudio.retrofuturelushcave.worldgen.lushcave;
 
 import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.google.common.collect.Lists;
@@ -163,13 +163,10 @@ public class WorldGenBigAzaleaTree extends WorldGenAbstractTree {
      */
     void generateLeafNode(BlockPos pos)
     {
-        for (int i = 0; i < this.leafDistanceLimit; ++i)
-        {
-            if(new Random().nextFloat() < 0.25)
-            {
+        for (int i = 0; i < this.leafDistanceLimit; ++i) {
+            if (this.rand.nextFloat() < 0.25) {
                 this.crosSection(pos.up(i), this.leafSize(i), ModBlocks.Flowering_Azalea_Leaves.getDefaultState().withProperty(BlockLeaves.CHECK_DECAY, false));
-            }
-            else {
+            } else {
                 this.crosSection(pos.up(i), this.leafSize(i), ModBlocks.Azalea_Leaves.getDefaultState().withProperty(BlockLeaves.CHECK_DECAY, false));
             }
         }
