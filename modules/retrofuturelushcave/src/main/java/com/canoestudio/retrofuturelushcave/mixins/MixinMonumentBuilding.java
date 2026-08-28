@@ -1,7 +1,5 @@
 package com.canoestudio.retrofuturelushcave.mixins;
 
-import java.util.List;
-import java.util.Random;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.gen.structure.StructureOceanMonumentPieces;
 import org.spongepowered.asm.mixin.Final;
@@ -10,6 +8,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.List;
+import java.util.Random;
 
 @Mixin(StructureOceanMonumentPieces.MonumentBuilding.class)
 public abstract class MixinMonumentBuilding {

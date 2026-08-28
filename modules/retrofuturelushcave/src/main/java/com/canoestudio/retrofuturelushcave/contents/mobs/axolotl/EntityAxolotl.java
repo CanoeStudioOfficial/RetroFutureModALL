@@ -1,22 +1,17 @@
 package com.canoestudio.retrofuturelushcave.contents.mobs.axolotl;
 
-import java.util.Arrays;
-
-import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
+import com.canoestudio.retrofuturelushcave.contents.items.ItemAxolotlBucket;
+import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
 import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
-import net.minecraft.block.material.Material;
+import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
 import com.canoestudio.retrofuturemccore.api.tag.RetroTagRegistry;
 import com.canoestudio.retrofuturemccore.api.tag.RetroTags;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.IEntityLivingData;
-import net.minecraft.entity.MoverType;
-import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.*;
 import net.minecraft.entity.passive.EntityWaterMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
-import net.minecraft.item.ItemStack;
 import net.minecraft.init.MobEffects;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
@@ -30,10 +25,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
-import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
-import com.canoestudio.retrofuturelushcave.contents.items.ItemAxolotlBucket;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
 
 public class EntityAxolotl extends EntityWaterMob {
     private static final DataParameter<Integer> VARIANT = EntityDataManager.createKey(EntityAxolotl.class, DataSerializers.VARINT);

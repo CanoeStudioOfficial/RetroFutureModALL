@@ -1,8 +1,5 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf;
 
-import java.util.Arrays;
-import java.util.Random;
-
 import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
@@ -35,6 +32,8 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.Random;
 
 public class DripleafStem extends Block implements IGrowable, RetroWaterloggedBlock {
     public static final String name = "Big_Dripleaf_Stem";

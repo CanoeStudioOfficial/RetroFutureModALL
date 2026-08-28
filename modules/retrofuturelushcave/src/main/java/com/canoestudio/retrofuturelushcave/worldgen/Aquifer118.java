@@ -1,11 +1,11 @@
 package com.canoestudio.retrofuturelushcave.worldgen;
 
 import com.canoestudio.retrofuturelushcave.worldgen.noise.NormalNoise118;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+
 import java.util.Random;
 
-import net.minecraft.block.state.IBlockState;
-
-import net.minecraft.init.Blocks;
 /**
  * 1.18.2 {@code Aquifer}/{@code Aquifer.NoiseBasedAquifer} 的1.12.2移植。
  *

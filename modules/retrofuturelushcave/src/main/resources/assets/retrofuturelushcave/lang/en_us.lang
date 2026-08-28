@@ -182,7 +182,7 @@ tile.retrofuturelushcave.black_candle_cake.name=Black Candle Cake
 config.retrofuturelushcave.cave_generation=Cave Generation
 config.retrofuturelushcave.underground_features=Underground Features
 config.retrofuturelushcave.lush_caves=Lush Caves
-config.retrofuturelushcave.diagnostics=Debug
+config.retrofuturelushcave.debug=Debug
 
 config.retrofuturelushcave.caves.surface_entrance_depth=Surface Entrance Depth
 config.retrofuturelushcave.caves.entrance_density_threshold=Surface Entrance Density Threshold
@@ -211,7 +211,7 @@ config.retrofuturelushcave.root_system.minimum_tree_attempts=Minimum Tree Attemp
 config.retrofuturelushcave.root_system.additional_tree_attempts=Additional Tree Attempts
 config.retrofuturelushcave.root_system.maximum_column_height=Maximum Root Column Height
 config.retrofuturelushcave.root_system.hanging_root_attempts=Hanging Root Attempts
-config.retrofuturelushcave.diagnostics.enable_worldgen=Enable World Generation Diagnostics
+config.retrofuturelushcave.debug.enable_worldgen=Enable World Generation Debug
 config.retrofuturelushcave.dripstone.small_cluster_minimum_attempts=Small Cluster Minimum Attempts
 config.retrofuturelushcave.dripstone.small_cluster_additional_attempts=Small Cluster Additional Attempts
 config.retrofuturelushcave.dripstone.large_minimum_attempts=Large Dripstone Minimum Attempts
@@ -220,7 +220,7 @@ config.retrofuturelushcave.dripstone.large_additional_attempts=Large Dripstone A
 config.retrofuturelushcave.cave_generation.tooltip=Settings for underground noise caves, aquifers, and canyons.
 config.retrofuturelushcave.underground_features.tooltip=Settings for dripstone, glow lichen, and underwater magma features.
 config.retrofuturelushcave.lush_caves.tooltip=Settings for lush cave climate selection and vegetation features.
-config.retrofuturelushcave.diagnostics.tooltip=Print debug information in the log, used for troubleshooting world generation issues.
+config.retrofuturelushcave.debug.tooltip=Print debug information in the log, used for troubleshooting world generation issues.
 
 config.retrofuturelushcave.caves.surface_entrance_depth.tooltip=How far below the surface large caves must stay. Only narrow natural entrances can appear above this depth.
 config.retrofuturelushcave.caves.entrance_density_threshold.tooltip=Lower this value to make surface cave entrances less common and smaller.
@@ -253,7 +253,7 @@ config.retrofuturelushcave.root_system.minimum_tree_attempts.tooltip=Minimum aza
 config.retrofuturelushcave.root_system.additional_tree_attempts.tooltip=Extra random azalea root-system attempts in each chunk.
 config.retrofuturelushcave.root_system.maximum_column_height.tooltip=Maximum distance from a successful azalea tree to its cave ceiling.
 config.retrofuturelushcave.root_system.hanging_root_attempts.tooltip=Attempts to place hanging roots below a successful azalea root column.
-config.retrofuturelushcave.diagnostics.enable_worldgen.tooltip=Writes one aggregate world-generation report after every 128 new chunks. Keep this off for normal play.
+config.retrofuturelushcave.debug.enable_worldgen.tooltip=Writes one aggregate world-generation report after every 128 new chunks. Keep this off for normal play.
 
 commands.retrofuturelushcave.locatelushcave.usage=/locatelushcave
 commands.retrofuturelushcave.locatelushcave.overworld_only=This command can only be used in the Overworld!

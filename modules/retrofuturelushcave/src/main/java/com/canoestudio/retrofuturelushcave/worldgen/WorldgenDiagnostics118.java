@@ -88,7 +88,7 @@ public final class WorldgenDiagnostics118 {
                                                     int mouthAirWritten, int mouthColumns,
                                                     int mouthCaveEntranceSignal, int mouthSpaghettiSignal,
                                                     int minimumDepth, int maximumDepth) {
-        if (!Configuration.DIAGNOSTICS.enableWorldgenDiagnostics) return;
+        if (!Configuration.DEBUG.enableWorldgenDebug) return;
         resetIfSeedChanged(seed);
         sampledChunks++;
         entranceShallowNegative += shallowNegative;
@@ -109,7 +109,7 @@ public final class WorldgenDiagnostics118 {
     }
 
     public static synchronized void recordEntranceMouth(long seed, int x, int y, int z) {
-        if (!Configuration.DIAGNOSTICS.enableWorldgenDiagnostics) return;
+        if (!Configuration.DEBUG.enableWorldgenDebug) return;
         resetIfSeedChanged(seed);
         long distanceSq = (long) x * (long) x + (long) z * (long) z;
         if (distanceSq < entranceNearestMouthDistanceSq) {
@@ -121,14 +121,14 @@ public final class WorldgenDiagnostics118 {
     }
 
     public static synchronized void recordCanyonSource(long seed, boolean accepted) {
-        if (!Configuration.DIAGNOSTICS.enableWorldgenDiagnostics) return;
+        if (!Configuration.DEBUG.enableWorldgenDebug) return;
         resetIfSeedChanged(seed);
         canyonSourceCalls++;
         if (accepted) canyonAccepted++;
     }
 
     public static synchronized void recordCanyonSurfaceCarve(long seed, int surfaceBlocks, int surfaceColumns) {
-        if (!Configuration.DIAGNOSTICS.enableWorldgenDiagnostics
+        if (!Configuration.DEBUG.enableWorldgenDebug
                 || (surfaceBlocks <= 0 && surfaceColumns <= 0)) return;
         resetIfSeedChanged(seed);
         canyonSurfaceBlocks += surfaceBlocks;
@@ -142,7 +142,7 @@ public final class WorldgenDiagnostics118 {
                                                           int floorEnclosedHits, int floorRegionHits,
                                                           int clayCandidates, int clayScanHits,
                                                           int clayEnclosedHits, int clayRegionHits) {
-        if (!Configuration.DIAGNOSTICS.enableWorldgenDiagnostics) return;
+        if (!Configuration.DEBUG.enableWorldgenDebug) return;
         resetIfSeedChanged(seed);
         lushCeilingCandidates += ceilingCandidates;
         lushCeilingScanHits += ceilingScanHits;
@@ -161,7 +161,7 @@ public final class WorldgenDiagnostics118 {
     public static synchronized void recordDripstone(long seed, int smallAttempts, int smallFloorHits,
                                                      int smallRegionHits, int smallCalls, int largeAttempts,
                                                      int largeFloorHits, int largeRegionHits, int largeCalls) {
-        if (!Configuration.DIAGNOSTICS.enableWorldgenDiagnostics) return;
+        if (!Configuration.DEBUG.enableWorldgenDebug) return;
         resetIfSeedChanged(seed);
         dripstoneSmallAttempts += smallAttempts;
         dripstoneSmallFloorHits += smallFloorHits;
@@ -174,14 +174,14 @@ public final class WorldgenDiagnostics118 {
     }
 
     public static synchronized void recordDripstonePool(long seed) {
-        if (!Configuration.DIAGNOSTICS.enableWorldgenDiagnostics) return;
+        if (!Configuration.DEBUG.enableWorldgenDebug) return;
         resetIfSeedChanged(seed);
         dripstonePools++;
     }
 
     public static synchronized void recordUnderwaterMagma(long seed, int attempts, int belowOceanFloor,
                                                             int floorHits, int placed) {
-        if (!Configuration.DIAGNOSTICS.enableWorldgenDiagnostics) return;
+        if (!Configuration.DEBUG.enableWorldgenDebug) return;
         resetIfSeedChanged(seed);
         magmaAttempts += attempts;
         magmaBelowOceanFloor += belowOceanFloor;
@@ -191,7 +191,7 @@ public final class WorldgenDiagnostics118 {
 
     public static synchronized void recordRootSystem(long seed, int attempts, int ceilingHits, int lushHits,
                                                       int treeSuccesses, int columnBlocks, int hangingRoots) {
-        if (!Configuration.DIAGNOSTICS.enableWorldgenDiagnostics) return;
+        if (!Configuration.DEBUG.enableWorldgenDebug) return;
         resetIfSeedChanged(seed);
         rootAttempts += attempts;
         rootCeilingHits += ceilingHits;
@@ -202,7 +202,7 @@ public final class WorldgenDiagnostics118 {
     }
 
     public static synchronized void recordScheduledFluidUpdates(long seed, int waterSources, int lavaSources) {
-        if (!Configuration.DIAGNOSTICS.enableWorldgenDiagnostics
+        if (!Configuration.DEBUG.enableWorldgenDebug
                 || (waterSources <= 0 && lavaSources <= 0)) return;
         resetIfSeedChanged(seed);
         fluidUpdateChunks++;

@@ -1,12 +1,8 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf;
 
-import java.util.Arrays;
-import java.util.Random;
-
 import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import com.canoestudio.retrofuturemccore.api.fluid.RetroFluidState;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import com.canoestudio.retrofuturemccore.api.fluid.WaterloggedPlantFluid;
@@ -14,11 +10,10 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.IGrowable;
-import net.minecraft.block.SoundType;
 import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.IProperty;
+import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.state.BlockFaceShape;
@@ -38,10 +33,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.block.Block.EnumOffsetType;
-import net.minecraft.util.Mirror;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.Rotation;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -49,6 +41,10 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
+import java.util.Arrays;
+import java.util.Random;
+
+import static com.canoestudio.retrofuturelushcave.contents.tab.CreativeTab.CREATIVE_TABS;
 
 public class SmallDripleaf extends Block implements IGrowable, RetroWaterloggedBlock {
     public static final String name = "Small_Dripleaf";
@@ -63,6 +59,7 @@ public class SmallDripleaf extends Block implements IGrowable, RetroWaterloggedB
         setRegistryName(name);
         setTranslationKey(Tags.MOD_ID + "." + name.toLowerCase());
         setHardness(0.0F);
+        setCreativeTab(CREATIVE_TABS);
         setSoundType(BigDripleaf.DRIPLEAF);
         setLightOpacity(0);
         setDefaultState(RetroWaterlogging.withStillWaterLevel(blockState.getBaseState()

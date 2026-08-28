@@ -1,7 +1,5 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf;
 
-import java.util.Random;
-
 import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.Block;
@@ -10,6 +8,8 @@ import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+
+import java.util.Random;
 
 public final class DripleafPlacement {
     private DripleafPlacement() {

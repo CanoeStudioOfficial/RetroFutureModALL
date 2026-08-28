@@ -1,14 +1,5 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
-
-import javax.annotation.Nullable;
-
-import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
@@ -34,17 +25,15 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.stats.StatList;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockRenderLayer;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.Mirror;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.Rotation;
+import net.minecraft.util.*;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+
+import javax.annotation.Nullable;
+import java.util.*;
 
 public class GlowLichenBlock extends Block implements IGrowable, RetroWaterloggedBlock {
     public static final PropertyBool DOWN = PropertyBool.create("down");
@@ -417,7 +406,7 @@ public class GlowLichenBlock extends Block implements IGrowable, RetroWaterlogge
         if (place && world instanceof World) {
             boolean waterlogged = isGlowLichen(oldState)
                     ? isWaterlogged(oldState) : RetroWaterlogging.isWater(world, pos);
-            ((World) world).setBlockState(pos,
+            RetroWaterlogging.setFluidloggableBlock((World) world, pos,
                     stateFor(getFaceMask(oldState) | faceBit(face), waterlogged), 2);
         }
         return true;

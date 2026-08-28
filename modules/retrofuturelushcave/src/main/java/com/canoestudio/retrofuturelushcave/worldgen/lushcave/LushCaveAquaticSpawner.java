@@ -3,15 +3,15 @@ package com.canoestudio.retrofuturelushcave.worldgen.lushcave;
 import com.canoestudio.retrofuturelushcave.contents.mobs.axolotl.EntityAxolotl;
 import com.canoestudio.retrofuturelushcave.contents.mobs.glowsquid.EntityGlowSquid;
 import com.canoestudio.retrofuturelushcave.worldgen.cave.DensityCave118Generator;
-import java.util.Random;
-import net.minecraft.block.Block;
-import net.minecraft.init.Blocks;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+
+import java.util.Random;
 
 /**
  * 1.12没有垂直Biome SpawnSettings；因此在严格LUSH三维区域的实际地下水体中一次性生成水生生物。
@@ -111,13 +111,11 @@ public final class LushCaveAquaticSpawner {
 
     private static boolean isWater(Chunk chunk, int x, int y, int z) {
         if (y < 0 || y >= 256) return false;
-        Block block = chunk.getBlockState(new BlockPos(x, y, z)).getBlock();
-        return block == Blocks.WATER || block == Blocks.FLOWING_WATER;
+        return RetroWaterlogging.isWater(chunk.getWorld(), new BlockPos(x, y, z));
     }
 
     private static boolean isWater(World world, BlockPos pos) {
-        Block block = world.getBlockState(pos).getBlock();
-        return block == Blocks.WATER || block == Blocks.FLOWING_WATER;
+        return RetroWaterlogging.isWater(world, pos);
     }
 
     private static long mixSeed(long seed, int chunkX, int chunkZ, long salt) {

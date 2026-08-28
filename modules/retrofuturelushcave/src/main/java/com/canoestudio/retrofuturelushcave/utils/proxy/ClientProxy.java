@@ -1,14 +1,13 @@
 package com.canoestudio.retrofuturelushcave.utils.proxy;
 
-import com.canoestudio.retrofuturelushcave.contents.items.spyglass.SpyglassHandler;
-import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.contents.blocks.AmethystClusterBlock;
 import com.canoestudio.retrofuturelushcave.contents.blocks.GlowLichenBlock;
 import com.canoestudio.retrofuturelushcave.contents.blocks.HangingRootsBlock;
+import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf.BigDripleaf;
 import com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf.DripleafStem;
 import com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf.SmallDripleaf;
-import com.canoestudio.retrofuturemccore.api.client.model.RetroModelRegistry;
+import com.canoestudio.retrofuturelushcave.contents.items.spyglass.SpyglassHandler;
 import com.canoestudio.retrofuturelushcave.contents.mobs.axolotl.EntityAxolotl;
 import com.canoestudio.retrofuturelushcave.contents.mobs.axolotl.RenderAxolotl;
 import com.canoestudio.retrofuturelushcave.contents.mobs.brownmooshrooms.EntityBrownMooshroom;
@@ -18,17 +17,18 @@ import com.canoestudio.retrofuturelushcave.contents.mobs.glowsquid.RenderGlowSqu
 import com.canoestudio.retrofuturelushcave.contents.mobs.goat.EntityGoat;
 import com.canoestudio.retrofuturelushcave.contents.mobs.goat.RenderGoat;
 import com.canoestudio.retrofuturelushcave.utils.PowderSnowHudHandler;
-import net.minecraftforge.common.MinecraftForge;
+import com.canoestudio.retrofuturemccore.api.client.model.RetroModelRegistry;
+import net.minecraft.block.BlockLiquid;
+import net.minecraft.block.properties.IProperty;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
-import net.minecraft.block.BlockLiquid;
-import net.minecraft.block.properties.IProperty;
 
 import java.util.Arrays;
 

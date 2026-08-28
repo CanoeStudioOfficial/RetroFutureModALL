@@ -4,16 +4,19 @@ import com.canoestudio.retrofuturelushcave.config.Configuration;
 import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.worldgen.WorldgenDiagnostics118;
 import com.canoestudio.retrofuturelushcave.worldgen.cave.DensityCave118Generator;
-import java.util.Random;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockSapling;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraftforge.event.terraingen.PopulateChunkEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+
+import java.util.Random;
 
 /**
  * 1.12适配的1.18.2 RootSystemFeature。
@@ -72,7 +75,7 @@ public final class LushCaveRootSystemDecorator {
             if (originY < 0) continue;
             diagnostic.ceilingHits++;
 
-            boolean lush = regions.isLushAt(x, originY, z) && isEnclosedUndergroundRootCavity(chunk, x, originY, z);
+            boolean lush = regions.isLushAt(x, originY, z) && isEnclosedUndergroundRootCavity(world, chunk, x, originY, z);
             if (lush) diagnostic.lushHits++;
             if (!lush && !(debug && DEBUG_FORCE_HANGING_ROOTS)) continue;
 
@@ -173,13 +176,13 @@ public final class LushCaveRootSystemDecorator {
     }
 
     private static RootSystemResult placeRootSystem(World world, Chunk chunk, int baseX, int baseZ,
-                                                     int x, int originY, int z, Random random) {
-        int surfaceY = findSurfaceAir(chunk, x, z);
+                                                    int x, int originY, int z, Random random) {
+        int surfaceY = findSurfaceAir(world, chunk, x, z);
         if (surfaceY < 2 || surfaceY - originY > Configuration.LUSH_CAVES.maximumRootColumnHeight
                 || surfaceY <= originY) {
             return RootSystemResult.FAILED;
         }
-        if (!isAir(chunk, x, originY, z) || !hasInitialTreeSpace(chunk, x, surfaceY, z)) {
+        if (!isAir(chunk, x, originY, z) || !hasInitialTreeSpace(world, chunk, x, surfaceY, z)) {
             return RootSystemResult.FAILED;
         }
 
@@ -222,8 +225,8 @@ public final class LushCaveRootSystemDecorator {
 
     /** 在树下、已确认的繁茂洞顶附近放置RootSystemFeature配置中的垂根。 */
     private static int placeHangingRootsAroundCeiling(World world, Chunk chunk, int baseX, int baseZ,
-                                                       int x, int originY, int z, Random random,
-                                                       int attempts) {
+                                                      int x, int originY, int z, Random random,
+                                                      int attempts) {
         int placed = 0;
         for (int attempt = 0; attempt < attempts; attempt++) {
             int rootX = x + random.nextInt(HANGING_ROOT_RADIUS) - random.nextInt(HANGING_ROOT_RADIUS);
@@ -239,7 +242,7 @@ public final class LushCaveRootSystemDecorator {
     }
 
     /** 根系只可从真正的地下洞顶向上连接；露天凹地、树冠下和浅层裂缝不能成为繁茂根系起点。 */
-    private static boolean isEnclosedUndergroundRootCavity(Chunk chunk, int x, int originY, int z) {
+    private static boolean isEnclosedUndergroundRootCavity(World world, Chunk chunk, int x, int originY, int z) {
         if (originY <= 0 || originY >= 255 || !isAir(chunk, x, originY, z)
                 || !isSolid(chunk, x, originY + 1, z)) return false;
         for (int y = originY + 1; y <= originY + 8 && y < 256; y++) {
@@ -248,23 +251,33 @@ public final class LushCaveRootSystemDecorator {
             if (block != Blocks.STONE && block != ModBlocks.DeepSlate && block != ModBlocks.DRIPSTONE_BLOCK
                     && block != ModBlocks.CALCITE && block != ModBlocks.TUFF) return false;
         }
-        int surfaceY = findSurfaceAir(chunk, x, z);
+        int surfaceY = findSurfaceAir(world, chunk, x, z);
         return surfaceY > originY + 12
                 && surfaceY - originY <= Configuration.LUSH_CAVES.maximumRootColumnHeight;
     }
 
-    private static int findSurfaceAir(Chunk chunk, int x, int z) {
+    /** 融合版本一的土壤检测：只承认能支撑树苗的方块为有效地表。 */
+    private static int findSurfaceAir(World world, Chunk chunk, int x, int z) {
         for (int y = 254; y >= 1; y--) {
-            if (isSolid(chunk, x, y, z) && isAir(chunk, x, y + 1, z)) return y + 1;
+            BlockPos pos = new BlockPos(x, y, z);
+            if (isTreeSoil(world, pos) && isAir(chunk, x, y + 1, z)) return y + 1;
         }
         return -1;
     }
 
-    private static boolean hasInitialTreeSpace(Chunk chunk, int x, int y, int z) {
+    /** 版本二原本仅要求3格空气和固体地面；此处将固体地面改为“能支撑树苗的土壤”。 */
+    private static boolean hasInitialTreeSpace(World world, Chunk chunk, int x, int y, int z) {
         for (int dy = 0; dy < 3 && y + dy <= 255; dy++) {
             if (!isAir(chunk, x, y + dy, z)) return false;
         }
-        return isSolid(chunk, x, y - 1, z);
+        return isTreeSoil(world, new BlockPos(x, y - 1, z));
+    }
+
+    /** 检查方块是否能支撑原版树苗（即草方块、泥土等）。 */
+    private static boolean isTreeSoil(World world, BlockPos pos) {
+        IBlockState state = world.getBlockState(pos);
+        return state.getBlock().canSustainPlant(state, world, pos, EnumFacing.UP,
+                (BlockSapling) Blocks.SAPLING);
     }
 
     private static int scanUpForCeilingAir(Chunk chunk, int x, int startY, int z, int maxSteps) {

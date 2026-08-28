@@ -182,7 +182,7 @@ subtitles.item.spyglass.stop_using=望远镜收回
 config.retrofuturelushcave.cave_generation=洞穴生成
 config.retrofuturelushcave.underground_features=地下特征
 config.retrofuturelushcave.lush_caves=繁茂洞穴
-config.retrofuturelushcave.diagnostics=调试
+config.retrofuturelushcave.debug=调试
 
 config.retrofuturelushcave.caves.surface_entrance_depth=地表入口深度
 config.retrofuturelushcave.caves.entrance_density_threshold=地表入口密度阈值
@@ -211,7 +211,7 @@ config.retrofuturelushcave.root_system.minimum_tree_attempts=最小树木尝试�
 config.retrofuturelushcave.root_system.additional_tree_attempts=额外随机树木尝试次数
 config.retrofuturelushcave.root_system.maximum_column_height=最大根柱高度
 config.retrofuturelushcave.root_system.hanging_root_attempts=垂根尝试次数
-config.retrofuturelushcave.diagnostics.enable_worldgen=启用世界生成诊断
+config.retrofuturelushcave.debug.enable_worldgen=启用世界生成诊断
 config.retrofuturelushcave.dripstone.small_cluster_minimum_attempts=小型滴水石簇最小尝试次数
 config.retrofuturelushcave.dripstone.small_cluster_additional_attempts=小型滴水石簇额外随机尝试次数
 config.retrofuturelushcave.dripstone.large_minimum_attempts=大型滴水石最小尝试次数
@@ -220,7 +220,7 @@ config.retrofuturelushcave.dripstone.large_additional_attempts=大型滴水石�
 config.retrofuturelushcave.cave_generation.tooltip=地下噪声洞穴、含水层和峡谷的相关设置。
 config.retrofuturelushcave.underground_features.tooltip=水滴石、发光地衣和水下岩浆块特征的相关设置。
 config.retrofuturelushcave.lush_caves.tooltip=繁茂洞穴气候选择和植被特征的相关设置。
-config.retrofuturelushcave.diagnostics.tooltip=在日志中打印Debug调试信息，用于排查世界生成问题。
+config.retrofuturelushcave.debug.tooltip=在日志中打印Debug调试信息，用于排查世界生成问题。
 
 config.retrofuturelushcave.caves.surface_entrance_depth.tooltip=大型洞穴距离地表的最小深度。只有较窄的自然入口可以在这个深度以上出现。
 config.retrofuturelushcave.caves.entrance_density_threshold.tooltip=调低后，地表洞穴入口会更少、更小。
@@ -253,7 +253,7 @@ config.retrofuturelushcave.root_system.minimum_tree_attempts.tooltip=每个区�
 config.retrofuturelushcave.root_system.additional_tree_attempts.tooltip=每个区块额外随机尝试生成杜鹃树根系的次数。
 config.retrofuturelushcave.root_system.maximum_column_height.tooltip=杜鹃树与下方洞穴顶部之间允许的最大距离。
 config.retrofuturelushcave.root_system.hanging_root_attempts.tooltip=成功生成杜鹃树根柱后，尝试放置垂根的次数。
-config.retrofuturelushcave.diagnostics.enable_worldgen.tooltip=每生成128个新区块输出一条世界生成汇总日志。正常游玩建议关闭。
+config.retrofuturelushcave.debug.enable_worldgen.tooltip=每生成128个新区块输出一条世界生成汇总日志。正常游玩建议关闭。
 
 commands.retrofuturelushcave.locatelushcave.usage=/locatelushcave
 commands.retrofuturelushcave.locatelushcave.overworld_only=该命令只能在主世界使用！

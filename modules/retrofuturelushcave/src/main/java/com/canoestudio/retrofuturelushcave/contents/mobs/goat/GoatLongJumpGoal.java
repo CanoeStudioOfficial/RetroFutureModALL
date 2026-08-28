@@ -1,16 +1,13 @@
 package com.canoestudio.retrofuturelushcave.contents.mobs.goat;
 
 import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
-import com.canoestudio.retrofuturelushcave.utils.FluidloggedCompat;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.ai.EntityAIBase;
-import net.minecraft.init.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.Loader;
 
 import javax.annotation.Nullable;
 
@@ -126,11 +123,7 @@ public class GoatLongJumpGoal extends EntityAIBase {
     }
 
     private static boolean isWater(World world, BlockPos pos) {
-        if (!Loader.isModLoaded("fluidlogged_api")) {
-            IBlockState state = world.getBlockState(pos);
-            return state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.FLOWING_WATER;
-        }
-        return FluidloggedCompat.isWater(world, pos);
+        return RetroWaterlogging.isWater(world, pos);
     }
 
     private boolean hasClearArc(BlockPos landing) {

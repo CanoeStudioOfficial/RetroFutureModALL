@@ -1,7 +1,7 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
-import com.canoestudio.retrofuturelushcave.utils.FluidloggedCompat;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -13,7 +13,6 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.Loader;
 
 import java.util.Random;
 
@@ -65,18 +64,11 @@ public class BuddingAmethystBlock extends Block {
     }
 
     private static boolean canClusterGrowAtState(World world, BlockPos pos, IBlockState state) {
-        if (!Loader.isModLoaded("fluidlogged_api")) {
-            return state.getBlock().isReplaceable(world, pos) || state.getBlock() == Blocks.AIR
-                    || state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.FLOWING_WATER;
-        }
-        return FluidloggedCompat.isWater(world, pos);
+        return state.getBlock().canPlaceBlockAt(world, pos) || state.getBlock() == Blocks.WATER || RetroWaterlogging.isWater(world, pos);
     }
 
     private void setFluidloggableBlock(World world, BlockPos pos, IBlockState newState) {
-        world.setBlockState(pos, newState, 3);
-        if (Loader.isModLoaded("fluidlogged_api")) {
-            FluidloggedCompat.setFluidloggableBlock(world, pos, newState, 3);
-        }
+        RetroWaterlogging.setFluidloggableBlock(world, pos, newState, 3);
     }
 
     @Override

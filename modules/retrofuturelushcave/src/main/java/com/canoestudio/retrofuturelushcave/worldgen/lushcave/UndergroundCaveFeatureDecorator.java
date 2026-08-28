@@ -2,31 +2,20 @@ package com.canoestudio.retrofuturelushcave.worldgen.lushcave;
 
 import com.canoestudio.retrofuturelushcave.config.Configuration;
 import com.canoestudio.retrofuturelushcave.contents.blocks.CaveVine.CaveVine;
-import com.canoestudio.retrofuturelushcave.contents.blocks.GlowLichenBlock;
-import com.canoestudio.retrofuturelushcave.utils.FluidloggedCompat;
-
 import com.canoestudio.retrofuturelushcave.contents.blocks.CaveVine.CaveVinePlant;
+import com.canoestudio.retrofuturelushcave.contents.blocks.GlowLichenBlock;
 import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.contents.blocks.PointedDripstoneBlock;
 import com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf.BigDripleaf;
 import com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf.DripleafStem;
 import com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf.SmallDripleaf;
-import com.canoestudio.retrofuturelushcave.worldgen.cave.DensityCave118Generator;
 import com.canoestudio.retrofuturelushcave.worldgen.WorldgenDiagnostics118;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
+import com.canoestudio.retrofuturelushcave.worldgen.cave.DensityCave118Generator;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.Block;
-
 import net.minecraft.block.BlockDoublePlant;
 import net.minecraft.block.BlockTallGrass;
 import net.minecraft.block.BlockVine;
-
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
@@ -34,9 +23,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
-
-
 import net.minecraftforge.fml.common.Loader;
+
+import java.util.*;
 
 import static com.canoestudio.retrofuturelushcave.RetroFutureLushCave.LOGGER;
 
@@ -211,9 +200,9 @@ InSquare、
             int x = baseX + random.nextInt(16);
             int z = baseZ + random.nextInt(16);
             int y = randomLushPlacementY(random);
-            if (y < MIN_Y || y > oceanFloorHeight(sourceChunk, x, z)
-                    - Configuration.UNDERGROUND_FEATURES.glowLichenMinimumOceanFloorDepth) continue;
-            placeGlowLichenFeature(world, sourceChunk, sourceChunkX, sourceChunkZ, x, y, z, random);
+            if (y >= 0 && y <= oceanFloorHeight(sourceChunk, x, z) - Configuration.UNDERGROUND_FEATURES.glowLichenMinimumOceanFloorDepth) {
+                placeGlowLichenFeature(world, sourceChunk, sourceChunkX, sourceChunkZ, x, y, z, random);
+            }
         }
     }
 
@@ -254,7 +243,7 @@ InSquare、
                 IBlockState candidateState = state(candidateChunk, candidate.getX(), candidate.getY(), candidate.getZ());
                 if (!isAir(candidateChunk, candidate.getX(), candidate.getY(), candidate.getZ())
                         && !isWater(candidateChunk, candidate.getX(), candidate.getY(), candidate.getZ())
-                        && candidateState.getBlock() != ModBlocks.GLOW_LICHEN) break;
+                        && !GlowLichenBlock.isGlowLichen(candidateState)) break;
                 for (EnumFacing face : faces) {
                     if (tryPlaceGlowLichenFace(world, sourceChunk, sourceChunkX, sourceChunkZ, candidate, face, true)) {
                         if (random.nextFloat() < 0.5F) {
@@ -315,30 +304,43 @@ InSquare、
     /**
      * 初放遵守GlowLichenConfiguration.canBePlacedOn；传播阶段遵守MultifaceBlock对任意牢固面的规则。
      */
-    private static boolean tryPlaceGlowLichenFace(World world, Chunk sourceChunk, int sourceChunkX, int sourceChunkZ,
-                                                  BlockPos pos, EnumFacing face, boolean initialPlacement) {
-        if (pos.getY() < MIN_Y || pos.getY() > MAX_Y) return false;
-        Chunk target = loadedChunk(world, sourceChunk, sourceChunkX, sourceChunkZ, pos.getX(), pos.getZ());
-        if (target == null) return false;
-        if (!isEnclosedLichenCavity(target, pos.getX(), pos.getY(), pos.getZ())) return false;
-        IBlockState current = state(target, pos.getX(), pos.getY(), pos.getZ());
-        boolean currentIsLichen = current.getBlock() == ModBlocks.GLOW_LICHEN;
-        if (!currentIsLichen && !isAir(target, pos.getX(), pos.getY(), pos.getZ())
-                && !isWater(target, pos.getX(), pos.getY(), pos.getZ())) return false;
+    private static boolean tryPlaceGlowLichenFace(World world, Chunk sourceChunk, int sourceChunkX, int sourceChunkZ, BlockPos pos, EnumFacing face, boolean initialPlacement) {
+        if (pos.getY() >= 0 && pos.getY() <= 255) {
+            Chunk target = loadedChunk(world, sourceChunk, sourceChunkX, sourceChunkZ, pos.getX(), pos.getZ());
+            if (target == null) {
+                return false;
+            } else if (!isEnclosedLichenCavity(target, pos.getX(), pos.getY(), pos.getZ())) {
+                return false;
+            } else {
+                IBlockState current = state(target, pos.getX(), pos.getY(), pos.getZ());
+                boolean currentIsLichen = GlowLichenBlock.isGlowLichen(current);
+                if (!currentIsLichen && !isAir(target, pos.getX(), pos.getY(), pos.getZ()) && !isWater(target, pos.getX(), pos.getY(), pos.getZ())) {
+                    return false;
+                } else {
+                    BlockPos supportPos = pos.offset(face);
+                    Chunk supportChunk = loadedChunk(world, sourceChunk, sourceChunkX, sourceChunkZ, supportPos.getX(), supportPos.getZ());
+                    if (supportChunk == null) {
+                        return false;
+                    } else {
+                        IBlockState support = state(supportChunk, supportPos.getX(), supportPos.getY(), supportPos.getZ());
+                        if (initialPlacement) {
+                            if (!isGlowLichenInitialSupport(support.getBlock())) {
+                                return false;
+                            }
+                        } else if (!support.isSideSolid(world, supportPos, face.getOpposite())) {
+                            return false;
+                        }
 
-        BlockPos supportPos = pos.offset(face);
-        Chunk supportChunk = loadedChunk(world, sourceChunk, sourceChunkX, sourceChunkZ,
-                supportPos.getX(), supportPos.getZ());
-        if (supportChunk == null) return false;
-        IBlockState support = state(supportChunk, supportPos.getX(), supportPos.getY(), supportPos.getZ());
-        if (initialPlacement ? !isGlowLichenInitialSupport(support.getBlock())
-                : !support.isSideSolid(world, supportPos, face.getOpposite())) return false;
-
-        GlowLichenBlock lichen = (GlowLichenBlock) ModBlocks.GLOW_LICHEN;
-        IBlockState placed = lichen.getStateWithFace(current, face);
-        if (placed == null) return false;
-        setFluidloggableGlowLichen(world, target, pos, placed, isWater(target, pos.getX(), pos.getY(), pos.getZ()));
-        return true;
+                        boolean waterlogged = currentIsLichen && GlowLichenBlock.isWaterlogged(current) || RetroWaterlogging.isWater(world, pos);
+                        IBlockState placed = GlowLichenBlock.stateFor(GlowLichenBlock.getFaceMask(current) | GlowLichenBlock.faceBit(face), waterlogged);
+                        setFluidloggableGlowLichen(world, pos, placed);
+                        return true;
+                    }
+                }
+            }
+        } else {
+            return false;
+        }
     }
 
     private static boolean isGlowLichenInitialSupport(Block block) {
@@ -346,13 +348,8 @@ InSquare、
                 || block == ModBlocks.TUFF || block == ModBlocks.DeepSlate;
     }
 
-    private static void setFluidloggableGlowLichen(World world, Chunk chunk, BlockPos pos, IBlockState state,
-                                                   boolean preserveWater) {
-        if (preserveWater && Loader.isModLoaded("fluidlogged_api")) {
-            FluidloggedCompat.setFluidloggableBlock(world, pos, state, 2);
-        } else {
-            chunk.setBlockState(pos, state);
-        }
+    private static void setFluidloggableGlowLichen(World world, BlockPos pos, IBlockState state) {
+        RetroWaterlogging.setFluidloggableBlock(world, pos, state, 2);
     }
 
     private static void ensureGenerator(long worldSeed) {
@@ -1028,18 +1025,12 @@ InSquare、
     }
 
     private static void placeDripleaf(World world, Chunk chunk, int x, int y, int z, Random random, boolean waterPool) {
-        /* SimpleRandomSelectorFeature：先nextInt(5)，索引0为小叶，1..4固定对应东、西、南、北。 */
         int variant = random.nextInt(5);
         if (variant == 0) {
-            /* makeSmallDripleaf中的WeightedStateProvider：四个朝向权重均为1。 */
             EnumFacing facing = EnumFacing.byHorizontalIndex(random.nextInt(4));
             if (y + 1 <= MAX_Y && canOccupyDripleafCell(chunk, x, y, z, waterPool)
                     && canOccupyDripleafCell(chunk, x, y + 1, z, false)) {
-                setFluidloggableDripleaf(world, chunk, x, y, z, ModBlocks.SMALL_DRIPLEAF.getDefaultState()
-                        .withProperty(SmallDripleaf.HALF, BlockDoublePlant.EnumBlockHalf.LOWER)
-                        .withProperty(SmallDripleaf.FACING, facing), waterPool);
-                set(chunk, x, y + 1, z, ModBlocks.SMALL_DRIPLEAF.getDefaultState()
-                        .withProperty(SmallDripleaf.FACING, facing));
+                ((SmallDripleaf) ModBlocks.SMALL_DRIPLEAF).placeAt(world, new BlockPos(x, y, z), facing, 2);
             }
             return;
         }
@@ -1052,7 +1043,6 @@ InSquare、
             default: facing = EnumFacing.NORTH; break;
         }
 
-        /* WeightedListInt：Uniform[0,4]的权重2、Constant(0)的权重1。 */
         int stemCount = random.nextInt(3) < 2 ? random.nextInt(5) : 0;
         if (y + stemCount > MAX_Y) return;
         for (int i = 0; i <= stemCount; i++) {
@@ -1073,15 +1063,10 @@ InSquare、
         return isAir(chunk, x, y, z) || (allowWater && isWater(chunk, x, y, z));
     }
 
-    /** Fluidlogged API存在时保留水；无该API时退化为1.12普通水中植物的视觉近似。 */
     private static void setFluidloggableDripleaf(World world, Chunk chunk, int x, int y, int z, IBlockState state,
                                                  boolean preserveWater) {
         BlockPos pos = new BlockPos(x, y, z);
-        if (preserveWater && Loader.isModLoaded("fluidlogged_api")) {
-            FluidloggedCompat.setFluidloggableBlock(world, pos, state, 2);
-        } else {
-            chunk.setBlockState(pos, state);
-        }
+        RetroWaterlogging.setFluidloggableBlock(world, pos, state, 2);
     }
 
     /** 对应VegetationPatchFeature在surface=CEILING、verticalRange=5下寻找可替换天花板支撑方块。 */
@@ -1360,8 +1345,7 @@ InSquare、
     }
 
     private static boolean isWater(Chunk chunk, int x, int y, int z) {
-        Block block = state(chunk, x, y, z).getBlock();
-        return block == Blocks.WATER || block == Blocks.FLOWING_WATER;
+        return RetroWaterlogging.isWater(chunk.getWorld(), new BlockPos(x, y, z));
     }
 
     private static IBlockState state(Chunk chunk, int x, int y, int z) {

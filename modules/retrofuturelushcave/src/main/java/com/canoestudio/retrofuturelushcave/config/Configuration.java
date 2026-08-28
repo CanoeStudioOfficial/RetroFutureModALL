@@ -29,8 +29,8 @@ public final class Configuration {
 
     @Config.Name("Debug")
     @Config.Comment("Print debug information in the log, used for troubleshooting world generation issues.\n")
-    @Config.LangKey("config.retrofuturelushcave.diagnostics")
-    public static Diagnostics DIAGNOSTICS = new Diagnostics();
+    @Config.LangKey("config.retrofuturelushcave.debug")
+    public static Debug DEBUG = new Debug();
 
     public static final class CaveGeneration {
         @Config.Name("Surface Entrance Depth")
@@ -255,11 +255,11 @@ public final class Configuration {
         public double underwaterMagmaPlacementProbability = 0.50D;
     }
 
-    public static final class Diagnostics {
-        @Config.Name("Enable World Generation Diagnostics")
+    public static final class Debug {
+        @Config.Name("Enable World Generation Debug")
         @Config.Comment("Writes one aggregate world-generation report after every 128 new chunks. Keep disabled during normal play.")
-        @Config.LangKey("config.retrofuturelushcave.diagnostics.enable_worldgen")
-        public boolean enableWorldgenDiagnostics = false;
+        @Config.LangKey("config.retrofuturelushcave.debug.enable_worldgen")
+        public boolean enableWorldgenDebug = false;
     }
 
     @Mod.EventBusSubscriber(modid = Tags.MOD_ID)

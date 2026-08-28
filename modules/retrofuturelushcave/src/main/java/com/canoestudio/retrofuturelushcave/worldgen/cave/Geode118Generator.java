@@ -2,8 +2,8 @@ package com.canoestudio.retrofuturelushcave.worldgen.cave;
 
 import com.canoestudio.retrofuturelushcave.contents.blocks.AmethystClusterBlock;
 import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
-import com.canoestudio.retrofuturelushcave.utils.FluidloggedCompat;
 import com.canoestudio.retrofuturelushcave.worldgen.noise.LegacyNormalNoise118;
+import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
@@ -12,7 +12,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
-import net.minecraftforge.fml.common.Loader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +89,7 @@ public final class Geode118Generator {
             BlockPos point = origin.add(4 + random.nextInt(3), 4 + random.nextInt(3), 4 + random.nextInt(3));
             Chunk pointChunk = loadedChunk(world, sourceChunk, sourceChunkX, sourceChunkZ, point.getX(), point.getZ());
             IBlockState pointState = state(pointChunk, point);
-            if (isAir(pointState) || isGeodeInvalid(pointState)) {
+            if (isAir(pointState) || isGeodeInvalid(world, point, pointState)) {
                 if (++invalid > INVALID_THRESHOLD) return;
             }
             points.add(new GeodePoint(point, 1 + random.nextInt(2))); // UniformInt[1,2]
@@ -183,7 +182,8 @@ public final class Geode118Generator {
                 if (!canClusterGrowAt(world, targetPos, targetState)) continue;
                 IBlockState clusterState = cluster.getDefaultState()
                         .withProperty(AmethystClusterBlock.FACING, facing);
-                setFluidloggableCluster(world, target, targetPos, clusterState, isWater(targetState));
+                setFluidloggableCluster(world, target, targetPos, clusterState,
+                        RetroWaterlogging.isWater(world, targetPos));
                 break;
             }
         }
@@ -202,19 +202,15 @@ public final class Geode118Generator {
         }
     }
 
-    /** 与用户BuddingAmethystBlock#canClusterGrowAtState保持一致。 */
+    /** Uses the shared optional fluid bridge for both plain water and Fluidlogged API states. */
     private static boolean canClusterGrowAt(World world, BlockPos pos, IBlockState state) {
-        if (!Loader.isModLoaded("fluidlogged_api")) {
-            Block block = state.getBlock();
-            return block.isReplaceable(world, pos) || isAir(state)
-                    || block == Blocks.WATER || block == Blocks.FLOWING_WATER;
-        }
-        return FluidloggedCompat.isWater(world, pos);
+        return state.getBlock().isReplaceable(world, pos) || isAir(state)
+                || RetroWaterlogging.isWater(world, pos);
     }
 
     private static void setFluidloggableCluster(World world, Chunk chunk, BlockPos pos, IBlockState state, boolean water) {
-        if (water && Loader.isModLoaded("fluidlogged_api")) {
-            FluidloggedCompat.setFluidloggableBlock(world, pos, state, 2);
+        if (water) {
+            RetroWaterlogging.setFluidloggableBlock(world, pos, state, 2);
         } else {
             chunk.setBlockState(pos, state);
         }
@@ -253,14 +249,10 @@ public final class Geode118Generator {
         return state.getBlock() == Blocks.AIR;
     }
 
-    private static boolean isWater(IBlockState state) {
+    private static boolean isGeodeInvalid(World world, BlockPos pos, IBlockState state) {
         Block block = state.getBlock();
-        return block == Blocks.WATER || block == Blocks.FLOWING_WATER;
-    }
-
-    private static boolean isGeodeInvalid(IBlockState state) {
-        Block block = state.getBlock();
-        return block == Blocks.BEDROCK || isWater(state) || block == Blocks.LAVA || block == Blocks.FLOWING_LAVA
+        return block == Blocks.BEDROCK || RetroWaterlogging.isWater(world, pos)
+                || block == Blocks.LAVA || block == Blocks.FLOWING_LAVA
                 || block == Blocks.ICE || block == Blocks.PACKED_ICE;
     }
 
