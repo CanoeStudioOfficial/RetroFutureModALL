@@ -1,7 +1,5 @@
 package com.canoestudio.retrofutureupdateaquatic.entity;
 
-import java.util.Arrays;
-
 import com.canoestudio.retrofutureupdateaquatic.compat.AquaticCompat;
 import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
 import com.canoestudio.retrofuturemccore.api.fluid.FluidloggedSupport;
@@ -72,9 +70,8 @@ public class EntityDolphin extends EntityWaterMob {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
-            RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, 10.0D),
-            RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 1.1D)));
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MAX_HEALTH, 10.0D);
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MOVEMENT_SPEED, 1.1D);
     }
 
     @Override

@@ -1,7 +1,5 @@
 package com.canoestudio.retrofutureupdateaquatic.entity;
 
-import java.util.Arrays;
-
 import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAIPhantomCircle;
 import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAIPhantomSwoop;
 import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAIPhantomTarget;
@@ -78,11 +76,10 @@ public class EntityPhantom extends EntityFlying implements IMob {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
-                RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, 20.0D),
-                RetroEntityAttributes.value(SharedMonsterAttributes.ATTACK_DAMAGE, 6.0D),
-                RetroEntityAttributes.value(SharedMonsterAttributes.FOLLOW_RANGE, 64.0D),
-                RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 0.35D)));
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MAX_HEALTH, 20.0D);
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.ATTACK_DAMAGE, 6.0D);
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.FOLLOW_RANGE, 64.0D);
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MOVEMENT_SPEED, 0.35D);
         this.setPhantomSize(0);
     }
 

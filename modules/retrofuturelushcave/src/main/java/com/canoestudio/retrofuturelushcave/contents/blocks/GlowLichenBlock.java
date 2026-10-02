@@ -1,5 +1,13 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+import javax.annotation.Nullable;
+
+import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterlogging;
@@ -9,7 +17,6 @@ import net.minecraft.block.IGrowable;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
@@ -31,9 +38,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
-
-import javax.annotation.Nullable;
-import java.util.*;
 
 public class GlowLichenBlock extends Block implements IGrowable, RetroWaterloggedBlock {
     public static final PropertyBool DOWN = PropertyBool.create("down");
@@ -87,7 +91,7 @@ public class GlowLichenBlock extends Block implements IGrowable, RetroWaterlogge
     @Override
     protected BlockStateContainer createBlockState() {
         return RetroWaterlogging.createWaterMaterialStateContainer(this,
-                Arrays.<IProperty<?>>asList(DOWN, UP, NORTH, SOUTH));
+                DOWN, UP, NORTH, SOUTH);
     }
 
     @Override

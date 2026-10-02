@@ -229,8 +229,7 @@ public class AmethystClusterBlock extends FluidloggableDirectionalBlock implemen
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return RetroWaterlogging.createWaterMaterialStateContainer(this,
-                Arrays.<IProperty<?>>asList(FACING, WATERLOGGED));
+        return RetroWaterlogging.createWaterMaterialStateContainer(this, FACING, WATERLOGGED);
     }
 
     @Override

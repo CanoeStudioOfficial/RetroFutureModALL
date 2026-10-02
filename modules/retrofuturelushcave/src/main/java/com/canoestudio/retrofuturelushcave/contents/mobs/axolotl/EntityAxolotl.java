@@ -27,7 +27,6 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
 
 public class EntityAxolotl extends EntityWaterMob {
     private static final DataParameter<Integer> VARIANT = EntityDataManager.createKey(EntityAxolotl.class, DataSerializers.VARINT);
@@ -78,11 +77,10 @@ public class EntityAxolotl extends EntityWaterMob {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
-                RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, 14.0D),
-                RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 1.0D),
-                RetroEntityAttributes.value(SharedMonsterAttributes.ATTACK_DAMAGE, 2.0D),
-                RetroEntityAttributes.value(SharedMonsterAttributes.KNOCKBACK_RESISTANCE, 0.35D)));
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MAX_HEALTH, 14.0D);
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MOVEMENT_SPEED, 1.0D);
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.ATTACK_DAMAGE, 2.0D);
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.KNOCKBACK_RESISTANCE, 0.35D);
     }
 
     @Override

@@ -1,7 +1,6 @@
 package com.canoestudio.retrofuturemccore.api.fluid;
 
 import java.util.Arrays;
-import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.material.Material;
@@ -69,15 +68,6 @@ public final class RetroWaterlogging {
             ? new IUnlistedProperty<?>[0] : WaterloggedPlantFluid.extendedProperties();
         return new ExtendedBlockState(block, appendStillWaterLevel(properties),
             extendedProperties);
-    }
-
-    public static BlockStateContainer createWaterMaterialStateContainer(Block block,
-            List<? extends IProperty<?>> properties) {
-        if (properties == null || properties.isEmpty()) {
-            return createWaterMaterialStateContainer(block, new IProperty<?>[0]);
-        }
-        return createWaterMaterialStateContainer(block,
-            properties.toArray(new IProperty<?>[properties.size()]));
     }
 
     public static IBlockState extendedState(IBlockState state, IBlockAccess world, BlockPos pos) {

@@ -1,5 +1,7 @@
 package com.canoestudio.retrofuturelushcave.contents.blocks.dripLeaf;
 
+import java.util.Random;
+
 import com.canoestudio.retrofuturelushcave.contents.blocks.ModBlocks;
 import com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags;
 import com.canoestudio.retrofuturemccore.api.fluid.RetroWaterloggedBlock;
@@ -10,7 +12,6 @@ import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.BlockFaceShape;
@@ -32,8 +33,6 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
-import java.util.Random;
 
 public class DripleafStem extends Block implements IGrowable, RetroWaterloggedBlock {
     public static final String name = "Big_Dripleaf_Stem";
@@ -63,8 +62,7 @@ public class DripleafStem extends Block implements IGrowable, RetroWaterloggedBl
 
     @Override
     protected BlockStateContainer createBlockState() {
-        return RetroWaterlogging.createWaterMaterialStateContainer(this,
-                Arrays.<IProperty<?>>asList(FACING, WATERLOGGED));
+        return RetroWaterlogging.createWaterMaterialStateContainer(this, FACING, WATERLOGGED);
     }
 
     @Override

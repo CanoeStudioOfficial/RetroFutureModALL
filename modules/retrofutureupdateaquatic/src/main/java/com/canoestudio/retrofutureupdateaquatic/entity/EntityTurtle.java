@@ -1,7 +1,5 @@
 package com.canoestudio.retrofutureupdateaquatic.entity;
 
-import java.util.Arrays;
-
 import com.canoestudio.retrofutureupdateaquatic.block.BlockTurtleEgg;
 import com.canoestudio.retrofutureupdateaquatic.block.ModBlocks;
 import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAITurtleGoHome;
@@ -72,9 +70,8 @@ public class EntityTurtle extends EntityAnimal {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
-            RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, 30.0D),
-            RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 0.16D)));
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MAX_HEALTH, 30.0D);
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MOVEMENT_SPEED, 0.16D);
     }
 
     @Override

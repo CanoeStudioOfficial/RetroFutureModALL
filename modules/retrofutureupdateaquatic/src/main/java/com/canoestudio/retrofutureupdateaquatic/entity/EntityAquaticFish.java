@@ -1,7 +1,5 @@
 package com.canoestudio.retrofutureupdateaquatic.entity;
 
-import java.util.Arrays;
-
 import com.canoestudio.retrofutureupdateaquatic.item.ItemFishBucket;
 import com.canoestudio.retrofutureupdateaquatic.item.ModItems;
 import com.canoestudio.retrofutureupdateaquatic.entity.ai.EntityAIWanderUnderwater;
@@ -77,9 +75,8 @@ public class EntityAquaticFish extends EntityAnimal {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
-            RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, this.fishType.getHealth()),
-            RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 1.0D)));
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MAX_HEALTH, this.fishType.getHealth());
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MOVEMENT_SPEED, 1.0D);
     }
 
     @Override

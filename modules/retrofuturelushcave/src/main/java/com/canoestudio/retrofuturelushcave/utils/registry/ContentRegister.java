@@ -26,7 +26,7 @@ public class ContentRegister {
     @SubscribeEvent
     public static void registerItems(RegistryEvent.Register<Item> event) {
         RetroBlockRegistration.registerItems(event.getRegistry(), ModItems.ITEMS);
-        RetroBlockRegistration.registerItems(event.getRegistry(), BLOCKITEMS);
+        RetroBlockRegistration.registerBlockItems(event.getRegistry(), BLOCKITEMS);
     }
 
     @SideOnly(Side.CLIENT)

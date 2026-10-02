@@ -1,5 +1,6 @@
 package com.canoestudio.retrofuturelushcave.contents.mobs.goat;
 
+import com.canoestudio.retrofuturelushcave.contents.items.ModItems;
 import com.canoestudio.retrofuturelushcave.contents.items.ItemGoatHorn;
 import com.canoestudio.retrofuturelushcave.sounds.ModSoundHandler;
 import com.canoestudio.retrofuturemccore.api.entity.RetroEntityAttributes;
@@ -25,7 +26,6 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.World;
 
 import javax.annotation.Nullable;
-import java.util.Arrays;
 
 public class EntityGoat extends EntityAnimal {
     private static final DataParameter<Boolean> SCREAMING = EntityDataManager.createKey(EntityGoat.class, DataSerializers.BOOLEAN);
@@ -72,10 +72,9 @@ public class EntityGoat extends EntityAnimal {
     @Override
     protected void applyEntityAttributes() {
         super.applyEntityAttributes();
-        RetroEntityAttributes.setBaseValues(this, Arrays.asList(
-                RetroEntityAttributes.value(SharedMonsterAttributes.MAX_HEALTH, 10.0D),
-                RetroEntityAttributes.value(SharedMonsterAttributes.MOVEMENT_SPEED, 0.20000000298023224D),
-                RetroEntityAttributes.value(SharedMonsterAttributes.KNOCKBACK_RESISTANCE, 0.25D)));
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MAX_HEALTH, 10.0D);
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.MOVEMENT_SPEED, 0.20000000298023224D);
+        RetroEntityAttributes.setBaseValue(this, SharedMonsterAttributes.KNOCKBACK_RESISTANCE, 0.25D);
     }
 
     @Override

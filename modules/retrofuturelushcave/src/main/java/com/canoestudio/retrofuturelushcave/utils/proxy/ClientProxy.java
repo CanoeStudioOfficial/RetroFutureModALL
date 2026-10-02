@@ -30,8 +30,6 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 
-import java.util.Arrays;
-
 @Mod.EventBusSubscriber(value = {Side.CLIENT}, modid = com.canoestudio.retrofuturelushcave.retrofuturelushcave.Tags.MOD_ID)
 public class ClientProxy extends CommonProxy {
     @Override
@@ -52,23 +50,27 @@ public class ClientProxy extends CommonProxy {
 
     private static void registerWaterStateMappers() {
         RetroModelRegistry.ignoreStateProperties(ModBlocks.SMALL_DRIPLEAF,
-                Arrays.<IProperty<?>>asList(BlockLiquid.LEVEL, SmallDripleaf.WATERLOGGED));
+                BlockLiquid.LEVEL, SmallDripleaf.WATERLOGGED);
         RetroModelRegistry.ignoreStateProperties(ModBlocks.DRIPLEAF_STEM,
-                Arrays.<IProperty<?>>asList(BlockLiquid.LEVEL, DripleafStem.WATERLOGGED));
+                BlockLiquid.LEVEL, DripleafStem.WATERLOGGED);
         RetroModelRegistry.ignoreStateProperties(ModBlocks.BIG_DRIPLEAF,
-                Arrays.<IProperty<?>>asList(BlockLiquid.LEVEL, BigDripleaf.WATERLOGGED));
-        RetroModelRegistry.ignoreStateProperties(
-                Arrays.<IProperty<?>>asList(BlockLiquid.LEVEL, BigDripleaf.WATERLOGGED),
-                Arrays.asList(ModBlocks.BIG_DRIPLEAF_WATERLOGGED));
+                BlockLiquid.LEVEL, BigDripleaf.WATERLOGGED);
+        RetroModelRegistry.ignoreStateProperties(ModBlocks.BIG_DRIPLEAF_WATERLOGGED,
+                BlockLiquid.LEVEL, BigDripleaf.WATERLOGGED);
         RetroModelRegistry.ignoreStateProperties(ModBlocks.HANGING_ROOTS,
-                Arrays.<IProperty<?>>asList(BlockLiquid.LEVEL, HangingRootsBlock.WATERLOGGED));
-        RetroModelRegistry.ignoreStateProperties(
-                Arrays.<IProperty<?>>asList(BlockLiquid.LEVEL, GlowLichenBlock.WATERLOGGED),
-                Arrays.asList(ModBlocks.GLOW_LICHEN_VARIANTS));
-        RetroModelRegistry.ignoreStateProperties(
-                Arrays.<IProperty<?>>asList(BlockLiquid.LEVEL, AmethystClusterBlock.WATERLOGGED),
-                Arrays.asList(ModBlocks.AMETHYST_CLUSTER, ModBlocks.LARGE_AMETHYST_BUD,
-                        ModBlocks.MEDIUM_AMETHYST_BUD, ModBlocks.SMALL_AMETHYST_BUD));
+                BlockLiquid.LEVEL, HangingRootsBlock.WATERLOGGED);
+        for (GlowLichenBlock glowLichen : ModBlocks.GLOW_LICHEN_VARIANTS) {
+            RetroModelRegistry.ignoreStateProperties(glowLichen,
+                    BlockLiquid.LEVEL, GlowLichenBlock.WATERLOGGED);
+        }
+        RetroModelRegistry.ignoreStateProperties(ModBlocks.AMETHYST_CLUSTER,
+                BlockLiquid.LEVEL, AmethystClusterBlock.WATERLOGGED);
+        RetroModelRegistry.ignoreStateProperties(ModBlocks.LARGE_AMETHYST_BUD,
+                BlockLiquid.LEVEL, AmethystClusterBlock.WATERLOGGED);
+        RetroModelRegistry.ignoreStateProperties(ModBlocks.MEDIUM_AMETHYST_BUD,
+                BlockLiquid.LEVEL, AmethystClusterBlock.WATERLOGGED);
+        RetroModelRegistry.ignoreStateProperties(ModBlocks.SMALL_AMETHYST_BUD,
+                BlockLiquid.LEVEL, AmethystClusterBlock.WATERLOGGED);
     }
 
     @Override

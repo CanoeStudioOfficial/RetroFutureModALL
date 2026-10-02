@@ -66,7 +66,7 @@ public final class RetroModelRegistry {
         }
     }
 
-    public static void registerItems(Iterable<? extends Item> items) {
+    public static void registerItems(List<Item> items) {
         if (items == null) {
             return;
         }
@@ -108,7 +108,7 @@ public final class RetroModelRegistry {
         }
     }
 
-    public static void registerBlockItems(Iterable<? extends Block> blocks) {
+    public static void registerBlockItems(List<Block> blocks) {
         if (blocks == null) {
             return;
         }
@@ -124,30 +124,12 @@ public final class RetroModelRegistry {
         ModelLoader.setCustomStateMapper(block, new StateMap.Builder().ignore(properties).build());
     }
 
-    public static void ignoreStateProperties(Block block, List<? extends IProperty<?>> properties) {
-        if (properties == null || properties.isEmpty()) {
-            return;
-        }
-        ignoreStateProperties(block, properties.toArray(new IProperty<?>[properties.size()]));
-    }
-
     public static void ignoreStateProperties(IProperty<?>[] properties, Block... blocks) {
         if (blocks == null) {
             return;
         }
         for (Block block : blocks) {
             ignoreStateProperties(block, properties);
-        }
-    }
-
-    public static void ignoreStateProperties(List<? extends IProperty<?>> properties,
-            Iterable<? extends Block> blocks) {
-        if (properties == null || properties.isEmpty() || blocks == null) {
-            return;
-        }
-        IProperty<?>[] propertyArray = properties.toArray(new IProperty<?>[properties.size()]);
-        for (Block block : blocks) {
-            ignoreStateProperties(block, propertyArray);
         }
     }
 

@@ -445,8 +445,7 @@ public class BigDripleaf extends Block implements IGrowable, RetroWaterloggedBlo
 
     protected BlockStateContainer createBlockState()
     {
-        return RetroWaterlogging.createWaterMaterialStateContainer(this,
-                Arrays.<IProperty<?>>asList(FACING, TILT, WATERLOGGED));
+        return RetroWaterlogging.createWaterMaterialStateContainer(this, FACING, TILT, WATERLOGGED);
     }
 
     @Override
